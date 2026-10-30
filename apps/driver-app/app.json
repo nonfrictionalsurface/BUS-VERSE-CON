@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "BusCon Driver Terminal",
+    "slug": "buscon-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#020604"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow BusCon to scan passenger QR boarding passes."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#020604"
+      },
+      "permissions": ["CAMERA"]
+    }
+  }
+}
