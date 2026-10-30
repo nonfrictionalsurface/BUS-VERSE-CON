@@ -1,0 +1,36 @@
+﻿# Environment & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.test
+!.env.production.template
+docs/secrets.local.md
+
+# Dependencies & build
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+
+# Logs & dumps
+*.log
+full-test.txt
+ws-*.txt
+server-boot*.log
+diagnostic-dump-*.txt
+*-DUMP.md
+*DUMP-V*.md
+BUSCON-KICKOFF-DUMP.md
+SEAT-BUG-DUMP.md
+LIVE-TRACKING-DUMP*.md
+
+# Backups
+*.bak
+*.bak-*
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
