@@ -1,0 +1,171 @@
+# ============================================================
+# RATE LIMIT DUMP — 2026-10-31 17:15:50
+# ============================================================
+
+================================================================================
+FILE: apps\api\src\middleware\rate-limit.ts
+================================================================================
+import rateLimit from '@fastify/rate-limit';
+import type { FastifyInstance } from 'fastify';
+import { isTest } from '../config/env.js';
+
+export async function rateLimitMiddleware(server: FastifyInstance): Promise<void> {
+  // Bypass rate limiting entirely in tests (per D8 / locked decision)
+  if (isTest) return;
+
+  await server.register(rateLimit, {
+    max: 300,
+    timeWindow: '1 minute',
+    allowList: () => false,
+  });
+}
+
+================================================================================
+FILE: apps\api\src\config\env.ts
+================================================================================
+import { z } from 'zod';
+
+const boolEnv = z
+  .string()
+  .default('false')
+  .transform((v) => v.toLowerCase() === 'true');
+
+const EnvSchema = z.object({
+  // Core
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(4310),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+    .default('info'),
+
+  // Data stores
+  DATABASE_URL: z.string().min(1),
+  REDIS_URL: z.string().min(1),
+
+  // Secrets
+  JWT_SECRET: z.string().min(32),
+  PII_ENCRYPTION_KEY: z.string().min(32),
+  PHONE_HASH_SALT: z.string().min(32),
+
+  // QR signing (generated in Phase 4)
+  QR_SIGNING_PRIVATE_KEY: z.string().optional(),
+  QR_SIGNING_PUBLIC_KEY: z.string().optional(),
+
+  // Razorpay
+  RAZORPAY_KEY_ID: z.string().min(1),
+  RAZORPAY_KEY_SECRET: z.string().min(1),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
+
+  // SMS
+  MSG91_AUTH_KEY: z.string().optional(),
+  MSG91_SENDER_ID: z.string().optional(),
+
+  // Email
+  SENDGRID_API_KEY: z.string().optional(),
+
+  // R2
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET: z.string().optional(),
+  R2_ENDPOINT: z.string().optional(),
+
+  // CORS
+  CORS_ALLOWED_ORIGINS: z
+    .string()
+    .default('http://localhost:3000,http://localhost:3001,http://localhost:8081'),
+
+  // Realtime (Phase 9) â€” test-overridable timing
+  WS_AUTH_EXPIRING_LEAD_SEC: z.coerce.number().int().min(0).default(60),
+  WS_AUTH_REFRESH_WINDOW_SEC: z.coerce.number().int().min(0).default(30),
+
+  // Admin recovery
+  ADMIN_EMAIL: z.string().optional(),
+  ADMIN_RECOVERY_TOKEN: z.string().optional(),
+
+  // Webhook fallback
+  TMP_WEBHOOKS_DIR: z.string().default('/tmp/webhooks'),
+
+  // Demo
+  DEMO_MULTI_DEVICE_DRIVER: boolEnv,
+
+  // Mocks
+  MOCK_OTP: boolEnv,
+  MOCK_EMAIL: boolEnv,
+  MOCK_PAYMENT: boolEnv,
+  ENABLE_NOTIFICATIONS: boolEnv,
+
+  // Observability (Phase 12)
+  SENTRY_DSN: z.string().optional(),
+  RAILWAY_ENVIRONMENT: z.string().optional(),
+});
+
+export type Env = z.infer<typeof EnvSchema>;
+
+function loadEnv(): Env {
+  const parsed = EnvSchema.safeParse(process.env);
+  if (!parsed.success) {
+    const issues = parsed.error.issues
+      .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
+      .join('\n');
+    throw new Error(`Invalid environment variables:\n${issues}`);
+  }
+  return parsed.data;
+}
+
+export const env = loadEnv();
+
+export const isProd = env.NODE_ENV === 'production';
+export const isDev = env.NODE_ENV === 'development';
+export const isTest = env.NODE_ENV === 'test';
+
+================================================================================
+FILE: apps\api\src\lib\redis.ts
+================================================================================
+import { Redis, type RedisOptions } from 'ioredis';
+import { env } from '../config/env.js';
+
+const baseOptions: RedisOptions = {
+  maxRetriesPerRequest: 3,
+  retryStrategy: (times: number) => Math.min(times * 50, 2000),
+};
+
+export const redis = new Redis(env.REDIS_URL, baseOptions);
+
+redis.on('connect', () => {
+  if (env.NODE_ENV !== 'test') console.warn('[redis] connected');
+});
+redis.on('error', (err: Error) => {
+  if (env.NODE_ENV !== 'test') console.error('[redis] error', err.message);
+});
+
+export const keys = {
+  seatLock: (scheduleId: string, seatId: string) => `lock:${scheduleId}:${seatId}`,
+  session: (sessionId: string) => `session:${sessionId}`,
+  revokedSession: (sessionId: string) => `revoked:${sessionId}`,
+  gpsTrip: (tripId: string) => `gps:trip:${tripId}`,
+  tripState: (tripId: string) => `trip:state:${tripId}`,
+  liveCache: (tripId: string) => `live:${tripId}`,
+  rateLimit: (tier: string, identity: string) => `rl:${tier}:${identity}`,
+  idempotency: (key: string) => `idem:${key}`,
+};
+
+export async function closeRedis(): Promise<void> {
+  await redis.quit();
+}
+
+================================================================================
+GREP: all references to rateLimit / rate-limit / otpLimiter
+================================================================================
+src\lib\errors.ts : 99 : rateLimited: (msg = 'Too many requests') => make('RATE_LIMITED', 429, msg),
+src\lib\redis.ts : 25 : rateLimit: (tier: string, identity: string) => `rl:${tier}:${identity}`,
+src\middleware\index.ts : 6 : import { rateLimitMiddleware } from './rate-limit.js';
+src\middleware\index.ts : 16 : *   5. rate-limit → blocks abuse (skipped in tests)
+src\middleware\index.ts : 25 : await rateLimitMiddleware(server);
+src\middleware\rate-limit.ts : 1 : import rateLimit from '@fastify/rate-limit';
+src\middleware\rate-limit.ts : 5 : export async function rateLimitMiddleware(server: FastifyInstance): Promise<void> {
+src\middleware\rate-limit.ts : 9 : await server.register(rateLimit, {
+src\modules\identity\otp.service.ts : 39 : const key = keys.rateLimit('otp-request', identifier);
+src\modules\identity\otp.service.ts : 43 : throw errors.rateLimited(
+src\modules\identity\otp.service.ts : 50 : const key = keys.rateLimit('otp-verify', identifier);
+src\modules\identity\password-reset.service.ts : 19 : const key = keys.rateLimit('pw-reset', identifier);
+src\modules\identity\password-reset.service.ts : 23 : throw errors.rateLimited('Too many password reset attempts. Try again in 1 hour.');

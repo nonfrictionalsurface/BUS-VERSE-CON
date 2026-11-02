@@ -1,26 +1,38 @@
-import { api } from '@/lib/api/client';
-import { CreateBookingRequest, CreateBookingResponse, BookingResponse } from '../types';
+﻿import { api } from '@/lib/api/client';
 
-export async function createBooking(payload: CreateBookingRequest): Promise<CreateBookingResponse> {
-  const response = await api.post<CreateBookingResponse>('/passenger/bookings', payload);
-  return response.data;
+export interface CreateBookingPassengerInput {
+  seatId: string;
+  name: string;
+  age: number;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
 }
 
-export async function fetchBookingDetail(bookingId: string): Promise<BookingResponse> {
-  const response = await api.get<BookingResponse>(`/passenger/bookings/${bookingId}`);
-  return response.data;
+export interface CreateBookingResponse {
+  bookingId: string;
+  status: 'PENDING';
+  expiresAt: string;
+  totalFarePaise: number;
 }
 
-export async function fetchMyBookings(): Promise<any[]> {
-  const response = await api.get<any>('/passenger/bookings');
-  if (Array.isArray(response.data)) {
-    return response.data;
-  }
-  if (Array.isArray(response.data?.items)) {
-    return response.data.items;
-  }
-  if (Array.isArray(response.data?.bookings)) {
-    return response.data.bookings;
-  }
-  return [];
-}
+export const bookingApi = {
+  createBooking: async (input: {
+    scheduleId: string;
+    lockId: string;
+    boardingStandId: string;
+    droppingStandId: string;
+    passengers: CreateBookingPassengerInput[];
+  }): Promise<CreateBookingResponse> => {
+    const res = await api.post<CreateBookingResponse>('/passenger/bookings', input);
+    return res.data;
+  },
+
+  getBooking: async (bookingId: string) => {
+    const res = await api.get<any>(`/passenger/bookings/${bookingId}`);
+    return res.data;
+  },
+
+  getBookingsList: async (cursor?: string) => {
+    const res = await api.get<any[]>(`/passenger/bookings?limit=20${cursor ? `&cursor=${cursor}` : ''}`);
+    return res;
+  },
+};

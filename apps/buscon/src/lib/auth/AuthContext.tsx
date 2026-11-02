@@ -59,11 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const doLogin = useCallback(async (surfaceParam: Surface, email: string, password: string) => {
+    console.log('[AC] doLogin entry', { surfaceParam, emailLen: email.length, pwdLen: password.length, email });
     api.setSurface(surfaceParam);
     const res = await api.post<{
       accessToken: string; refreshToken: string; expiresAt: string; user: UserSession;
     }>(`/${surfaceParam}/auth/login`, { email, password }, { skipAuth: true });
 
+    console.log('[AC] doLogin HTTP OK', { hasToken: !!(res as any)?.data?.accessToken, dataKeys: Object.keys((res as any)?.data ?? {}) });
     const { accessToken, refreshToken, user: u } = res.data;
     
     // Decode JWT to extract role reliably
@@ -76,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('buscon_access_token', accessToken);
     localStorage.setItem('buscon_refresh_token', refreshToken);
     localStorage.setItem('buscon_user', JSON.stringify(userWithRole));
+    console.log('[AC] doLogin COMMIT', { role, userId: userWithRole.id, email: userWithRole.email });
     setUser(userWithRole);
     setSurface(surfaceParam);
   }, []);

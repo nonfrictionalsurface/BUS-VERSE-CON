@@ -1,4 +1,4 @@
-import { api } from '@/lib/api/client';
+﻿import { api } from '@/lib/api/client';
 
 export interface City {
   id: string;
@@ -11,6 +11,16 @@ export interface Stand {
   cityId: string;
   name: string;
   type: string;
+  lat: number;
+  lng: number;
+}
+
+export interface RouteStand {
+  standId: string;
+  sequence: number;
+  distanceFromPrevKm: number;
+  durationFromPrevMin: number;
+  stand?: Stand;
 }
 
 export interface Route {
@@ -20,10 +30,11 @@ export interface Route {
   originCity: City;
   destinationCity: City;
   approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  stands?: RouteStand[];
   createdAt: string;
 }
 
-export interface CreateRouteStand {
+export interface CreateRouteStandInput {
   standId: string;
   sequence: number;
   distanceFromPrevKm: number;
@@ -33,7 +44,7 @@ export interface CreateRouteStand {
 export interface CreateRouteInput {
   originCityId: string;
   destinationCityId: string;
-  stands: CreateRouteStand[]; // must have >= 2
+  stands: CreateRouteStandInput[];
 }
 
 export const routesApi = {
@@ -42,8 +53,14 @@ export const routesApi = {
     return res.data;
   },
   create: async (input: CreateRouteInput): Promise<Route> => {
+    if (!input.stands || input.stands.length < 2) {
+      throw new Error('Route needs at least 2 stands (origin + destination)');
+    }
     const res = await api.post<Route>('/operator/routes', input);
     return res.data;
+  },
+  addStand: async (routeId: string, stand: CreateRouteStandInput): Promise<void> => {
+    await api.post(`/operator/routes/${routeId}/stands`, stand);
   },
   searchCities: async (query: string): Promise<City[]> => {
     const res = await api.get<City[]>(`/public/cities?q=${encodeURIComponent(query)}&limit=10`);

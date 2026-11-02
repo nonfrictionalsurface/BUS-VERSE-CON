@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "BusVerse",
+    "slug": "busverse",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "busverse",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.busverse.passenger"
+    },
+    "android": {
+      "package": "app.busverse.passenger",
+      "adaptiveIcon": {
+        "backgroundColor": "#060A12"
+      }
+    },
+    "plugins": ["expo-font"],
+    "extra": {
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}

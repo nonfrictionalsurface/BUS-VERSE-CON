@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRevenueSummary, useDailyTrend } from '../hooks/useRevenue';
 import { Card } from '@/components/ui/Card';
@@ -113,7 +113,7 @@ export function RevenueDashboard() {
                     boxShadow: 'var(--shadow-floating)',
                   }}
                   itemStyle={{ color: 'var(--brand-emerald)', fontWeight: 'bold' }}
-                  formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
+                  formatter={(value) => [`₹${Number(value ?? 0).toLocaleString('en-IN')}`, 'Revenue']}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="var(--brand-emerald)" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
@@ -124,3 +124,4 @@ export function RevenueDashboard() {
     </div>
   );
 }
+

@@ -1,14 +1,14 @@
-# AI Frontend Handover v1 — BusVerse + BusCon Frontends
+﻿# AI Frontend Handover v1 â€” BusVerse + BusCon Frontends
 
 **Document:** `docs/AI-FRONTEND-HANDOVER-v1.md`
-**Purpose:** Cold-start doc for building the 3 frontends. Read §0 → §4 → the frontend you're building (§5, §6, or §7) → §8. Do not read the whole thing at once.
+**Purpose:** Cold-start doc for building the 3 frontends. Read Â§0 â†’ Â§4 â†’ the frontend you're building (Â§5, Â§6, or Â§7) â†’ Â§8. Do not read the whole thing at once.
 **Date:** 2026-10-30
-**Backend state:** Phase 13 complete — 396/396 tests, 108/108 endpoints, 16/16 WS events wired, EXIT CODE 0. **Backend is production-ready.**
-**Reading time from cold:** ~30 minutes (this doc + §3 reading list).
+**Backend state:** Phase 13 complete â€” 396/396 tests, 108/108 endpoints, 16/16 WS events wired, EXIT CODE 0. **Backend is production-ready.**
+**Reading time from cold:** ~30 minutes (this doc + Â§3 reading list).
 
 ---
 
-## §0. TL;DR — Read This First
+## Â§0. TL;DR â€” Read This First
 
 **What you're building:** Three frontends for a two-sided bus booking platform (BusVerse = passenger, BusCon = operator web, Operator App = driver mobile). All talk to **one backend** at `http://localhost:4310` (dev).
 
@@ -18,35 +18,35 @@
 
 | Frontend | For | Tech (recommended) | Dev port |
 |---|---|---|---|
-| **BusVerse** | Passengers — search, book, pay, track, ticket | Next.js 15 (App Router) + Tailwind + shadcn/ui | 3410 |
-| **BusCon** | Operators — buses, routes, schedules, drivers, revenue, bookings | Next.js 15 (App Router) + Tailwind + shadcn/ui | 3411 |
-| **Operator App** | Drivers — today's trips, GPS, scan QR, delay, manifest | Expo SDK 51+ + React Navigation + React Query | 8281 |
+| **BusVerse** | Passengers â€” search, book, pay, track, ticket | Next.js 15 (App Router) + Tailwind + shadcn/ui | 3410 |
+| **BusCon** | Operators â€” buses, routes, schedules, drivers, revenue, bookings | Next.js 15 (App Router) + Tailwind + shadcn/ui | 3411 |
+| **Operator App** | Drivers â€” today's trips, GPS, scan QR, delay, manifest | Expo SDK 51+ + React Navigation + React Query | 8281 |
 
 **Read this first, in this order:**
 
-1. This doc (§0–§4) — 15 min
-2. `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 — endpoint + error contracts
-3. `docs/shared/04-EVENT-AND-REALTIME-CATALOG.md` v1.0 — WS event payloads
-4. Your frontend's UI spec (see §3)
-5. `docs/AI-HANDOVER-v7.md` §0–§6 — backend state, top gotchas
+1. This doc (Â§0â€“Â§4) â€” 15 min
+2. `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 â€” endpoint + error contracts
+3. `docs/shared/04-EVENT-AND-REALTIME-CATALOG.md` v1.0 â€” WS event payloads
+4. Your frontend's UI spec (see Â§3)
+5. `docs/AI-HANDOVER-v7.md` Â§0â€“Â§6 â€” backend state, top gotchas
 
 **Before you write a line of code:**
 
-- Read §3 below ("What to read before writing anything")
-- Confirm §4 (non-negotiables) — 12 rules, do not violate
-- Skim §8 (gotchas) — these will bite you
+- Read Â§3 below ("What to read before writing anything")
+- Confirm Â§4 (non-negotiables) â€” 12 rules, do not violate
+- Skim Â§8 (gotchas) â€” these will bite you
 
 **Never do these things:**
 
-- Guess at response shapes — read `07` v1.3
-- Guess at DB fields — read `06-DATABASE-SCHEMA.md` v1.3
-- Guess at WS event payloads — read `shared/04`
-- Modify backend code — it's shipped, tested, frozen
-- Assume the demo is a static mock — it's a real backend with real Razorpay test mode
+- Guess at response shapes â€” read `07` v1.3
+- Guess at DB fields â€” read `06-DATABASE-SCHEMA.md` v1.3
+- Guess at WS event payloads â€” read `shared/04`
+- Modify backend code â€” it's shipped, tested, frozen
+- Assume the demo is a static mock â€” it's a real backend with real Razorpay test mode
 
 ---
 
-## §1. Backend state — what you're integrating with
+## Â§1. Backend state â€” what you're integrating with
 
 ### 1.1 Endpoints
 
@@ -64,15 +64,15 @@
 | Webhooks | 1 | Razorpay signature |
 | **Total** | **108** | |
 
-Full endpoint catalog: `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 §1.5.2.
+Full endpoint catalog: `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 Â§1.5.2.
 
-**Note:** `07` v1.3 was published at 102 endpoints. The actual count is now 108 — four endpoints (operator signup, trip cancel, 2 audit async) were added in Phase 12/13 without the doc being updated to v1.4 yet. The four are documented in this handover (§5, §6, §7) even if not in `07`.
+**Note:** `07` v1.3 was published at 102 endpoints. The actual count is now 108 â€” four endpoints (operator signup, trip cancel, 2 audit async) were added in Phase 12/13 without the doc being updated to v1.4 yet. The four are documented in this handover (Â§5, Â§6, Â§7) even if not in `07`.
 
 ### 1.2 WebSocket
 
 **URL:** `ws://localhost:4310/v1/ws` (Socket.io 4.8.1)
 **16 events wired.** Event payloads in `shared/04-EVENT-AND-REALTIME-CATALOG.md`.
-**4 topics** — subscribe to what your screen needs:
+**4 topics** â€” subscribe to what your screen needs:
 
 | Topic pattern | Who can subscribe | Events delivered |
 |---|---|---|
@@ -81,7 +81,7 @@ Full endpoint catalog: `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 §1.5.2.
 | `booking:{bookingId}` | Booking owner + admin | `booking:confirmed`, `booking:cancelled`, `booking:expired`, `payment:succeeded`, `refund:requested` |
 | `admin:notifications` | `SUPER_ADMIN` only | `operator:applied` |
 
-Handshake protocol (§7 has full detail): connect → send `{ action: 'auth', token: JWT }` within **5 seconds** → receive `auth:ok` → then `{ action: 'subscribe', topics: [...] }`.
+Handshake protocol (Â§7 has full detail): connect â†’ send `{ action: 'auth', token: JWT }` within **5 seconds** â†’ receive `auth:ok` â†’ then `{ action: 'subscribe', topics: [...] }`.
 
 ### 1.3 Auth model
 
@@ -92,14 +92,14 @@ Handshake protocol (§7 has full detail): connect → send `{ action: 'auth', to
 | Passenger | OTP via phone OR email | `REGISTERED_PASSENGER` | BusVerse |
 | Driver | OTP via phone + device fingerprint | `DRIVER` | Operator App |
 | Operator | Email+password OR phone OTP | `OPERATOR_OWNER` / `OPERATOR_MANAGER` | BusCon |
-| Admin | Email+password | `SUPER_ADMIN` | (admin panel — out of scope) |
+| Admin | Email+password | `SUPER_ADMIN` | (admin panel â€” out of scope) |
 
 **Tokens:**
 
-- **Access token** — JWT, 15 min TTL (30 min for driver, 5 min for admin)
-- **Refresh token** — JWT, 7 day TTL (30 day for driver, 1 day for admin)
-- **`jti` claim** on every token — rotated refresh tokens are always different
-- **Refresh endpoint** — `POST /v1/{surface}/auth/refresh`, `{ surface }` = `passenger` | `driver` | `operator` | `admin`
+- **Access token** â€” JWT, 15 min TTL (30 min for driver, 5 min for admin)
+- **Refresh token** â€” JWT, 7 day TTL (30 day for driver, 1 day for admin)
+- **`jti` claim** on every token â€” rotated refresh tokens are always different
+- **Refresh endpoint** â€” `POST /v1/{surface}/auth/refresh`, `{ surface }` = `passenger` | `driver` | `operator` | `admin`
 
 **Storage:** `localStorage` for BusVerse/BusCon (web). `expo-secure-store` for Operator App (mobile). Never in a query string or URL.
 
@@ -111,9 +111,9 @@ Handshake protocol (§7 has full detail): connect → send `{ action: 'auth', to
 |---|---|---|---|
 | Success | `4111 1111 1111 1111` | any | any future |
 | Failure | `4000 0000 0000 0002` | any | any future |
-| UPI | `success@razorpay` | — | — |
+| UPI | `success@razorpay` | â€” | â€” |
 
-**Dev shortcut:** `POST /v1/dev/mock-confirm-payment` with `{ paymentId }` simulates the payment.captured webhook. **Guarded by `NODE_ENV !== 'production'`** — only works in dev. Use this to skip the Razorpay checkout during development and testing.
+**Dev shortcut:** `POST /v1/dev/mock-confirm-payment` with `{ paymentId }` simulates the payment.captured webhook. **Guarded by `NODE_ENV !== 'production'`** â€” only works in dev. Use this to skip the Razorpay checkout during development and testing.
 
 **Production:** real Razorpay checkout window opens, user pays, webhook confirms server-side, client polls `GET /v1/passenger/payments/:id` to detect success.
 
@@ -121,9 +121,9 @@ Handshake protocol (§7 has full detail): connect → send `{ action: 'auth', to
 
 **Two-step flow** for driver KYC docs:
 
-1. `POST /v1/driver/uploads` — request signed URL, receives `{ uploadId, uploadUrl, expiresAt }`
-2. `PUT {uploadUrl}` — put file bytes directly to Cloudflare R2 (or mock in dev)
-3. `POST /v1/driver/me/documents` — with `{ uploadIds: [...] }` to attach
+1. `POST /v1/driver/uploads` â€” request signed URL, receives `{ uploadId, uploadUrl, expiresAt }`
+2. `PUT {uploadUrl}` â€” put file bytes directly to Cloudflare R2 (or mock in dev)
+3. `POST /v1/driver/me/documents` â€” with `{ uploadIds: [...] }` to attach
 
 Same pattern exists at `/v1/operator/uploads` + `/v1/operator/me/documents` for operator KYC.
 
@@ -133,14 +133,14 @@ Same pattern exists at `/v1/operator/uploads` + `/v1/operator/me/documents` for 
 |---|---|---|
 | MSG91 (SMS) | Logs to console, no SMS sent | `MOCK_OTP=true` (default in `.env.example`) |
 | SendGrid (email) | Logs to console, no email sent | `MOCK_EMAIL=true` (default) |
-| Razorpay | Test mode — real dashboard, test cards only | — |
+| Razorpay | Test mode â€” real dashboard, test cards only | â€” |
 | R2 | Mock URLs returned if R2 env vars missing | Falls back automatically |
 
-**OTP in dev:** `MOCK_OTP=true` means **any 6-digit code works** — usually use `123456`. Do not build UI that assumes a real SMS arrives.
+**OTP in dev:** `MOCK_OTP=true` means **any 6-digit code works** â€” usually use `123456`. Do not build UI that assumes a real SMS arrives.
 
 ---
 
-## §2. What's already built (backend — do not modify)
+## Â§2. What's already built (backend â€” do not modify)
 
 **Do not touch `apps/api/`.** It is:
 - 396 tests passing, EXIT CODE 0
@@ -148,24 +148,24 @@ Same pattern exists at `/v1/operator/uploads` + `/v1/operator/me/documents` for 
 - Docker image builds and boots
 - Frozen at Phase 13
 
-Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not exist yet — you will scaffold them.
+Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not exist yet â€” you will scaffold them.
 
 **If you find a backend bug:**
 1. Document it (screenshot + curl reproduction)
-2. Do NOT fix it — the backend is under a separate freeze for a reason (deployment checks pending, docs at v1.3 will be updated to v1.4)
+2. Do NOT fix it â€” the backend is under a separate freeze for a reason (deployment checks pending, docs at v1.3 will be updated to v1.4)
 3. Work around it in the frontend
 4. Note it in your final handover
 
 ---
 
-## §3. What to read before writing anything
+## Â§3. What to read before writing anything
 
 **Mandatory (in this order):**
 
-1. **This handover** (§0–§4)
-2. **`docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3** — every endpoint's request + response shape + error codes. §4 = passenger, §5 = operator, §6 = admin, §7 = driver, §8 = WebSocket, §9 = error catalog.
-3. **`docs/shared/04-EVENT-AND-REALTIME-CATALOG.md` v1.0** — 16 WS event payloads. All have `_v: 1` version field.
-4. **`docs/AI-HANDOVER-v7.md` §0–§6** — backend gotchas. §6.1 (Prisma relation naming), §6.25 (webhook raw body), §6.65 (schedule time math) are the ones that leak to the frontend.
+1. **This handover** (Â§0â€“Â§4)
+2. **`docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3** â€” every endpoint's request + response shape + error codes. Â§4 = passenger, Â§5 = operator, Â§6 = admin, Â§7 = driver, Â§8 = WebSocket, Â§9 = error catalog.
+3. **`docs/shared/04-EVENT-AND-REALTIME-CATALOG.md` v1.0** â€” 16 WS event payloads. All have `_v: 1` version field.
+4. **`docs/AI-HANDOVER-v7.md` Â§0â€“Â§6** â€” backend gotchas. Â§6.1 (Prisma relation naming), Â§6.25 (webhook raw body), Â§6.65 (schedule time math) are the ones that leak to the frontend.
 5. **Your frontend's UI spec** (see below)
 
 **Your frontend's UI spec:**
@@ -180,13 +180,13 @@ Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not
 
 **Read-only references (do not need to be read upfront):**
 
-- `docs/06-DATABASE-SCHEMA.md` v1.3 — if you need to understand what a field means
-- `docs/shared/02-QR-CONTRACT.md` — if you're displaying a QR code
-- `docs/shared/03-SEAT-LOCK.md` — if you're debugging seat availability
+- `docs/06-DATABASE-SCHEMA.md` v1.3 â€” if you need to understand what a field means
+- `docs/shared/02-QR-CONTRACT.md` â€” if you're displaying a QR code
+- `docs/shared/03-SEAT-LOCK.md` â€” if you're debugging seat availability
 
 ---
 
-## §4. Non-negotiables
+## Â§4. Non-negotiables
 
 **12 rules. Violating any will cause the app to break in production.**
 
@@ -198,16 +198,16 @@ Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not
 | 4 | **Never store tokens in localStorage for the Operator App.** Use `expo-secure-store`. |
 | 5 | **Never subscribe to a WS topic you don't have permission for.** Server closes connection with code 1008. |
 | 6 | **Never ignore the 15-minute booking expiry.** PENDING bookings die after 15 min. Show countdown from `expiresAt`. |
-| 7 | **Never retry `POST /passenger/payments` with the same `Idempotency-Key` after failure.** Generate a new UUID. Reusing the old one returns the cached failed response — user is stuck. |
+| 7 | **Never retry `POST /passenger/payments` with the same `Idempotency-Key` after failure.** Generate a new UUID. Reusing the old one returns the cached failed response â€” user is stuck. |
 | 8 | **Never decode or construct cursor values.** They are opaque base64. Pass `meta.nextCursor` verbatim. |
-| 9 | **Never assume a masked field is null.** Absent ≠ null. Operator endpoints omit `phone`/`email` entirely, not set to `null`. Use `'phone' in obj` not `obj.phone === null`. |
+| 9 | **Never assume a masked field is null.** Absent â‰  null. Operator endpoints omit `phone`/`email` entirely, not set to `null`. Use `'phone' in obj` not `obj.phone === null`. |
 | 10 | **Never poll faster than the WS fallback interval.** Booking status: 5s. Live trip: 3s. Anything faster will get rate-limited (429). |
 | 11 | **Never assume mock auth in production.** `MOCK_OTP=true` is dev-only. Use real OTP flows that work when the flag is false. |
 | 12 | **Never modify `apps/api/`.** Frozen at Phase 13. |
 
 ---
 
-## §5. BusVerse — Passenger PWA
+## Â§5. BusVerse â€” Passenger PWA
 
 **Tech:** Next.js 15 App Router + TypeScript strict + Tailwind CSS 4 + shadcn/ui + TanStack Query v5 + socket.io-client 4.8.1
 **Port:** 3410
@@ -215,9 +215,9 @@ Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not
 
 ### 5.1 Reading order
 
-1. `docs/busverse/00-OVERVIEW.md` — product context
-2. `docs/busverse/05-UI-SPEC.md` — screen designs
-3. `07` v1.3 §4 (passenger endpoints)
+1. `docs/busverse/00-OVERVIEW.md` â€” product context
+2. `docs/busverse/05-UI-SPEC.md` â€” screen designs
+3. `07` v1.3 Â§4 (passenger endpoints)
 4. This section
 
 ### 5.2 Auth flow
@@ -225,12 +225,12 @@ Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not
 **First-time user (signup):**
 
 ```
-1. Phone screen → POST /v1/passenger/auth/otp/request
+1. Phone screen â†’ POST /v1/passenger/auth/otp/request
    { phone: "+919876543210", intent: "SIGNUP" }
    Response: 200 { expiresInSeconds: 600 }
    Show OTP input, disable resend for 60s
 
-2. OTP screen → POST /v1/passenger/auth/otp/verify
+2. OTP screen â†’ POST /v1/passenger/auth/otp/verify
    { phone: "+919876543210", otp: "123456" }
    Response: 200 {
      accessToken, refreshToken, expiresAt,
@@ -238,21 +238,21 @@ Your job is `apps/busverse/`, `apps/buscon/`, `apps/operator-app/`. These do not
    }
    Store tokens. Redirect to home.
 
-3. Duplicate phone → 409 PHONE_ALREADY_REGISTERED
+3. Duplicate phone â†’ 409 PHONE_ALREADY_REGISTERED
    Prompt user to log in instead.
 ```
 
 **Returning user (login):**
 
-Same endpoint, `intent: "LOGIN"`. If no user exists, backend creates one — that's the same as signup. Do not gate on `intent` for user creation; use it only for the duplicate check.
+Same endpoint, `intent: "LOGIN"`. If no user exists, backend creates one â€” that's the same as signup. Do not gate on `intent` for user creation; use it only for the duplicate check.
 
 **Email login:**
 
-Supported for **login only**, not signup. Same endpoints with `{ email }` instead of `{ phone }`. **Signup with email returns 400 EMAIL_SIGNUP_NOT_SUPPORTED** — phone is the anchor identity.
+Supported for **login only**, not signup. Same endpoints with `{ email }` instead of `{ phone }`. **Signup with email returns 400 EMAIL_SIGNUP_NOT_SUPPORTED** â€” phone is the anchor identity.
 
 **Refresh:**
 
-Every API call that gets 401 → call `POST /v1/passenger/auth/refresh` with `{ refreshToken }` (or cookie). New tokens returned. Retry the original call. On refresh failure → logout + redirect to login.
+Every API call that gets 401 â†’ call `POST /v1/passenger/auth/refresh` with `{ refreshToken }` (or cookie). New tokens returned. Retry the original call. On refresh failure â†’ logout + redirect to login.
 
 ### 5.3 Key screens (build in this order)
 
@@ -270,15 +270,15 @@ Every API call that gets 401 → call `POST /v1/passenger/auth/refresh` with `{ 
 
 - Route: `/schedule/{scheduleId}`
 - API: `GET /v1/public/schedules/{id}` for detail, `GET /v1/passenger/schedules/{id}/availability` for seat map
-- Render: bus layout grid (rows × columns), aisle cells skipped
+- Render: bus layout grid (rows Ã— columns), aisle cells skipped
 - Seat states: `AVAILABLE` (green), `LOCKED` (gray), `BOOKED` (dark gray), `MINE` (blue), `BLOCKED` (red)
-- **WS subscribe** to `seat:availability:{scheduleId}` — update in real time
+- **WS subscribe** to `seat:availability:{scheduleId}` â€” update in real time
 - On seat click:
   - `POST /v1/passenger/seat-locks` with `{ scheduleId, seatId }`
   - Response: `{ lockId, expiresAt, remainingSeconds: 300 }`
   - Show countdown timer (5 min)
-  - 409 `SEAT_LOCKED` → toast "Seat was taken", refresh availability
-  - 409 `SEAT_ALREADY_BOOKED` → same treatment
+  - 409 `SEAT_LOCKED` â†’ toast "Seat was taken", refresh availability
+  - 409 `SEAT_ALREADY_BOOKED` â†’ same treatment
 
 **3. Booking / passenger details**
 
@@ -288,7 +288,7 @@ Every API call that gets 401 → call `POST /v1/passenger/auth/refresh` with `{ 
 - On submit: `POST /v1/passenger/bookings`
 - Body: `{ lockId, boardingStandId, droppingStandId, passengers: [{ seatId, name, age, gender }] }`
 - Response: `{ bookingId, status: "PENDING", expiresAt, totalFarePaise }`
-- **Store `expiresAt` and start a countdown. 15 minutes.** If it hits zero, booking is dead — force redirect to seat selection.
+- **Store `expiresAt` and start a countdown. 15 minutes.** If it hits zero, booking is dead â€” force redirect to seat selection.
 
 **4. Payment**
 
@@ -298,9 +298,9 @@ Every API call that gets 401 → call `POST /v1/passenger/auth/refresh` with `{ 
 - Response: `{ paymentId, checkoutUrl, status: "INITIATED" }`
 - Open `checkoutUrl` in a new window (Razorpay checkout)
 - Meanwhile: poll `GET /v1/passenger/payments/{id}` every 2s
-- Also **WS subscribe** to `booking:{bookingId}` — listen for `payment:succeeded` + `booking:confirmed`
-- Both signals arrive → redirect to ticket
-- **Dev shortcut:** `POST /v1/dev/mock-confirm-payment` with `{ paymentId }` — skip the Razorpay flow
+- Also **WS subscribe** to `booking:{bookingId}` â€” listen for `payment:succeeded` + `booking:confirmed`
+- Both signals arrive â†’ redirect to ticket
+- **Dev shortcut:** `POST /v1/dev/mock-confirm-payment` with `{ paymentId }` â€” skip the Razorpay flow
 - **15-min timer still running.** If it expires: `400 PAYMENT_NOT_ALLOWED`, redirect to search
 
 **5. Ticket / My Trips**
@@ -309,14 +309,14 @@ Every API call that gets 401 → call `POST /v1/passenger/auth/refresh` with `{ 
 - API: `GET /v1/passenger/bookings?limit=20` (cursor paginated)
 - Detail: `GET /v1/passenger/bookings/{id}` + `GET /v1/passenger/bookings/{id}/ticket`
 - Ticket response: `{ ticketId, bookingId, qrPayload, status, issuedAt }`
-- **`qrPayload` is a wire format string `v1:{base64}:{base64}`** — render it as a QR code. Do NOT decode it client-side. Use a QR library (e.g. `qrcode.react`).
-- **WS subscribe** to `booking:{bookingId}` — listen for `booking:cancelled`, `refund:requested`
+- **`qrPayload` is a wire format string `v1:{base64}:{base64}`** â€” render it as a QR code. Do NOT decode it client-side. Use a QR library (e.g. `qrcode.react`).
+- **WS subscribe** to `booking:{bookingId}` â€” listen for `booking:cancelled`, `refund:requested`
 
 **6. Live tracking**
 
 - Route: `/trips/{tripId}/live`
 - API: `GET /v1/passenger/trips/{tripId}/live` (initial snapshot)
-- **WS subscribe** to `trip:live:{tripId}` — updates on `bus:position` every 3s (server throttled)
+- **WS subscribe** to `trip:live:{tripId}` â€” updates on `bus:position` every 3s (server throttled)
 - Render: map with bus marker, ETA list per stop
 - Fallback: poll every 3s if WS fails
 - Also subscribe for `trip:delayed` + `trip:ended` + `trip:cancelled`
@@ -324,10 +324,10 @@ Every API call that gets 401 → call `POST /v1/passenger/auth/refresh` with `{ 
 **7. Cancel booking**
 
 - On booking detail: "Cancel" button
-- First: `GET /v1/passenger/bookings/{id}/refund-preview` — show tier + refund amount + deadline
+- First: `GET /v1/passenger/bookings/{id}/refund-preview` â€” show tier + refund amount + deadline
 - Confirm: `POST /v1/passenger/bookings/{id}/cancel`
 - Response: `{ status: "CANCELLED", refund: { refundId, tier, amountPaise, status: "INITIATED" } }`
-- Refund is **INITIATED** not PROCESSED — takes days. Show "Refund will appear in 3-5 business days"
+- Refund is **INITIATED** not PROCESSED â€” takes days. Show "Refund will appear in 3-5 business days"
 
 ### 5.4 WS connection (BusVerse)
 
@@ -354,7 +354,7 @@ function connect(accessToken: string) {
   });
 
   socket.on('auth:expiring', () => {
-    // Access token 60s from expiry — call refresh, then auth:refresh
+    // Access token 60s from expiry â€” call refresh, then auth:refresh
     socket.emit('message', { action: 'auth:refresh', refreshToken });
   });
 
@@ -363,13 +363,13 @@ function connect(accessToken: string) {
   });
 
   socket.on('error', (err) => {
-    if (err.code === 4001) { /* token invalid/expired — logout */ }
+    if (err.code === 4001) { /* token invalid/expired â€” logout */ }
   });
 
   socket.on('disconnect', (reason) => {
     // Server closes with 4001 (auth fail), 4003 (auth timeout), 1008 (forbidden)
     if (reason === 'io server disconnect') {
-      // Server forced disconnect — reconnect with fresh token
+      // Server forced disconnect â€” reconnect with fresh token
     }
   });
 }
@@ -386,10 +386,10 @@ function unsubscribe(topics: string[]) {
 
 **BusVerse subscribes:**
 
-- Seat availability page → `seat:availability:{scheduleId}`
-- Payment page → `booking:{bookingId}`
-- Ticket page → `booking:{bookingId}`
-- Live tracking page → `trip:live:{tripId}`
+- Seat availability page â†’ `seat:availability:{scheduleId}`
+- Payment page â†’ `booking:{bookingId}`
+- Ticket page â†’ `booking:{bookingId}`
+- Live tracking page â†’ `trip:live:{tripId}`
 
 **Unsubscribe when leaving the page.** The server tracks per-socket subscriptions.
 
@@ -397,89 +397,89 @@ function unsubscribe(topics: string[]) {
 
 ```
 apps/busverse/
-├── app/
-│   ├── layout.tsx            (root — providers: QueryClient, AuthProvider, WSProvider)
-│   ├── page.tsx              (search home)
-│   ├── schedule/[scheduleId]/page.tsx
-│   ├── book/[scheduleId]/page.tsx
-│   ├── pay/[bookingId]/page.tsx
-│   ├── bookings/page.tsx
-│   ├── bookings/[id]/page.tsx
-│   ├── trips/[tripId]/live/page.tsx
-│   ├── auth/
-│   │   ├── phone/page.tsx
-│   │   └── otp/page.tsx
-│   └── api/                  (Next.js route handlers for cookie-based auth if used)
-├── components/
-│   ├── ui/                   (shadcn primitives)
-│   ├── SearchForm.tsx
-│   ├── ScheduleCard.tsx
-│   ├── SeatMap.tsx
-│   ├── PassengerForm.tsx
-│   ├── CountdownTimer.tsx
-│   ├── QRDisplay.tsx
-│   ├── LiveMap.tsx
-│   └── CancelBookingDialog.tsx
-├── lib/
-│   ├── api/
-│   │   ├── client.ts         (fetch wrapper: base URL, auth header, 401 refresh, error handling)
-│   │   ├── auth.ts           (OTP request/verify, refresh, logout)
-│   │   ├── cities.ts         (autocomplete, stands)
-│   │   ├── schedules.ts      (search, detail, availability)
-│   │   ├── bookings.ts       (create, list, detail, cancel, refund preview)
-│   │   ├── payments.ts       (initiate, status, mock-confirm)
-│   │   ├── tickets.ts        (get ticket)
-│   │   └── trips.ts          (live status, map)
-│   ├── ws/
-│   │   ├── socket.ts         (socket singleton + reconnect + auth refresh)
-│   │   └── useWsEvent.ts     (React hook: subscribe to event, cleanup)
-│   ├── auth/
-│   │   └── AuthProvider.tsx  (token storage, login/logout, auto-refresh)
-│   ├── errors.ts             (map error codes → user-facing messages)
-│   └── formatters.ts         (money, dates, durations)
-├── public/
-├── package.json
-├── tsconfig.json
-├── next.config.ts
-└── tailwind.config.ts
+â”œâ”€â”€ app/
+â”‚   â”œâ”€â”€ layout.tsx            (root â€” providers: QueryClient, AuthProvider, WSProvider)
+â”‚   â”œâ”€â”€ page.tsx              (search home)
+â”‚   â”œâ”€â”€ schedule/[scheduleId]/page.tsx
+â”‚   â”œâ”€â”€ book/[scheduleId]/page.tsx
+â”‚   â”œâ”€â”€ pay/[bookingId]/page.tsx
+â”‚   â”œâ”€â”€ bookings/page.tsx
+â”‚   â”œâ”€â”€ bookings/[id]/page.tsx
+â”‚   â”œâ”€â”€ trips/[tripId]/live/page.tsx
+â”‚   â”œâ”€â”€ auth/
+â”‚   â”‚   â”œâ”€â”€ phone/page.tsx
+â”‚   â”‚   â””â”€â”€ otp/page.tsx
+â”‚   â””â”€â”€ api/                  (Next.js route handlers for cookie-based auth if used)
+â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ ui/                   (shadcn primitives)
+â”‚   â”œâ”€â”€ SearchForm.tsx
+â”‚   â”œâ”€â”€ ScheduleCard.tsx
+â”‚   â”œâ”€â”€ SeatMap.tsx
+â”‚   â”œâ”€â”€ PassengerForm.tsx
+â”‚   â”œâ”€â”€ CountdownTimer.tsx
+â”‚   â”œâ”€â”€ QRDisplay.tsx
+â”‚   â”œâ”€â”€ LiveMap.tsx
+â”‚   â””â”€â”€ CancelBookingDialog.tsx
+â”œâ”€â”€ lib/
+â”‚   â”œâ”€â”€ api/
+â”‚   â”‚   â”œâ”€â”€ client.ts         (fetch wrapper: base URL, auth header, 401 refresh, error handling)
+â”‚   â”‚   â”œâ”€â”€ auth.ts           (OTP request/verify, refresh, logout)
+â”‚   â”‚   â”œâ”€â”€ cities.ts         (autocomplete, stands)
+â”‚   â”‚   â”œâ”€â”€ schedules.ts      (search, detail, availability)
+â”‚   â”‚   â”œâ”€â”€ bookings.ts       (create, list, detail, cancel, refund preview)
+â”‚   â”‚   â”œâ”€â”€ payments.ts       (initiate, status, mock-confirm)
+â”‚   â”‚   â”œâ”€â”€ tickets.ts        (get ticket)
+â”‚   â”‚   â””â”€â”€ trips.ts          (live status, map)
+â”‚   â”œâ”€â”€ ws/
+â”‚   â”‚   â”œâ”€â”€ socket.ts         (socket singleton + reconnect + auth refresh)
+â”‚   â”‚   â””â”€â”€ useWsEvent.ts     (React hook: subscribe to event, cleanup)
+â”‚   â”œâ”€â”€ auth/
+â”‚   â”‚   â””â”€â”€ AuthProvider.tsx  (token storage, login/logout, auto-refresh)
+â”‚   â”œâ”€â”€ errors.ts             (map error codes â†’ user-facing messages)
+â”‚   â””â”€â”€ formatters.ts         (money, dates, durations)
+â”œâ”€â”€ public/
+â”œâ”€â”€ package.json
+â”œâ”€â”€ tsconfig.json
+â”œâ”€â”€ next.config.ts
+â””â”€â”€ tailwind.config.ts
 ```
 
 ### 5.6 Build order
 
-**Milestone 1 — Skeleton (2-3h)**
+**Milestone 1 â€” Skeleton (2-3h)**
 
 - Next.js app + Tailwind + shadcn/ui
-- Auth pages (phone → OTP → home)
+- Auth pages (phone â†’ OTP â†’ home)
 - AuthProvider with token storage + auto-refresh
 - API client with 401 handling
 
-**Milestone 2 — Search + seat selection (3-4h)**
+**Milestone 2 â€” Search + seat selection (3-4h)**
 
 - Home with city autocomplete
 - Search results
 - Schedule detail
-- Seat map (static — no WS yet)
+- Seat map (static â€” no WS yet)
 
-**Milestone 3 — Booking flow (3-4h)**
+**Milestone 3 â€” Booking flow (3-4h)**
 
 - Seat lock (with countdown)
 - Passenger form
 - Booking creation
 - Payment initiation (Razorpay window or mock)
 
-**Milestone 4 — Real-time (2-3h)**
+**Milestone 4 â€” Real-time (2-3h)**
 
 - WS connection + auth
 - Seat availability subscription (live updates)
 - Booking status subscription
 
-**Milestone 5 — Ticket + tracking (2-3h)**
+**Milestone 5 â€” Ticket + tracking (2-3h)**
 
 - QR display
 - Live trip tracking (WS + polling fallback)
 - Cancel flow with refund preview
 
-**Milestone 6 — Polish (2-3h)**
+**Milestone 6 â€” Polish (2-3h)**
 
 - Error states
 - Loading skeletons
@@ -491,7 +491,7 @@ apps/busverse/
 
 ---
 
-## §6. BusCon — Operator Web
+## Â§6. BusCon â€” Operator Web
 
 **Tech:** Next.js 15 App Router + TypeScript strict + Tailwind CSS 4 + shadcn/ui + TanStack Query v5 + TanStack Table v8 + socket.io-client 4.8.1
 **Port:** 3411
@@ -499,9 +499,9 @@ apps/busverse/
 
 ### 6.1 Reading order
 
-1. `docs/buscon/00-OVERVIEW.md` — product context
-2. `docs/buscon/06-UI-SPEC.md` — dashboard + management screens
-3. `07` v1.3 §5 (operator endpoints)
+1. `docs/buscon/00-OVERVIEW.md` â€” product context
+2. `docs/buscon/06-UI-SPEC.md` â€” dashboard + management screens
+3. `07` v1.3 Â§5 (operator endpoints)
 4. This section
 
 ### 6.2 Auth flow
@@ -509,14 +509,14 @@ apps/busverse/
 **Email + password (primary):**
 
 ```
-1. Login screen → POST /v1/operator/auth/login
+1. Login screen â†’ POST /v1/operator/auth/login
    { email: "owner@sharmatravels.com", password: "..." }
    Response: 200 { accessToken, refreshToken, expiresAt, user: { id, operatorId, ... } }
    Store tokens.
 
-2. Wrong password → 401 INVALID_CREDENTIALS
+2. Wrong password â†’ 401 INVALID_CREDENTIALS
 
-3. Email not verified → 403 EMAIL_NOT_VERIFIED
+3. Email not verified â†’ 403 EMAIL_NOT_VERIFIED
    Prompt to resend verification (out of scope for v1)
 ```
 
@@ -527,7 +527,7 @@ Same as passenger flow, but at `/v1/operator/auth/otp/*`. Use only if user doesn
 **Signup (new operator):**
 
 ```
-POST /v1/operator/auth/signup  (Phase 13 endpoint — not yet in 07 v1.3)
+POST /v1/operator/auth/signup  (Phase 13 endpoint â€” not yet in 07 v1.3)
 {
   companyName: "Sharma Travels Pvt Ltd",
   gstin: "09AAACH7409R1ZZ",
@@ -542,14 +542,14 @@ Response: 201 {
 }
 ```
 
-GSTIN + PAN formats are validated. After signup, operator is `status: "APPLIED"` — needs admin approval before they can create buses/routes. Show "pending approval" screen until admin approves.
+GSTIN + PAN formats are validated. After signup, operator is `status: "APPLIED"` â€” needs admin approval before they can create buses/routes. Show "pending approval" screen until admin approves.
 
 **Role gating:**
 
-- `OPERATOR_OWNER` — full access (profile edit, manager invite, everything)
-- `OPERATOR_MANAGER` — cannot edit profile, cannot invite managers, everything else allowed
+- `OPERATOR_OWNER` â€” full access (profile edit, manager invite, everything)
+- `OPERATOR_MANAGER` â€” cannot edit profile, cannot invite managers, everything else allowed
 
-Check role from JWT (decode `role` claim) — hide/disable UI, but **backend enforces the real check**. Never rely on client-side role gating for security.
+Check role from JWT (decode `role` claim) â€” hide/disable UI, but **backend enforces the real check**. Never rely on client-side role gating for security.
 
 ### 6.3 Key screens (build in this order)
 
@@ -574,7 +574,7 @@ Check role from JWT (decode `role` claim) — hide/disable UI, but **backend enf
 
 - Route: `/routes` (list), `/routes/new`, `/routes/[id]`
 - API: `GET /v1/operator/routes`, `POST`, `PATCH`, `DELETE`
-- **Route needs stands** — `POST /v1/operator/routes/{id}/stands` per stand, with `{ standId, sequence, distanceFromPrevKm, durationFromPrevMin }`
+- **Route needs stands** â€” `POST /v1/operator/routes/{id}/stands` per stand, with `{ standId, sequence, distanceFromPrevKm, durationFromPrevMin }`
 - Stand picker: `GET /v1/public/cities/{cityId}/stands`
 - Route approval: `approvalStatus: PENDING`
 
@@ -585,7 +585,7 @@ Check role from JWT (decode `role` claim) — hide/disable UI, but **backend enf
 - **Schedule needs: `busId, routeId, departureTime, arrivalTime, fareAmountPaise`**
 - Validation: `arrivalTime > departureTime` (`chk_schedules_times`)
 - **Publish** action: `POST /v1/operator/schedules/{id}/publish`
-  - Can fail with `409 SCHEDULE_CONFLICT` — show conflicting schedule
+  - Can fail with `409 SCHEDULE_CONFLICT` â€” show conflicting schedule
   - Response detail: `{ conflictingScheduleId, departureTime, arrivalTime }` in `error.details`
 - Only `PUBLISHED` schedules appear in search
 
@@ -593,23 +593,23 @@ Check role from JWT (decode `role` claim) — hide/disable UI, but **backend enf
 
 - Route: `/drivers` (list), `/drivers/[id]`
 - API: `GET /v1/operator/drivers?limit=20`, `POST /v1/operator/drivers/invite`, `DELETE /v1/operator/drivers/{id}`
-- Invite: `{ phone, licenseNumber, name }` — sends SMS (mocked in dev)
-- **Cannot delete driver on duty** → `409 DRIVER_ON_DUTY`
+- Invite: `{ phone, licenseNumber, name }` â€” sends SMS (mocked in dev)
+- **Cannot delete driver on duty** â†’ `409 DRIVER_ON_DUTY`
 - Show: name, phone, KYC status, on-duty status
-- **This is the one place `phone` is NOT masked** — operator sees own fleet's phone
+- **This is the one place `phone` is NOT masked** â€” operator sees own fleet's phone
 
 **6. Bookings view**
 
 - Route: `/bookings` (list), `/bookings/[id]`
 - API: `GET /v1/operator/bookings?limit=20&status=&from=&to=`, `GET /v1/operator/bookings/{id}`
-- **PII is masked** — no `phone`, no `email`, no `idNumber` on passenger objects. Absent, not null.
+- **PII is masked** â€” no `phone`, no `email`, no `idNumber` on passenger objects. Absent, not null.
 - Show: booking reference, status, passengers (name + seat + age + gender), total, confirmedAt
 
 **7. Revenue**
 
 - Route: `/revenue`
 - API: `GET /v1/operator/revenue?from=YYYY-MM-DD&to=YYYY-MM-DD&groupBy=day|week|month`
-- `GET /v1/operator/revenue/daily` — last 7 days trend (chart-ready)
+- `GET /v1/operator/revenue/daily` â€” last 7 days trend (chart-ready)
 - Show: total, refunds, net, per-bucket breakdown
 
 **8. Settlements**
@@ -622,101 +622,101 @@ Check role from JWT (decode `role` claim) — hide/disable UI, but **backend enf
 
 - Route: `/settings/managers` (owner only)
 - API: `GET /v1/operator/me/managers` (owner only)
-- Manager invitation is not yet implemented — hide the button with "Coming soon" tooltip
+- Manager invitation is not yet implemented â€” hide the button with "Coming soon" tooltip
 
 **10. Real-time notifications**
 
 - Global: `POST /v1/admin/audit-logs/export-async` isn't needed for BusCon
-- Do NOT subscribe to `admin:notifications` — that's SUPER_ADMIN only
+- Do NOT subscribe to `admin:notifications` â€” that's SUPER_ADMIN only
 - Subscribe to `booking:{bookingId}` on booking detail page (for live updates)
 
 ### 6.4 BusCon WS usage
 
 **BusCon uses WS sparingly:**
 
-- Booking detail page → `booking:{bookingId}` (payment:succeeded, booking:cancelled)
-- Dashboard → no WS (poll every 30s or manual refresh)
-- Trip tracking (if implemented) → `trip:live:{tripId}`
+- Booking detail page â†’ `booking:{bookingId}` (payment:succeeded, booking:cancelled)
+- Dashboard â†’ no WS (poll every 30s or manual refresh)
+- Trip tracking (if implemented) â†’ `trip:live:{tripId}`
 
 **Do NOT subscribe to:**
 
-- `admin:notifications` — SUPER_ADMIN only, connection will close 1008
-- `seat:availability:*` — not relevant to operator UI
+- `admin:notifications` â€” SUPER_ADMIN only, connection will close 1008
+- `seat:availability:*` â€” not relevant to operator UI
 
 ### 6.5 File structure (suggested)
 
 ```
 apps/buscon/
-├── app/
-│   ├── layout.tsx
-│   ├── (auth)/
-│   │   ├── login/page.tsx
-│   │   └── signup/page.tsx
-│   ├── (dashboard)/
-│   │   ├── layout.tsx        (sidebar + top bar, auth-gated)
-│   │   ├── page.tsx          (dashboard)
-│   │   ├── buses/
-│   │   │   ├── page.tsx
-│   │   │   ├── new/page.tsx
-│   │   │   └── [id]/page.tsx
-│   │   ├── routes/...
-│   │   ├── schedules/...
-│   │   ├── drivers/...
-│   │   ├── bookings/...
-│   │   ├── revenue/page.tsx
-│   │   ├── settlements/page.tsx
-│   │   └── settings/managers/page.tsx
-├── components/
-│   ├── ui/                   (shadcn)
-│   ├── data-table.tsx        (TanStack Table wrapper)
-│   ├── StatCard.tsx
-│   ├── LayoutEditor.tsx      (seat grid editor)
-│   ├── RouteStandBuilder.tsx
-│   └── SchedulePublishDialog.tsx
-├── lib/
-│   ├── api/                  (one file per resource)
-│   ├── ws/
-│   ├── auth/
-│   ├── errors.ts
-│   └── formatters.ts
-├── package.json
-└── ...
+â”œâ”€â”€ app/
+â”‚   â”œâ”€â”€ layout.tsx
+â”‚   â”œâ”€â”€ (auth)/
+â”‚   â”‚   â”œâ”€â”€ login/page.tsx
+â”‚   â”‚   â””â”€â”€ signup/page.tsx
+â”‚   â”œâ”€â”€ (dashboard)/
+â”‚   â”‚   â”œâ”€â”€ layout.tsx        (sidebar + top bar, auth-gated)
+â”‚   â”‚   â”œâ”€â”€ page.tsx          (dashboard)
+â”‚   â”‚   â”œâ”€â”€ buses/
+â”‚   â”‚   â”‚   â”œâ”€â”€ page.tsx
+â”‚   â”‚   â”‚   â”œâ”€â”€ new/page.tsx
+â”‚   â”‚   â”‚   â””â”€â”€ [id]/page.tsx
+â”‚   â”‚   â”œâ”€â”€ routes/...
+â”‚   â”‚   â”œâ”€â”€ schedules/...
+â”‚   â”‚   â”œâ”€â”€ drivers/...
+â”‚   â”‚   â”œâ”€â”€ bookings/...
+â”‚   â”‚   â”œâ”€â”€ revenue/page.tsx
+â”‚   â”‚   â”œâ”€â”€ settlements/page.tsx
+â”‚   â”‚   â””â”€â”€ settings/managers/page.tsx
+â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ ui/                   (shadcn)
+â”‚   â”œâ”€â”€ data-table.tsx        (TanStack Table wrapper)
+â”‚   â”œâ”€â”€ StatCard.tsx
+â”‚   â”œâ”€â”€ LayoutEditor.tsx      (seat grid editor)
+â”‚   â”œâ”€â”€ RouteStandBuilder.tsx
+â”‚   â””â”€â”€ SchedulePublishDialog.tsx
+â”œâ”€â”€ lib/
+â”‚   â”œâ”€â”€ api/                  (one file per resource)
+â”‚   â”œâ”€â”€ ws/
+â”‚   â”œâ”€â”€ auth/
+â”‚   â”œâ”€â”€ errors.ts
+â”‚   â””â”€â”€ formatters.ts
+â”œâ”€â”€ package.json
+â””â”€â”€ ...
 ```
 
 ### 6.6 Build order
 
-**Milestone 1 — Auth + dashboard shell (3h)**
+**Milestone 1 â€” Auth + dashboard shell (3h)**
 
 - Login + signup
 - AuthProvider + role-based sidebar
 - Dashboard with stats cards (no charts yet)
 
-**Milestone 2 — Buses + layouts (4h)**
+**Milestone 2 â€” Buses + layouts (4h)**
 
 - Buses list (TanStack Table)
 - Create bus with `busType` + `amenities`
 - Layout editor (grid + validation)
 
-**Milestone 3 — Routes + schedules (4h)**
+**Milestone 3 â€” Routes + schedules (4h)**
 
 - Routes list + create
 - Stand builder (ordered list with distance/duration)
 - Schedules list + create
 - Publish flow (handle SCHEDULE_CONFLICT)
 
-**Milestone 4 — Drivers + bookings (3h)**
+**Milestone 4 â€” Drivers + bookings (3h)**
 
 - Drivers list + invite
 - Bookings list (masked PII) + detail
 - Filters: status, date range
 
-**Milestone 5 — Revenue + settlements (2h)**
+**Milestone 5 â€” Revenue + settlements (2h)**
 
 - Revenue with charts (Recharts)
 - 7-day trend
 - Settlements empty state
 
-**Milestone 6 — Polish (2h)**
+**Milestone 6 â€” Polish (2h)**
 
 - Loading skeletons
 - Error boundaries
@@ -727,7 +727,7 @@ apps/buscon/
 
 ---
 
-## §7. Operator App — Driver Mobile
+## Â§7. Operator App â€” Driver Mobile
 
 **Tech:** Expo SDK 51+ + React Navigation 6 + TanStack Query v5 + expo-secure-store + expo-location + expo-camera + socket.io-client 4.8.1
 **Port:** 8281 (Expo dev server)
@@ -735,10 +735,10 @@ apps/buscon/
 
 ### 7.1 Reading order
 
-1. `docs/buscon/00-OVERVIEW.md` — driver surface is in buscon
-2. `docs/buscon/05-UI-SPEC.md` — mobile UI
-3. `docs/shared/02-QR-CONTRACT.md` — QR format
-4. `07` v1.3 §7 (driver endpoints)
+1. `docs/buscon/00-OVERVIEW.md` â€” driver surface is in buscon
+2. `docs/buscon/05-UI-SPEC.md` â€” mobile UI
+3. `docs/shared/02-QR-CONTRACT.md` â€” QR format
+4. `07` v1.3 Â§7 (driver endpoints)
 5. This section
 
 ### 7.2 Auth flow
@@ -746,11 +746,11 @@ apps/buscon/
 **OTP + device fingerprint:**
 
 ```
-1. Phone screen → POST /v1/driver/auth/otp/request
+1. Phone screen â†’ POST /v1/driver/auth/otp/request
    { phone: "+919876543210" }
    Response: 200 { expiresInSeconds: 600 }
 
-2. OTP screen → POST /v1/driver/auth/otp/verify
+2. OTP screen â†’ POST /v1/driver/auth/otp/verify
    {
      phone: "+919876543210",
      otp: "123456",
@@ -762,22 +762,22 @@ apps/buscon/
    - Use expo-application + expo-device to get stable device ID
    - Hash it: sha256(deviceId + appVersion)
    - Send on EVERY OTP verify
-   - Server enforces single-device binding — old sessions are revoked
+   - Server enforces single-device binding â€” old sessions are revoked
 
 4. Driver KYC gate:
    - kycStatus must be VERIFIED or ACTIVE to log in
-   - NOT_VERIFIED or BLOCKED → 403 with reason
+   - NOT_VERIFIED or BLOCKED â†’ 403 with reason
 ```
 
 **Single-device binding:**
 
-If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed (demo mode). Default is single-device — logging in on device B logs out device A.
+If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed (demo mode). Default is single-device â€” logging in on device B logs out device A.
 
 **Where to store tokens:** `expo-secure-store`. NOT AsyncStorage (not encrypted).
 
 ### 7.3 Key screens (build in this order)
 
-**1. Login (phone → OTP)**
+**1. Login (phone â†’ OTP)**
 
 - Standard 2-screen flow
 - Ask for location permission upfront (before first trip)
@@ -796,7 +796,7 @@ If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed 
 - API: `GET /v1/driver/trips/{id}`, `POST /v1/driver/trips/{id}/start`
 - Show: schedule, bus, boarding stands
 - **Start trip:**
-  - Only works within ±2h of departure time
+  - Only works within Â±2h of departure time
   - Response: `{ tripId, status: "IN_PROGRESS", startedAt }`
   - Errors: `TRIP_OUTSIDE_WINDOW`, `BUS_NOT_APPROVED`, `BUS_LAYOUT_MISSING`, `DRIVER_NOT_VERIFIED`
 
@@ -809,16 +809,16 @@ If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed 
   - `timeInterval: 5000`
   - `distanceInterval: 10` (or 0 for pure time-based)
   - `accuracy: Location.Accuracy.Balanced`
-- **Server has provenance checks** — sends 400 `INVALID_COORDINATES` / `INVALID_ACCURACY` / `TELEPORT_DETECTED` if data looks suspicious
-  - 3 consecutive failures → `gps_anomaly` WS event fires (admin sees it)
-  - **Handle 400 gracefully** — do not retry, log locally, wait for next sample
+- **Server has provenance checks** â€” sends 400 `INVALID_COORDINATES` / `INVALID_ACCURACY` / `TELEPORT_DETECTED` if data looks suspicious
+  - 3 consecutive failures â†’ `gps_anomaly` WS event fires (admin sees it)
+  - **Handle 400 gracefully** â€” do not retry, log locally, wait for next sample
 - **The GPS loop is the hardest part.** Test it while walking around with the phone before the demo.
 
 **5. Scan QR (offline-capable)**
 
 - Route: `Trips/{id}/scan` (camera view)
 - **Offline-first:**
-  1. Fetch `GET /v1/driver/config` on login — contains `qrPublicKey` (Ed25519 public key)
+  1. Fetch `GET /v1/driver/config` on login â€” contains `qrPublicKey` (Ed25519 public key)
   2. Cache the public key locally (secure-store)
   3. When scanning offline: verify signature locally
   4. Queue the scan result
@@ -826,8 +826,8 @@ If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed 
 - **Wire format:** `v1:{base64_payload}:{base64_signature}`
   - Split on `:`. Verify signature with cached public key using `@noble/ed25519`.
   - Payload JSON: `{ ticketId, bookingId, scheduleId, primarySeatId, ..., _v }`
-- **Server re-verifies on upload** — client-side verification is optimistic only
-- **Manual entry fallback:** `{ manualEntry: true, bookingReference, primaryPassengerName, scannedAt }` — for passengers who can't show QR
+- **Server re-verifies on upload** â€” client-side verification is optimistic only
+- **Manual entry fallback:** `{ manualEntry: true, bookingReference, primaryPassengerName, scannedAt }` â€” for passengers who can't show QR
 - Response: `{ result: "VALID" | "DUPLICATE" | ..., ticketId, bookingId, primaryPassengerName, seatLabels, passengerCount }`
 
 **6. Manifest**
@@ -835,7 +835,7 @@ If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed 
 - Route: `Trips/{id}/manifest`
 - API: `GET /v1/driver/trips/{id}/manifest`
 - Show: passengers grouped by boarding stand, name + seat + boarded status
-- **Masked PII:** no phone, no email — only name + seat
+- **Masked PII:** no phone, no email â€” only name + seat
 
 **7. Report delay**
 
@@ -863,7 +863,7 @@ If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed 
 - Route: `Profile` tab
 - API: `GET /v1/driver/me`
 - Show: name, license, KYC status, on-duty status, operator
-- **Document upload:** `POST /v1/driver/uploads` → PUT to R2 → `POST /v1/driver/me/documents`
+- **Document upload:** `POST /v1/driver/uploads` â†’ PUT to R2 â†’ `POST /v1/driver/me/documents`
 
 ### 7.4 WS usage (Operator App)
 
@@ -872,7 +872,7 @@ If `DEMO_MULTI_DEVICE_DRIVER=true` env var on backend, multiple devices allowed 
 - Listens for `trip:delayed` (confirmation of reported delay)
 - Listens for `gps_anomaly` (warning: "Your GPS is showing anomalies, check position")
 
-**No WS needed for most screens** — driver is often offline or on cellular with spotty signal. Prefer REST polling.
+**No WS needed for most screens** â€” driver is often offline or on cellular with spotty signal. Prefer REST polling.
 
 **Offline-tolerant pattern:**
 
@@ -899,10 +899,10 @@ async function syncQueue() {
       await saveQueue(queue);
     } catch (err) {
       if (err.status === 400) {
-        // Server rejected — drop from queue, log
+        // Server rejected â€” drop from queue, log
         queue.shift();
       } else {
-        // Network error — retry later
+        // Network error â€” retry later
         break;
       }
     }
@@ -914,73 +914,73 @@ async function syncQueue() {
 
 ```
 apps/operator-app/
-├── App.tsx                   (React Navigation root)
-├── app.json                  (Expo config)
-├── src/
-│   ├── screens/
-│   │   ├── auth/
-│   │   │   ├── PhoneScreen.tsx
-│   │   │   └── OtpScreen.tsx
-│   │   ├── trips/
-│   │   │   ├── TripsListScreen.tsx
-│   │   │   ├── TripDetailScreen.tsx
-│   │   │   ├── ScanScreen.tsx
-│   │   │   ├── ManifestScreen.tsx
-│   │   │   ├── DelayScreen.tsx
-│   │   │   └── TripEndScreen.tsx
-│   │   ├── history/
-│   │   │   └── HistoryScreen.tsx
-│   │   └── profile/
-│   │       └── ProfileScreen.tsx
-│   ├── components/
-│   │   ├── TripCard.tsx
-│   │   ├── StatusBadge.tsx
-│   │   ├── CountdownTimer.tsx
-│   │   └── QRScanner.tsx
-│   ├── lib/
-│   │   ├── api/
-│   │   ├── ws/
-│   │   ├── auth/
-│   │   ├── gps/
-│   │   │   ├── streamer.ts       (watchPositionAsync loop)
-│   │   │   └── provenance.ts     (client-side sanity checks)
-│   │   ├── qr/
-│   │   │   ├── verify.ts         (Ed25519 local verification)
-│   │   │   └── queue.ts          (offline scan queue)
-│   │   └── secure-store.ts
-│   ├── navigation/
-│   │   └── RootNavigator.tsx
-│   └── hooks/
-│       ├── useAuth.ts
-│       ├── useTrip.ts
-│       └── useGpsStreamer.ts
-├── package.json
-└── tsconfig.json
+â”œâ”€â”€ App.tsx                   (React Navigation root)
+â”œâ”€â”€ app.json                  (Expo config)
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ screens/
+â”‚   â”‚   â”œâ”€â”€ auth/
+â”‚   â”‚   â”‚   â”œâ”€â”€ PhoneScreen.tsx
+â”‚   â”‚   â”‚   â””â”€â”€ OtpScreen.tsx
+â”‚   â”‚   â”œâ”€â”€ trips/
+â”‚   â”‚   â”‚   â”œâ”€â”€ TripsListScreen.tsx
+â”‚   â”‚   â”‚   â”œâ”€â”€ TripDetailScreen.tsx
+â”‚   â”‚   â”‚   â”œâ”€â”€ ScanScreen.tsx
+â”‚   â”‚   â”‚   â”œâ”€â”€ ManifestScreen.tsx
+â”‚   â”‚   â”‚   â”œâ”€â”€ DelayScreen.tsx
+â”‚   â”‚   â”‚   â””â”€â”€ TripEndScreen.tsx
+â”‚   â”‚   â”œâ”€â”€ history/
+â”‚   â”‚   â”‚   â””â”€â”€ HistoryScreen.tsx
+â”‚   â”‚   â””â”€â”€ profile/
+â”‚   â”‚       â””â”€â”€ ProfileScreen.tsx
+â”‚   â”œâ”€â”€ components/
+â”‚   â”‚   â”œâ”€â”€ TripCard.tsx
+â”‚   â”‚   â”œâ”€â”€ StatusBadge.tsx
+â”‚   â”‚   â”œâ”€â”€ CountdownTimer.tsx
+â”‚   â”‚   â””â”€â”€ QRScanner.tsx
+â”‚   â”œâ”€â”€ lib/
+â”‚   â”‚   â”œâ”€â”€ api/
+â”‚   â”‚   â”œâ”€â”€ ws/
+â”‚   â”‚   â”œâ”€â”€ auth/
+â”‚   â”‚   â”œâ”€â”€ gps/
+â”‚   â”‚   â”‚   â”œâ”€â”€ streamer.ts       (watchPositionAsync loop)
+â”‚   â”‚   â”‚   â””â”€â”€ provenance.ts     (client-side sanity checks)
+â”‚   â”‚   â”œâ”€â”€ qr/
+â”‚   â”‚   â”‚   â”œâ”€â”€ verify.ts         (Ed25519 local verification)
+â”‚   â”‚   â”‚   â””â”€â”€ queue.ts          (offline scan queue)
+â”‚   â”‚   â””â”€â”€ secure-store.ts
+â”‚   â”œâ”€â”€ navigation/
+â”‚   â”‚   â””â”€â”€ RootNavigator.tsx
+â”‚   â””â”€â”€ hooks/
+â”‚       â”œâ”€â”€ useAuth.ts
+â”‚       â”œâ”€â”€ useTrip.ts
+â”‚       â””â”€â”€ useGpsStreamer.ts
+â”œâ”€â”€ package.json
+â””â”€â”€ tsconfig.json
 ```
 
 ### 7.6 Build order
 
-**Milestone 1 — Auth + trips list (3h)**
+**Milestone 1 â€” Auth + trips list (3h)**
 
 - Expo app + navigation
-- Login (phone → OTP with device fingerprint)
+- Login (phone â†’ OTP with device fingerprint)
 - Trips list (today)
 
-**Milestone 2 — Trip lifecycle (3h)**
+**Milestone 2 â€” Trip lifecycle (3h)**
 
 - Trip detail
 - Start trip (with time-window gate)
 - End trip
 - Delay report
 
-**Milestone 3 — GPS streaming (4h)**
+**Milestone 3 â€” GPS streaming (4h)**
 
 - `expo-location` setup
 - 5-second POST loop
 - Provenance error handling
 - Background location (test on real device)
 
-**Milestone 4 — QR scan (5h)**
+**Milestone 4 â€” QR scan (5h)**
 
 - Camera screen
 - Ed25519 local verify
@@ -988,9 +988,9 @@ apps/operator-app/
 - Manual entry fallback
 - Sync on reconnect
 
-**Milestone 5 — Manifest + history (2h)**
+**Milestone 5 â€” Manifest + history (2h)**
 
-**Milestone 6 — Polish (2h)**
+**Milestone 6 â€” Polish (2h)**
 
 - Permissions flows
 - Offline indicators
@@ -1001,7 +1001,7 @@ apps/operator-app/
 
 ---
 
-## §8. Gotchas — things that will bite you
+## Â§8. Gotchas â€” things that will bite you
 
 **Frontend-specific. Read all of these.**
 
@@ -1012,10 +1012,10 @@ apps/operator-app/
 
 Do NOT expect a bare object. Do NOT unwrap in one place and not the other.
 
-**Wrong:** `const booking = await fetch(...).json()` → `booking.bookingId` is `undefined`
-**Right:** `const { data } = await fetch(...).json()` → `data.bookingId`
+**Wrong:** `const booking = await fetch(...).json()` â†’ `booking.bookingId` is `undefined`
+**Right:** `const { data } = await fetch(...).json()` â†’ `data.bookingId`
 
-### 8.2 Error codes are stable — messages can change
+### 8.2 Error codes are stable â€” messages can change
 
 **Key your logic on `error.code`, not `error.message`.**
 
@@ -1027,18 +1027,18 @@ if (err.message === "This seat is currently locked") { ... }
 if (err.code === 'SEAT_LOCKED') { ... }
 ```
 
-Message strings may be reworded by backend. Codes are in `07` v1.3 §9.2 (50 codes).
+Message strings may be reworded by backend. Codes are in `07` v1.3 Â§9.2 (50 codes).
 
 ### 8.3 401 vs 403
 
-- **401 UNAUTHORIZED** — no token, expired token, invalid token. **Refresh the token or logout.**
-- **403 FORBIDDEN** — valid token, but wrong role. **Do NOT try to refresh. Show error.**
+- **401 UNAUTHORIZED** â€” no token, expired token, invalid token. **Refresh the token or logout.**
+- **403 FORBIDDEN** â€” valid token, but wrong role. **Do NOT try to refresh. Show error.**
 
 If you refresh on 403, you'll loop forever.
 
 ### 8.4 15-minute booking expiry
 
-**A PENDING booking dies after 15 minutes.** Not 15 minutes from payment initiation — 15 minutes from booking creation.
+**A PENDING booking dies after 15 minutes.** Not 15 minutes from payment initiation â€” 15 minutes from booking creation.
 
 **Right pattern:**
 
@@ -1051,7 +1051,7 @@ const { bookingId, status, expiresAt } = await createBooking(...);
 // If countdown hits 0 and status is still PENDING:
 //   - Client shows "Booking expired"
 //   - Server transitions to EXPIRED via cron
-//   - Do NOT attempt payment after expiry — 400 PAYMENT_NOT_ALLOWED
+//   - Do NOT attempt payment after expiry â€” 400 PAYMENT_NOT_ALLOWED
 ```
 
 **Store `expiresAt` from the server response. Do NOT compute it client-side.** Server uses `created_at` from Postgres, not client clock.
@@ -1060,9 +1060,9 @@ const { bookingId, status, expiresAt } = await createBooking(...);
 
 `POST /passenger/payments` returns `checkoutUrl`. Options:
 
-**Option A — Redirect (simplest):** `window.location.href = checkoutUrl` — user pays, Razorpay redirects back. Add a `/payment/return` route.
+**Option A â€” Redirect (simplest):** `window.location.href = checkoutUrl` â€” user pays, Razorpay redirects back. Add a `/payment/return` route.
 
-**Option B — Embedded (recommended):** Use Razorpay's JS SDK:
+**Option B â€” Embedded (recommended):** Use Razorpay's JS SDK:
 
 ```typescript
 const script = document.createElement('script');
@@ -1097,7 +1097,7 @@ const payment = await api.post('/passenger/payments', body, {
 
 **If payment fails and user retries:** generate **NEW** UUID. Reusing old key returns cached failure.
 
-**If the same request is retried due to network blip:** reuse the SAME key. That's the point — dedup transient retries.
+**If the same request is retried due to network blip:** reuse the SAME key. That's the point â€” dedup transient retries.
 
 **Distinguish between "network retry" (reuse key) and "user retry after failure" (new key).**
 
@@ -1121,18 +1121,18 @@ do {
 
 **Access token expires in 15 min but the socket lives on.** The server handles this:
 
-1. Server sends `auth:expiring` at exp−60s
+1. Server sends `auth:expiring` at expâˆ’60s
 2. Client calls `POST /auth/refresh` (REST), gets new tokens
 3. Client sends `{ action: 'auth:refresh', refreshToken: <new_refresh_token> }` over WS
-4. Server responds `auth:refreshed` — socket continues
+4. Server responds `auth:refreshed` â€” socket continues
 
 **If you miss the window:** server closes with code `4001` (TOKEN_EXPIRED). Reconnect with fresh token.
 
 **Reconnection backoff:**
 
 ```
-1s → 2s → 4s → 8s → 16s (max 5 attempts)
-If all fail → switch to polling
+1s â†’ 2s â†’ 4s â†’ 8s â†’ 16s (max 5 attempts)
+If all fail â†’ switch to polling
 Poll every 3s (live trip) or 5s (booking status)
 Retry WS every 60s in background
 ```
@@ -1144,7 +1144,7 @@ Retry WS every 60s in background
 | 4001 | Invalid or expired token | Refresh, reconnect |
 | 4003 | No auth sent within 5s of connect | Send auth immediately |
 | 1008 | Forbidden topic | Do not subscribe to that topic |
-| 1000 | Normal close | Respect — do not reconnect |
+| 1000 | Normal close | Respect â€” do not reconnect |
 | 1006 | Abnormal (network) | Reconnect with backoff |
 
 ### 8.9 Absent vs null in PII
@@ -1152,7 +1152,7 @@ Retry WS every 60s in background
 **Operator endpoints:** passenger `phone`/`email`/`idNumber` are **absent from the JSON object entirely**, not set to `null`.
 
 ```typescript
-// Wrong — always false, even when absent
+// Wrong â€” always false, even when absent
 if (passenger.phone === null) { ... }
 
 // Right
@@ -1166,8 +1166,8 @@ if (passenger.phone === undefined) { ... }
 
 ### 8.10 Mocked services in dev
 
-- **OTP:** `MOCK_OTP=true` → any 6-digit code works. Show "DEV: use 123456" hint in dev UI.
-- **Email:** `MOCK_EMAIL=true` → no email sent, verification links logged to backend console.
+- **OTP:** `MOCK_OTP=true` â†’ any 6-digit code works. Show "DEV: use 123456" hint in dev UI.
+- **Email:** `MOCK_EMAIL=true` â†’ no email sent, verification links logged to backend console.
 - **Payment:** use `POST /v1/dev/mock-confirm-payment` to skip Razorpay entirely.
 
 **Do NOT rely on mocks in production.** Read `process.env.NODE_ENV` or a `NEXT_PUBLIC_MOCK_MODE` flag.
@@ -1205,7 +1205,7 @@ Backend has `CORS_ALLOWED_ORIGINS` env var. Defaults include `http://localhost:3
 Options:
 
 1. **Modify `apps/api/.env`:** add `http://localhost:3410,http://localhost:3411` to `CORS_ALLOWED_ORIGINS`. Restart backend.
-2. **Use a dev proxy in Next.js:** `next.config.ts` `rewrites()` — proxy `/api/*` to `http://localhost:4310/v1/*`. Avoids CORS entirely.
+2. **Use a dev proxy in Next.js:** `next.config.ts` `rewrites()` â€” proxy `/api/*` to `http://localhost:4310/v1/*`. Avoids CORS entirely.
 
 **Recommended:** use Next.js rewrites. No backend changes, no env var drift.
 
@@ -1239,11 +1239,11 @@ function formatINR(paise: number): string {
 }
 ```
 
-Never multiply by 100 on the client when sending — **backend expects paise, not rupees**.
+Never multiply by 100 on the client when sending â€” **backend expects paise, not rupees**.
 
 ---
 
-## §9. Environment setup
+## Â§9. Environment setup
 
 ### 9.1 Start the backend first
 
@@ -1254,9 +1254,9 @@ cd apps\api
 pnpm dev                                  # API on 4310
 ```
 
-Verify: `curl http://localhost:4310/v1/health` → `{"status":"ok"}`
+Verify: `curl http://localhost:4310/v1/health` â†’ `{"status":"ok"}`
 
-**If backend won't start:** `docs/AI-HANDOVER-v7.md` §8 has full troubleshooting.
+**If backend won't start:** `docs/AI-HANDOVER-v7.md` Â§8 has full troubleshooting.
 
 ### 9.2 Env vars for each frontend
 
@@ -1280,8 +1280,8 @@ NEXT_PUBLIC_DEV_MODE=true
 **Operator App (`apps/operator-app/.env`):**
 
 ```env
-EXPO_PUBLIC_API_BASE=http://192.168.1.100:4310/v1  # your LAN IP, not localhost
-EXPO_PUBLIC_WS_URL=http://192.168.1.100:4310
+EXPO_PUBLIC_API_BASE=http://127.0.0.1:4310/v1  # your LAN IP, not localhost
+EXPO_PUBLIC_WS_URL=http://127.0.0.1:4310
 EXPO_PUBLIC_DEV_MODE=true
 ```
 
@@ -1306,7 +1306,7 @@ pnpm start            # Expo dev server on :8281
 
 ---
 
-## §10. Common mistakes (read before you code)
+## Â§10. Common mistakes (read before you code)
 
 | Mistake | Fix |
 |---|---|
@@ -1315,7 +1315,7 @@ pnpm start            # Expo dev server on :8281
 | Refreshing token on 403 | Only on 401. 403 = wrong role, refresh won't help. |
 | Polling seat availability every second | Use WS `seat:availability:{scheduleId}`, fall back to 3s polling |
 | Storing tokens in localStorage (Operator App) | Use `expo-secure-store` |
-| Sending rupees to the backend | Backend expects paise (integer). `₹450 = 45000` |
+| Sending rupees to the backend | Backend expects paise (integer). `â‚¹450 = 45000` |
 | Reusing Idempotency-Key on retry-after-failure | Generate new UUID on every user retry |
 | Parsing cursors | Treat as opaque base64 string |
 | Assuming masked fields are `null` | Absent means missing key entirely. Use `'field' in obj` |
@@ -1331,27 +1331,27 @@ pnpm start            # Expo dev server on :8281
 
 ---
 
-## §11. Testing (frontend)
+## Â§11. Testing (frontend)
 
 **No frontend test framework is installed yet.** Recommend:
 
 **BusVerse + BusCon:**
 
 - **Vitest** + **@testing-library/react** for unit tests
-- **Playwright** for E2E — one smoke flow per critical path
+- **Playwright** for E2E â€” one smoke flow per critical path
 - **MSW** for API mocking in unit tests
 
 **Operator App:**
 
 - **Jest** + **@testing-library/react-native** (Expo compatible)
-- **Detox** for E2E (heavy setup — skip for MVP)
+- **Detox** for E2E (heavy setup â€” skip for MVP)
 
 **Minimum viable tests (before demo):**
 
-1. BusVerse happy path: search → seat lock → book → mock-pay → ticket visible
-2. BusVerse error path: seat locked → 409 → toast + seat refresh
-3. BusCon: login → bus create → layout editor → approve status shows
-4. Operator App: login → trips list → start → GPS POST → end
+1. BusVerse happy path: search â†’ seat lock â†’ book â†’ mock-pay â†’ ticket visible
+2. BusVerse error path: seat locked â†’ 409 â†’ toast + seat refresh
+3. BusCon: login â†’ bus create â†’ layout editor â†’ approve status shows
+4. Operator App: login â†’ trips list â†’ start â†’ GPS POST â†’ end
 
 **Do NOT write tests for:**
 
@@ -1363,32 +1363,32 @@ Focus on **flows that break the demo**.
 
 ---
 
-## §12. Demo-critical path
+## Â§12. Demo-critical path
 
-**8-step demo (from handover v7 §1.4). These 8 flows must work end-to-end or the demo fails.**
+**8-step demo (from handover v7 Â§1.4). These 8 flows must work end-to-end or the demo fails.**
 
 | # | Step | Frontend | Critical path |
 |---|---|---|---|
-| 1 | Passenger searches | BusVerse | Home → autocomplete → results |
-| 2 | Passenger locks seat | BusVerse | Schedule → seat map → lock (WS updates) |
-| 3 | Passenger books | BusVerse | Passenger form → booking created |
-| 4 | Passenger pays | BusVerse | Payment → mock-confirm → confirmed |
+| 1 | Passenger searches | BusVerse | Home â†’ autocomplete â†’ results |
+| 2 | Passenger locks seat | BusVerse | Schedule â†’ seat map â†’ lock (WS updates) |
+| 3 | Passenger books | BusVerse | Passenger form â†’ booking created |
+| 4 | Passenger pays | BusVerse | Payment â†’ mock-confirm â†’ confirmed |
 | 5 | Ticket issued | BusVerse | QR visible |
-| 6 | Driver starts trip | Operator App | Login → trip detail → start |
+| 6 | Driver starts trip | Operator App | Login â†’ trip detail â†’ start |
 | 7 | GPS + WS live update | Operator App + BusVerse | GPS POST loop + passenger sees bus move |
-| 8 | Passenger scans QR (boarding) | Operator App | Scan → VALID |
+| 8 | Passenger scans QR (boarding) | Operator App | Scan â†’ VALID |
 
 **Build these 8 first, then expand.** Everything else (revenue charts, manager invite, settlement history) is nice-to-have.
 
 **Demo day checklist (frontend):**
 
 - [ ] Backend running (`pnpm dev`)
-- [ ] BusVerse at `http://localhost:3410` — home page loads
-- [ ] BusCon at `http://localhost:3411` — login works
-- [ ] Operator App on phone via Expo Go — login works
+- [ ] BusVerse at `http://localhost:3410` â€” home page loads
+- [ ] BusCon at `http://localhost:3411` â€” login works
+- [ ] Operator App on phone via Expo Go â€” login works
 - [ ] All 3 have the same JWT-secret-adjacent backend (i.e., all point to `http://localhost:4310/v1`)
 - [ ] Seat availability updates in real time (open 2 browsers, lock in one, see grey in other)
-- [ ] Payment either real Razorpay or `POST /v1/dev/mock-confirm-payment` — test both
+- [ ] Payment either real Razorpay or `POST /v1/dev/mock-confirm-payment` â€” test both
 - [ ] GPS streaming starts within 10s of trip start
 - [ ] QR scan completes in under 2s
 - [ ] All chrome extensions disabled (some block WS)
@@ -1396,40 +1396,40 @@ Focus on **flows that break the demo**.
 
 ---
 
-## §13. If something breaks — diagnostic order
+## Â§13. If something breaks â€” diagnostic order
 
 **Before assuming it's a frontend bug:**
 
-1. Check `curl http://localhost:4310/v1/health` — backend alive?
-2. Check `docker compose ps` — Postgres + Redis healthy?
-3. Open browser DevTools → Network tab — what does the failing request actually return?
-4. Check backend logs (`pnpm dev` terminal) — is the request even reaching the backend?
+1. Check `curl http://localhost:4310/v1/health` â€” backend alive?
+2. Check `docker compose ps` â€” Postgres + Redis healthy?
+3. Open browser DevTools â†’ Network tab â€” what does the failing request actually return?
+4. Check backend logs (`pnpm dev` terminal) â€” is the request even reaching the backend?
 
 **If the request is reaching the backend but failing:**
 
-- **400/422** — request body doesn't match schema. Compare to `07` v1.3.
-- **401** — no token OR expired OR wrong surface. Check `Authorization: Bearer <token>` header.
-- **403** — role mismatch. Check JWT `role` claim. Do not refresh.
-- **404** — endpoint path wrong, or resource doesn't belong to this user (row-scoped).
-- **409** — conflict (duplicate email, seat already locked, etc). Check `error.code`.
-- **429** — rate limit. Wait `Retry-After` header seconds. Reduce poll frequency.
-- **500** — backend bug. Document with curl. Do not fix backend. Work around.
+- **400/422** â€” request body doesn't match schema. Compare to `07` v1.3.
+- **401** â€” no token OR expired OR wrong surface. Check `Authorization: Bearer <token>` header.
+- **403** â€” role mismatch. Check JWT `role` claim. Do not refresh.
+- **404** â€” endpoint path wrong, or resource doesn't belong to this user (row-scoped).
+- **409** â€” conflict (duplicate email, seat already locked, etc). Check `error.code`.
+- **429** â€” rate limit. Wait `Retry-After` header seconds. Reduce poll frequency.
+- **500** â€” backend bug. Document with curl. Do not fix backend. Work around.
 
 **If WS fails:**
 
-- Open DevTools → Network → WS tab — connection established?
+- Open DevTools â†’ Network â†’ WS tab â€” connection established?
 - See the `auth` message sent? See `auth:ok` response?
 - See `subscribed` after subscribe? Or `error` with code?
 - Code 1008 = forbidden topic. Code 4001 = bad token. Code 4003 = no auth in 5s.
 
 **If data looks wrong:**
 
-- Compare to backend response — is `data.booking.status` actually what the backend says, or is it stale?
+- Compare to backend response â€” is `data.booking.status` actually what the backend says, or is it stale?
 - Time zone: is the ISO string being parsed as UTC or local? (Hint: `new Date(isoString)` is UTC. Only format to IST at the display layer.)
 
 ---
 
-## §14. Handover back
+## Â§14. Handover back
 
 **When you stop (or finish a milestone), write `docs/FRONTEND-HANDOVER-{frontend}-v{N}.md`** with:
 
@@ -1440,24 +1440,24 @@ Focus on **flows that break the demo**.
 - Test commands
 - Next milestone plan
 
-**Follow the same pattern as this doc** — TL;DR first, gotchas last.
+**Follow the same pattern as this doc** â€” TL;DR first, gotchas last.
 
 **If you found a backend bug that blocked progress:**
 
 - Document it with reproduction steps
-- Note that `apps/api/` is frozen — do NOT fix
+- Note that `apps/api/` is frozen â€” do NOT fix
 - List the workaround you applied
 - Flag it for the backend team
 
 ---
 
-## §15. Final notes
+## Â§15. Final notes
 
 ### 15.1 What's frozen and what's not
 
 | Frozen | Not frozen |
 |---|---|
-| `apps/api/` — all code | `apps/busverse/` |
+| `apps/api/` â€” all code | `apps/busverse/` |
 | `docs/06-DATABASE-SCHEMA.md` v1.3 | `apps/buscon/` |
 | `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 | `apps/operator-app/` |
 | `docs/AI-HANDOVER-v7.md` | `docs/FRONTEND-HANDOVER-*` (your output) |
@@ -1465,11 +1465,11 @@ Focus on **flows that break the demo**.
 
 ### 15.2 What "done" looks like
 
-**BusVerse:** A first-time user can search, book, pay, get a ticket, track a live trip, and cancel with a refund preview — end to end, on a mobile browser, without errors.
+**BusVerse:** A first-time user can search, book, pay, get a ticket, track a live trip, and cancel with a refund preview â€” end to end, on a mobile browser, without errors.
 
-**BusCon:** An operator can create a bus, define a route, publish a schedule, invite a driver, view bookings, and see today's revenue — end to end, on desktop.
+**BusCon:** An operator can create a bus, define a route, publish a schedule, invite a driver, view bookings, and see today's revenue â€” end to end, on desktop.
 
-**Operator App:** A driver can log in, see today's trips, start one, stream GPS for 30+ minutes, scan 10+ QR codes (including offline), report a delay, end the trip, and see history — end to end, on a real Android/iOS phone.
+**Operator App:** A driver can log in, see today's trips, start one, stream GPS for 30+ minutes, scan 10+ QR codes (including offline), report a delay, end the trip, and see history â€” end to end, on a real Android/iOS phone.
 
 ### 15.3 What "done" does NOT include (v1 scope)
 
@@ -1487,24 +1487,24 @@ Focus on **flows that break the demo**.
 
 1. Read `07` v1.3 for the endpoint contract
 2. Read `shared/04` for the WS event payload
-3. Read the backend logs — errors are verbose there
+3. Read the backend logs â€” errors are verbose there
 4. curl the endpoint manually to see what the backend actually returns
-5. **Ask — do not guess.**
+5. **Ask â€” do not guess.**
 
 ---
 
-## §16. Reading checklist (tick before starting)
+## Â§16. Reading checklist (tick before starting)
 
 **Before writing any code:**
 
-- [ ] Read this doc §0–§4
-- [ ] Read `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 — at least §1, §2, §4 (or §5/§7 depending on frontend), §9
+- [ ] Read this doc Â§0â€“Â§4
+- [ ] Read `docs/07-API-AND-REALTIME-CONTRACTS.md` v1.3 â€” at least Â§1, Â§2, Â§4 (or Â§5/Â§7 depending on frontend), Â§9
 - [ ] Read `docs/shared/04-EVENT-AND-REALTIME-CATALOG.md` v1.0
-- [ ] Read `docs/AI-HANDOVER-v7.md` §0–§6
+- [ ] Read `docs/AI-HANDOVER-v7.md` Â§0â€“Â§6
 - [ ] Read your frontend's UI spec (`docs/busverse/05-UI-SPEC.md` OR `docs/buscon/06-UI-SPEC.md`)
 - [ ] Backend is running: `curl http://localhost:4310/v1/health` returns `{"status":"ok"}`
-- [ ] Read §8 (Gotchas) — all 15
-- [ ] Read §12 (Demo-critical path) — know what must work
+- [ ] Read Â§8 (Gotchas) â€” all 15
+- [ ] Read Â§12 (Demo-critical path) â€” know what must work
 
 **Before starting Milestone 2 (first feature work):**
 
@@ -1515,20 +1515,20 @@ Focus on **flows that break the demo**.
 
 **Before demo:**
 
-- [ ] All 8 demo steps (from §12) pass
+- [ ] All 8 demo steps (from Â§12) pass
 - [ ] No console errors on any page
 - [ ] Real phone (not just simulator) shows the flow working
-- [ ] Network throttle test (3G) — still works
+- [ ] Network throttle test (3G) â€” still works
 - [ ] Backup video recorded
 
 ---
 
 **End of `docs/AI-FRONTEND-HANDOVER-v1.md`**
 
-**Resume time from cold: ~30 minutes** (this doc + §3 reading list).
+**Resume time from cold: ~30 minutes** (this doc + Â§3 reading list).
 
 **Current backend state:** 396/396 tests, 108/108 endpoints, 16/16 WS events wired, EXIT CODE 0. Frozen at Phase 13. Ready for frontend integration.
 
-**Start here:** Read §0–§4. Then §3's reading list. Then pick your frontend (§5, §6, or §7). Then build Milestone 1.
+**Start here:** Read Â§0â€“Â§4. Then Â§3's reading list. Then pick your frontend (Â§5, Â§6, or Â§7). Then build Milestone 1.
 
 **Never guess. Always read `07` v1.3 or `shared/04`. Ask if a shape isn't documented.**

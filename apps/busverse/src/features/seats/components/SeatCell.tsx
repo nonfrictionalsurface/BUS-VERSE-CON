@@ -1,70 +1,40 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
-import { Seat } from '../types';
+import { SeatAvailabilityItem } from '../api/seats.api';
 
 interface SeatCellProps {
-  seat: Seat;
-  isSelected: boolean;
-  onSelect: (seat: Seat) => void;
-  disabled?: boolean;
+  seat: SeatAvailabilityItem;
+  isSelectedByMe: boolean;
+  onToggle: (seat: SeatAvailabilityItem) => void;
 }
 
-export function SeatCell({ seat, isSelected, onSelect, disabled = false }: SeatCellProps) {
-  const isBooked = seat.status === 'BOOKED' || seat.status === 'BLOCKED';
-  const isLocked = seat.status === 'LOCKED' && !isSelected;
-  const isFemale = seat.isFemaleOnly && !isSelected && !isBooked && !isLocked;
+export const SeatCell: React.FC<SeatCellProps> = ({ seat, isSelectedByMe, onToggle }) => {
+  const isBooked = seat.state === 'BOOKED';
+  const isLockedByOther = seat.state === 'LOCKED' && !isSelectedByMe;
 
-  let bg = 'var(--seat-available-bg)';
-  let border = 'var(--seat-available-border)';
-  let color = 'var(--seat-available-text)';
-  let extraClass = 'hover:-translate-y-0.5 cursor-pointer shadow-sm';
+  let bgClass = 'bg-[var(--seat-available-bg)] border-[var(--seat-available-border)] text-[var(--seat-available-text)] hover:-translate-y-0.5';
 
-  if (isSelected) {
-    bg = 'var(--seat-selected-bg)';
-    border = 'var(--seat-selected-border)';
-    color = 'var(--seat-selected-text)';
-    extraClass = 'shadow-glow -translate-y-0.5 scale-105';
-  } else if (isLocked) {
-    bg = 'var(--seat-locked-bg)';
-    border = 'var(--seat-locked-border)';
-    color = 'var(--seat-locked-text)';
-    extraClass = 'animate-seat-lock cursor-not-allowed';
-  } else if (isBooked) {
-    bg = 'var(--seat-booked-bg)';
-    border = 'var(--seat-booked-border)';
-    color = 'var(--seat-booked-text)';
-    extraClass = 'cursor-not-allowed opacity-75';
-  } else if (isFemale) {
-    bg = 'var(--seat-female-bg)';
-    border = 'var(--seat-female-border)';
-    color = 'var(--seat-female-text)';
+  if (isBooked) {
+    bgClass = 'bg-[var(--seat-booked-bg)] border-[var(--seat-booked-border)] text-[var(--seat-booked-text)] cursor-not-allowed';
+  } else if (isSelectedByMe) {
+    bgClass = 'bg-[var(--seat-selected-bg)] border-[var(--seat-selected-border)] text-[var(--seat-selected-text)] shadow-glow -translate-y-0.5';
+  } else if (isLockedByOther) {
+    bgClass = 'bg-[var(--seat-locked-bg)] border-[var(--seat-locked-border)] text-[var(--seat-locked-text)] animate-pulse cursor-not-allowed';
+  } else if (seat.isFemaleOnly) {
+    bgClass = 'bg-[var(--seat-female-bg)] border-[var(--seat-female-border)] text-[var(--seat-female-text)] hover:-translate-y-0.5';
   }
-
-  const handleClick = () => {
-    if (disabled || isBooked || isLocked) return;
-    onSelect(seat);
-  };
 
   return (
     <button
       type="button"
-      onClick={handleClick}
-      disabled={disabled || isBooked || isLocked}
-      aria-label={`Seat ${seat.seatLabel} ${isSelected ? 'Selected' : seat.status}`}
-      className={`relative w-11 h-12 rounded-xl border-2 flex flex-col items-center justify-center font-mono text-xs font-bold transition-all duration-200 select-none ${extraClass}`}
-      style={{
-        backgroundColor: bg,
-        borderColor: border,
-        color: color,
-      }}
+      disabled={isBooked || isLockedByOther}
+      onClick={() => onToggle(seat)}
+      className={`relative flex h-11 w-10 flex-col items-center justify-center rounded-lg border-2 font-mono text-[11px] font-bold transition-all ${bgClass}`}
+      title={`${seat.seatLabel} - ${seat.isFemaleOnly ? 'Female preferred' : seat.state}`}
     >
       <span>{seat.seatLabel}</span>
-      {/* Visual seat cushion accent */}
-      <span
-        className="w-6 h-1 rounded-full opacity-40 mt-0.5"
-        style={{ backgroundColor: color }}
-      />
+      <div className="absolute bottom-1 h-0.5 w-6 rounded bg-black/20 dark:bg-white/20" />
     </button>
   );
-}
+};

@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { success } from '../../lib/response.js';
 import { errors } from '../../lib/errors.js';
 import * as service from './network.service.js';
+import { tripIdParamSchema, assignTripBodySchema, reassignTripBodySchema, listOperatorTripsQuerySchema } from './network.schema.js';
 import {
   listCitiesQuerySchema, searchQuerySchema, scheduleIdParamSchema, cityIdParamSchema,
   patchOperatorMeSchema, busIdParamSchema, listBusesQuerySchema, createBusSchema, patchBusSchema,
@@ -213,4 +214,38 @@ export async function listSettlements(req: FastifyRequest, reply: FastifyReply) 
 export async function listManagers(req: FastifyRequest, reply: FastifyReply) {
   const user = requireUser(req);
   return reply.send(success(await service.listManagers({ userId: user.userId })));
+}
+
+// ---------- Phase 13: Operator trip assignment ----------
+export async function assignTrip(req: FastifyRequest, reply: FastifyReply) {
+  const user = requireUser(req);
+  const body = assignTripBodySchema.parse(req.body);
+  return reply.status(201).send(success(await service.assignTrip({ userId: user.userId, ...body })));
+}
+
+export async function listOperatorTrips(req: FastifyRequest, reply: FastifyReply) {
+  const user = requireUser(req);
+  const q = listOperatorTripsQuerySchema.parse(req.query);
+  const { data, nextCursor } = await service.listOperatorTrips({ userId: user.userId, ...q });
+  return reply.send({ data, meta: { nextCursor } });
+}
+
+export async function getOperatorTrip(req: FastifyRequest, reply: FastifyReply) {
+  const user = requireUser(req);
+  const { id } = tripIdParamSchema.parse(req.params);
+  return reply.send(success(await service.getOperatorTrip({ userId: user.userId, tripId: id })));
+}
+
+export async function patchOperatorTrip(req: FastifyRequest, reply: FastifyReply) {
+  const user = requireUser(req);
+  const { id } = tripIdParamSchema.parse(req.params);
+  const body = reassignTripBodySchema.parse(req.body);
+  return reply.send(success(await service.reassignTrip({ userId: user.userId, tripId: id, driverId: body.driverId })));
+}
+
+export async function deleteOperatorTrip(req: FastifyRequest, reply: FastifyReply) {
+  const user = requireUser(req);
+  const { id } = tripIdParamSchema.parse(req.params);
+  await service.unassignTrip({ userId: user.userId, tripId: id });
+  return reply.status(204).send();
 }

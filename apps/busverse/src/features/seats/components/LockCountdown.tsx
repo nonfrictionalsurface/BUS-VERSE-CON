@@ -1,45 +1,42 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
-import { formatCountdown } from '@/lib/utils/formatters';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Timer } from 'lucide-react';
 
 interface LockCountdownProps {
-  expiresAt: string; // ISO 8601 UTC
+  initialSeconds: number;
   onExpire: () => void;
 }
 
-export function LockCountdown({ expiresAt, onExpire }: LockCountdownProps) {
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(() => {
-    return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-  });
+export const LockCountdown: React.FC<LockCountdownProps> = ({ initialSeconds, onExpire }) => {
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-      setRemainingSeconds(diff);
+    setSecondsLeft(initialSeconds);
+  }, [initialSeconds]);
 
-      if (diff <= 0) {
-        clearInterval(timer);
-        onExpire();
-      }
+  useEffect(() => {
+    if (secondsLeft <= 0) {
+      onExpire();
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setSecondsLeft((s) => s - 1);
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [expiresAt, onExpire]);
+    return () => clearInterval(interval);
+  }, [secondsLeft, onExpire]);
 
-  const isCritical = remainingSeconds <= 60;
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
 
   return (
-    <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all ${
-        isCritical
-          ? 'bg-danger-subtle border-danger-crimson text-danger-crimson animate-pulse'
-          : 'bg-warning-subtle border-warning-amber text-warning-amber'
-      }`}
-    >
-      {isCritical ? <AlertTriangle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-      <span>Seat Locked: {formatCountdown(remainingSeconds)}</span>
+    <div className="flex items-center gap-2 rounded-xl border border-warning-amber/30 bg-warning-amber/10 px-3 py-1.5 text-warning-amber">
+      <Timer className="h-4 w-4 animate-pulse" />
+      <span className="font-mono text-xs font-bold">
+        Lock reserved: {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}
+      </span>
     </div>
   );
-}
+};

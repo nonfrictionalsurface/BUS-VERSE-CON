@@ -878,7 +878,7 @@ ifconfig | grep "inet "
 **2. Update `EXPO_PUBLIC_API_URL`:**
 
 ```env
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000
+EXPO_PUBLIC_API_URL=http://127.0.0.1:4000
 ```
 
 **3. Ensure phone and laptop are on the same Wi-Fi.**

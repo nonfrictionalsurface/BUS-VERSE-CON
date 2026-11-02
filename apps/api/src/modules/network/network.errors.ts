@@ -31,6 +31,6 @@ export const networkErrors = {
   driverAlreadyInvited: () => errors.invalidRequest('Driver already invited by this operator'),
   driverBelongsToOtherOperator: () => errors.invalidRequest('Driver belongs to another operator'),
   driverOnDuty: () => errors.driverOnDuty(),
-  driverKycNotVerified: () => errors.forbidden('Driver KYC not verified'),
+  driverKycNotVerified: () => errors.driverNotVerified(),
   notOwnerOnly: () => errors.forbidden('Only the operator owner can access this'),
 };

@@ -15,8 +15,8 @@ export interface Schedule {
 export interface CreateScheduleInput {
   busId: string;
   routeId: string;
-  departureTime: string; // ISO string
-  arrivalTime: string;   // ISO string
+  departureTime: string;
+  arrivalTime: string;
   fareAmountPaise: number;
 }
 
@@ -31,5 +31,8 @@ export const schedulesApi = {
   },
   publish: async (id: string): Promise<void> => {
     await api.post(`/operator/schedules/${id}/publish`, {});
-  }
+  },
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/dev/delete-schedule/${id}`);
+  },
 };

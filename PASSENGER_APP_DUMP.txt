@@ -1,0 +1,2184 @@
+﻿================================================================================
+PASSENGER APP SOURCE DUMP - 2026-11-01 17:55:24
+================================================================================
+
+
+================================================================================
+FILE: apps\passenger-app\App.tsx
+================================================================================
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  StatusBar as RNStatusBar,
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { BusVerseLogo } from './src/components/brand/BusVerseLogo';
+import { ProfileMenuModal } from './src/components/common/ProfileMenuModal';
+import { SearchScreen } from './src/screens/SearchScreen';
+import { SeatSelectionScreen } from './src/screens/SeatSelectionScreen';
+import { PassengerManifestScreen } from './src/screens/PassengerManifestScreen';
+import { PaymentScreen } from './src/screens/PaymentScreen';
+import { MyTicketsScreen } from './src/screens/MyTicketsScreen';
+import { LiveTrackingScreen } from './src/screens/LiveTrackingScreen';
+import { DepartureSchedule } from './src/types';
+
+const STATUSBAR_OFFSET = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) + 4 : 44;
+
+function MainAppShell() {
+  const { theme, tokens, toggleTheme } = useTheme();
+
+  const [activeTab, setActiveTab] = useState<'SEARCH' | 'TRACK' | 'TICKETS'>('SEARCH');
+  const [selectedSchedule, setSelectedSchedule] = useState<DepartureSchedule | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [totalFare, setTotalFare] = useState(0);
+  const [bookingData, setBookingData] = useState<any>(null);
+  const [bookingStep, setBookingStep] = useState<'NONE' | 'SEATS' | 'MANIFEST' | 'PAYMENT'>('NONE');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  // Flow navigation handlers
+  const handleSelectSchedule = (schedule: DepartureSchedule) => {
+    setSelectedSchedule(schedule);
+    setBookingStep('SEATS');
+  };
+
+  const handleSeatConfirm = (seats: string[], fare: number) => {
+    setSelectedSeats(seats);
+    setTotalFare(fare);
+    setBookingStep('MANIFEST');
+  };
+
+  const handleProceedToPayment = (data: any) => {
+    setBookingData(data);
+    setBookingStep('PAYMENT');
+  };
+
+  const handlePaymentSuccess = () => {
+    setBookingStep('NONE');
+    setSelectedSchedule(null);
+    setActiveTab('TICKETS');
+  };
+
+  return (
+    <View style={[styles.rootContainer, { backgroundColor: tokens.canvas.bg, paddingTop: STATUSBAR_OFFSET }]}>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline }]}>
+        <BusVerseLogo size={32} />
+
+        <View style={styles.headerRight}>
+          {/* Theme Toggle Pill */}
+          <TouchableOpacity
+            style={[styles.themePill, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}
+            onPress={toggleTheme}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={theme === 'dark' ? 'sunny' : 'moon-outline'}
+              size={13}
+              color={theme === 'dark' ? tokens.warning.amber : tokens.brand.primary}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={[styles.themePillText, { color: tokens.text.primary }]}>
+              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Profile Menu Pill */}
+          <TouchableOpacity
+            style={[styles.profilePill, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}
+            onPress={() => setProfileMenuOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="person" size={11} color={tokens.brand.primary} style={{ marginRight: 4 }} />
+            <Text style={[styles.profilePillText, { color: tokens.brand.primary }]}>+917235041123</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Main Viewport Stage */}
+      <View style={styles.bodyStage}>
+        {bookingStep === 'SEATS' && selectedSchedule && (
+          <SeatSelectionScreen
+            schedule={selectedSchedule}
+            onBack={() => setBookingStep('NONE')}
+            onConfirmReservation={handleSeatConfirm}
+          />
+        )}
+
+        {bookingStep === 'MANIFEST' && selectedSchedule && (
+          <PassengerManifestScreen
+            schedule={selectedSchedule}
+            selectedSeats={selectedSeats}
+            totalFare={totalFare}
+            onBack={() => setBookingStep('SEATS')}
+            onProceedToPayment={handleProceedToPayment}
+          />
+        )}
+
+        {bookingStep === 'PAYMENT' && (
+          <PaymentScreen
+            bookingData={bookingData}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
+
+        {bookingStep === 'NONE' && (
+          <>
+            {activeTab === 'SEARCH' && <SearchScreen onSelectSchedule={handleSelectSchedule} />}
+            {activeTab === 'TRACK' && <LiveTrackingScreen onBack={() => setActiveTab('TICKETS')} />}
+            {activeTab === 'TICKETS' && (
+              <MyTicketsScreen onTrackLive={() => setActiveTab('TRACK')} />
+            )}
+          </>
+        )}
+      </View>
+
+      {/* Profile & Navigation Menu Modal */}
+      <ProfileMenuModal
+        visible={profileMenuOpen}
+        onClose={() => setProfileMenuOpen(false)}
+        onNavigate={(tab) => {
+          setBookingStep('NONE');
+          setSelectedSchedule(null);
+          setActiveTab(tab);
+        }}
+      />
+    </View>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <MainAppShell />
+    </ThemeProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  rootContainer: { flex: 1 },
+  header: {
+    height: 56,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  themePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  themePillText: { fontSize: 10.5, fontWeight: '700' },
+  profilePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  profilePillText: { fontSize: 10.5, fontWeight: '800', fontFamily: 'monospace' },
+  bodyStage: { flex: 1 },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\types\index.ts
+================================================================================
+export interface CorridorStop {
+  id: string;
+  name: string;
+  city: string;
+  landmark: string;
+  eta: string;
+}
+
+export interface DepartureSchedule {
+  id: string;
+  routeTitle: string;
+  originCity: string;
+  destinationCity: string;
+  departureTime: string;
+  arrivalTime: string;
+  durationMinutes: number;
+  busPlate: string;
+  busModel: string;
+  coachType: 'VOLVO_MULTI_AXLE' | 'AC_SLEEPER' | 'ELECTRIC_EXPRESS';
+  baseFareInr: number;
+  totalSeats: number;
+  availableSeats: number;
+  amenities: string[];
+}
+
+export interface SeatItem {
+  id: string;
+  label: string;
+  deck: 'LOWER' | 'UPPER';
+  row: number;
+  col: number;
+  isAvailable: boolean;
+  isFemaleOnly: boolean;
+  priceInr: number;
+}
+
+export interface PassengerTicket {
+  ticketId: string;
+  bookingId: string;
+  primaryPassengerName: string;
+  primarySeatLabel: string;
+  allSeatLabels: string[];
+  passengerCount: number;
+  scheduleId: string;
+  departureTime: string;
+  routeTitle: string;
+  qrPayload: string;
+  fareInr: number;
+  status: 'CONFIRMED' | 'BOARDED' | 'CANCELLED';
+}
+
+================================================================================
+FILE: apps\passenger-app\src\screens\SearchScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+import { DepartureSchedule } from '../types';
+import { ScheduleCard } from '../features/search/components/ScheduleCard';
+import { DatePickerModal } from '../components/common/DatePickerModal';
+
+interface SearchScreenProps {
+  onSelectSchedule: (schedule: DepartureSchedule) => void;
+}
+
+export function SearchScreen({ onSelectSchedule }: SearchScreenProps) {
+  const { tokens } = useTheme();
+
+  const [origin, setOrigin] = useState('Kanpur');
+  const [destination, setDestination] = useState('Lucknow');
+  const [travelDate, setTravelDate] = useState('31-10-2026');
+  const [dateModalOpen, setDateModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'TIME' | 'PRICE'>('TIME');
+
+  const departures: DepartureSchedule[] = [
+    {
+      id: 'SCH-SHAGHAF-01',
+      routeTitle: 'Kanpur ⇄ Lucknow',
+      originCity: 'Kanpur',
+      destinationCity: 'Lucknow',
+      departureTime: '03:15 am',
+      arrivalTime: '03:15 am',
+      durationMinutes: 2880,
+      busPlate: 'UP-78-CT-9012',
+      busModel: 'SHAGHAF BUSSES',
+      coachType: 'VOLVO_MULTI_AXLE',
+      baseFareInr: 500,
+      totalSeats: 40,
+      availableSeats: 36,
+      amenities: ['AC Climate Control', 'USB Fast Charge', 'GPS Telemetry'],
+    },
+  ];
+
+  const handleSwap = () => {
+    const temp = origin;
+    setOrigin(destination);
+    setDestination(temp);
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: tokens.canvas.bg }}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Badge */}
+        <View style={[styles.heroPill, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+          <Ionicons name="sparkles" size={13} color={tokens.brand.primary} />
+          <Text style={[styles.heroPillText, { color: tokens.brand.primary }]}>
+            Next-Gen Transit Reservations
+          </Text>
+        </View>
+
+        {/* Hero Headings */}
+        <Text style={[styles.heroTitle, { color: tokens.text.bright }]}>
+          Seamless Intercity Travel Across India
+        </Text>
+        <Text style={[styles.heroSub, { color: tokens.text.secondary }]}>
+          Real-time seat locks, authenticated Ed25519 boarding passes, and live GPS telemetry.
+        </Text>
+
+        {/* Search Card */}
+        <View style={[styles.searchCard, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline, shadowColor: tokens.shadow }]}>
+          <View style={styles.inputStack}>
+            {/* Departure Station */}
+            <View style={styles.fieldBox}>
+              <Text style={[styles.fieldLabel, { color: tokens.text.muted }]}>DEPARTURE STATION</Text>
+              <View style={[styles.inputPill, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}>
+                <Ionicons name="location-outline" size={17} color={tokens.brand.primary} style={{ marginRight: 6 }} />
+                <TextInput
+                  style={[styles.inputField, { color: tokens.text.bright }]}
+                  value={origin}
+                  onChangeText={setOrigin}
+                  placeholder="From (e.g. Kanpur)"
+                  placeholderTextColor={tokens.text.muted}
+                />
+              </View>
+            </View>
+
+            {/* Swap Button */}
+            <TouchableOpacity
+              style={[styles.swapCircle, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}
+              onPress={handleSwap}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="swap-vertical" size={16} color={tokens.text.muted} />
+            </TouchableOpacity>
+
+            {/* Arrival Station */}
+            <View style={styles.fieldBox}>
+              <Text style={[styles.fieldLabel, { color: tokens.text.muted }]}>ARRIVAL STATION</Text>
+              <View style={[styles.inputPill, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}>
+                <Ionicons name="location-outline" size={17} color={tokens.brand.primary} style={{ marginRight: 6 }} />
+                <TextInput
+                  style={[styles.inputField, { color: tokens.text.bright }]}
+                  value={destination}
+                  onChangeText={setDestination}
+                  placeholder="To (e.g. Lucknow)"
+                  placeholderTextColor={tokens.text.muted}
+                />
+              </View>
+            </View>
+
+            {/* Selectable Journey Date */}
+            <View style={styles.fieldBox}>
+              <Text style={[styles.fieldLabel, { color: tokens.text.muted }]}>JOURNEY DATE</Text>
+              <TouchableOpacity
+                style={[styles.inputPill, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}
+                onPress={() => setDateModalOpen(true)}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="calendar-outline" size={17} color={tokens.brand.primary} style={{ marginRight: 8 }} />
+                <Text style={[styles.dateText, { color: tokens.text.bright }]}>{travelDate}</Text>
+                <Ionicons name="calendar" size={16} color={tokens.text.muted} style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.findBtn, { backgroundColor: tokens.brand.primary }]}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="search" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.findBtnText}>Find Schedules</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Results Sort Bar */}
+        <View style={styles.sortRow}>
+          <Text style={[styles.resultsCount, { color: tokens.text.secondary }]}>
+            Found <Text style={{ fontWeight: 'bold', color: tokens.text.bright }}>{departures.length}</Text> available coaches
+          </Text>
+
+          <View style={styles.sortControls}>
+            <Text style={[styles.sortLabel, { color: tokens.text.muted }]}>Sort by:</Text>
+            <View style={[styles.sortPillGroup, { backgroundColor: tokens.surface.card, borderColor: tokens.border.subtle }]}>
+              <TouchableOpacity
+                style={[styles.sortPill, sortBy === 'TIME' && { backgroundColor: tokens.brand.primary }]}
+                onPress={() => setSortBy('TIME')}
+              >
+                <Text style={[styles.sortPillText, { color: sortBy === 'TIME' ? '#FFFFFF' : tokens.text.secondary }]}>Departure</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sortPill, sortBy === 'PRICE' && { backgroundColor: tokens.brand.primary }]}
+                onPress={() => setSortBy('PRICE')}
+              >
+                <Text style={[styles.sortPillText, { color: sortBy === 'PRICE' ? '#FFFFFF' : tokens.text.secondary }]}>Price</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Modular Cards List */}
+        {departures.map((item) => (
+          <ScheduleCard
+            key={item.id}
+            schedule={item}
+            onSelect={() => onSelectSchedule(item)}
+          />
+        ))}
+      </ScrollView>
+
+      {/* Date Picker Modal */}
+      <DatePickerModal
+        visible={dateModalOpen}
+        selectedDate={travelDate}
+        onClose={() => setDateModalOpen(false)}
+        onSelectDate={setTravelDate}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollContent: { padding: 16, paddingBottom: 160, gap: 14 },
+  heroPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  heroPillText: { fontSize: 11, fontWeight: '700' },
+  heroTitle: { fontSize: 22, fontWeight: '900', textAlign: 'center', marginTop: 2, letterSpacing: -0.5 },
+  heroSub: { fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 4 },
+  searchCard: {
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1,
+    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    gap: 12,
+  },
+  inputStack: { gap: 10 },
+  fieldBox: { gap: 4 },
+  fieldLabel: { fontSize: 9.5, fontFamily: 'monospace', fontWeight: '700', letterSpacing: 0.5 },
+  inputPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  inputField: { flex: 1, fontSize: 13, fontWeight: '600' },
+  dateText: { fontSize: 13, fontWeight: '600' },
+  swapCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginVertical: -4,
+  },
+  findBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    borderRadius: 14,
+    marginTop: 4,
+  },
+  findBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  sortRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, paddingHorizontal: 2 },
+  resultsCount: { fontSize: 11.5 },
+  sortControls: { flexDirection: 'row', alignItems: 'center' },
+  sortLabel: { fontSize: 11, marginRight: 6 },
+  sortPillGroup: { flexDirection: 'row', borderRadius: 10, borderWidth: 1, padding: 2 },
+  sortPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  sortPillText: { fontSize: 10.5, fontWeight: '600' },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\screens\SeatSelectionScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+import { DepartureSchedule } from '../types';
+
+interface SeatSelectionScreenProps {
+  schedule: DepartureSchedule;
+  onBack: () => void;
+  onConfirmReservation: (selectedSeats: string[], totalFare: number) => void;
+}
+
+export function SeatSelectionScreen({
+  schedule,
+  onBack,
+  onConfirmReservation,
+}: SeatSelectionScreenProps) {
+  const { tokens } = useTheme();
+  const [selectedSeatLabels, setSelectedSeatLabels] = useState<string[]>(['A4']);
+
+  const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const leftCols = ['1', '2'];
+  const rightCols = ['3', '4'];
+
+  const femaleSeats = ['A1', 'A2', 'C1', 'C2'];
+  const bookedSeats = ['B1', 'B2', 'D3', 'D4'];
+
+  const toggleSeat = (label: string) => {
+    if (bookedSeats.includes(label)) return;
+    if (selectedSeatLabels.includes(label)) {
+      setSelectedSeatLabels((p) => p.filter((s) => s !== label));
+    } else {
+      setSelectedSeatLabels((p) => [...p, label]);
+    }
+  };
+
+  const totalFare = selectedSeatLabels.length * schedule.baseFareInr;
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas.bg }]}>
+      {/* Top Banner */}
+      <View style={[styles.tripCard, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline, shadowColor: tokens.shadow }]}>
+        <View style={styles.tripCardTop}>
+          <View>
+            <Text style={[styles.routeTitle, { color: tokens.text.bright }]}>
+              {schedule.originCity} → {schedule.destinationCity}
+            </Text>
+            <Text style={[styles.routeSub, { color: tokens.text.muted }]}>
+              {schedule.busModel} • AC_SEATER
+            </Text>
+          </View>
+
+          <View style={styles.fareBox}>
+            <Text style={[styles.fareAmount, { color: tokens.text.bright }]}>₹{schedule.baseFareInr}</Text>
+            <Text style={[styles.fareSub, { color: tokens.text.muted }]}>per seat (tax included)</Text>
+          </View>
+        </View>
+
+        <View style={[styles.tripTimingGrid, { borderColor: tokens.border.hairline }]}>
+          <View>
+            <Text style={[styles.timingLabel, { color: tokens.text.muted }]}>DEPARTS</Text>
+            <Text style={[styles.timingValue, { color: tokens.text.bright }]}>03:15 am</Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={[styles.timingLabel, { color: tokens.text.muted }]}>DURATION</Text>
+            <Text style={[styles.timingValue, { color: tokens.text.secondary }]}>48h 00m</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.timingLabel, { color: tokens.text.muted }]}>ARRIVES</Text>
+            <Text style={[styles.timingValue, { color: tokens.text.bright }]}>03:15 am</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 5-State Legend Bar */}
+      <View style={[styles.legendBar, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline, shadowColor: tokens.shadow }]}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendBox, { backgroundColor: tokens.seat.available.bg, borderColor: tokens.seat.available.border }]} />
+          <Text style={[styles.legendLabel, { color: tokens.text.secondary }]}>Available</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendBox, { backgroundColor: tokens.seat.selected.bg, borderColor: tokens.seat.selected.border }]} />
+          <Text style={[styles.legendLabel, { color: tokens.text.secondary }]}>Selected</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendBox, { backgroundColor: tokens.seat.locked.bg, borderColor: tokens.seat.locked.border }]} />
+          <Text style={[styles.legendLabel, { color: tokens.text.secondary }]}>Locked</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendBox, { backgroundColor: tokens.seat.booked.bg, borderColor: tokens.seat.booked.border }]} />
+          <Text style={[styles.legendLabel, { color: tokens.text.secondary }]}>Booked</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendBox, { backgroundColor: tokens.seat.female.bg, borderColor: tokens.seat.female.border }]} />
+          <Text style={[styles.legendLabel, { color: tokens.text.secondary }]}>Female Only</Text>
+        </View>
+      </View>
+
+      {/* 2D Bus Fuselage Chassis */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.deckContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.fuselageChassis, { backgroundColor: tokens.surface.card, borderColor: tokens.border.strong, shadowColor: tokens.shadow }]}>
+          
+          {/* Windshield & Steering Wheel Header */}
+          <View style={[styles.windshieldBar, { borderColor: tokens.border.subtle }]}>
+            <View style={[styles.windshieldPill, { backgroundColor: tokens.telemetry.subtle, borderColor: tokens.telemetry.cyan }]}>
+              <Text style={[styles.windshieldText, { color: tokens.telemetry.cyan }]}>WINDSHIELD</Text>
+            </View>
+
+            <View style={styles.driverCol}>
+              <Ionicons name="disc-outline" size={17} color={tokens.text.muted} />
+              <Text style={[styles.driverText, { color: tokens.text.muted }]}>DRIVER</Text>
+            </View>
+          </View>
+
+          {/* Seat Grid */}
+          <View style={styles.seatMatrix}>
+            {rows.map((rowLetter) => (
+              <View key={rowLetter} style={styles.seatRow}>
+                {/* Left Seat Pair (Columns 1, 2) */}
+                <View style={styles.seatPair}>
+                  {leftCols.map((colNum) => {
+                    const label = `${rowLetter}${colNum}`;
+                    const isBooked = bookedSeats.includes(label);
+                    const isSelected = selectedSeatLabels.includes(label);
+                    const isFemale = femaleSeats.includes(label);
+
+                    const seatBg = isSelected
+                      ? tokens.seat.selected.bg
+                      : isBooked
+                      ? tokens.seat.booked.bg
+                      : isFemale
+                      ? tokens.seat.female.bg
+                      : tokens.seat.available.bg;
+
+                    const seatBorder = isSelected
+                      ? tokens.seat.selected.border
+                      : isBooked
+                      ? tokens.seat.booked.border
+                      : isFemale
+                      ? tokens.seat.female.border
+                      : tokens.seat.available.border;
+
+                    const seatText = isSelected
+                      ? tokens.seat.selected.text
+                      : isBooked
+                      ? tokens.seat.booked.text
+                      : isFemale
+                      ? tokens.seat.female.text
+                      : tokens.seat.available.text;
+
+                    return (
+                      <TouchableOpacity
+                        key={label}
+                        disabled={isBooked}
+                        style={[styles.seatCell, { backgroundColor: seatBg, borderColor: seatBorder }]}
+                        onPress={() => toggleSeat(label)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.seatCellText, { color: seatText }]}>{label}</Text>
+                        <View style={[styles.seatBottomRim, { backgroundColor: seatText }]} />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Central Walking Aisle */}
+                <View style={styles.aisleCol}>
+                  <Text style={[styles.aisleLetter, { color: tokens.text.muted }]}>{rowLetter}</Text>
+                </View>
+
+                {/* Right Seat Pair (Columns 3, 4) */}
+                <View style={styles.seatPair}>
+                  {rightCols.map((colNum) => {
+                    const label = `${rowLetter}${colNum}`;
+                    const isBooked = bookedSeats.includes(label);
+                    const isSelected = selectedSeatLabels.includes(label);
+                    const isFemale = femaleSeats.includes(label);
+
+                    const seatBg = isSelected
+                      ? tokens.seat.selected.bg
+                      : isBooked
+                      ? tokens.seat.booked.bg
+                      : isFemale
+                      ? tokens.seat.female.bg
+                      : tokens.seat.available.bg;
+
+                    const seatBorder = isSelected
+                      ? tokens.seat.selected.border
+                      : isBooked
+                      ? tokens.seat.booked.border
+                      : isFemale
+                      ? tokens.seat.female.border
+                      : tokens.seat.available.border;
+
+                    const seatText = isSelected
+                      ? tokens.seat.selected.text
+                      : isBooked
+                      ? tokens.seat.booked.text
+                      : isFemale
+                      ? tokens.seat.female.text
+                      : tokens.seat.available.text;
+
+                    return (
+                      <TouchableOpacity
+                        key={label}
+                        disabled={isBooked}
+                        style={[styles.seatCell, { backgroundColor: seatBg, borderColor: seatBorder }]}
+                        onPress={() => toggleSeat(label)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.seatCellText, { color: seatText }]}>{label}</Text>
+                        <View style={[styles.seatBottomRim, { backgroundColor: seatText }]} />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Sticky Bottom Dock with Elevated Safe Area Margins */}
+      <View style={[styles.bottomBar, { backgroundColor: tokens.surface.card, borderColor: tokens.border.subtle, shadowColor: tokens.shadow }]}>
+        <View style={styles.dockLeft}>
+          <Text style={[styles.dockHint, { color: tokens.text.secondary }]}>
+            Tap up to 6 available seats on the coach deck to reserve
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          disabled={selectedSeatLabels.length === 0}
+          style={[styles.continueBtn, { backgroundColor: tokens.brand.primary }, selectedSeatLabels.length === 0 && { opacity: 0.5 }]}
+          onPress={() => onConfirmReservation(selectedSeatLabels, totalFare)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.continueBtnText}>Continue ({selectedSeatLabels.length} Seats)</Text>
+          <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  tripCard: {
+    margin: 16,
+    marginBottom: 8,
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    gap: 12,
+  },
+  tripCardTop: { flexDirection: 'row', justifyContent: 'space-between' },
+  routeTitle: { fontSize: 17, fontWeight: '900' },
+  routeSub: { fontSize: 10.5, marginTop: 2, fontFamily: 'monospace' },
+  fareBox: { alignItems: 'flex-end' },
+  fareAmount: { fontSize: 19, fontWeight: '900' },
+  fareSub: { fontSize: 9.5 },
+  tripTimingGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  timingLabel: { fontSize: 9, fontFamily: 'monospace', fontWeight: 'bold' },
+  timingValue: { fontSize: 12.5, fontWeight: '800', marginTop: 2 },
+  legendBar: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    elevation: 1,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendBox: { width: 12, height: 12, borderRadius: 3, borderWidth: 1.5 },
+  legendLabel: { fontSize: 9, fontWeight: '600' },
+  deckContent: { padding: 16, paddingBottom: 110, alignItems: 'center' },
+  fuselageChassis: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 28,
+    borderWidth: 1.5,
+    padding: 16,
+    gap: 16,
+    elevation: 2,
+  },
+  windshieldBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 10,
+    borderBottomWidth: 1.5,
+    borderStyle: 'dashed',
+  },
+  windshieldPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  windshieldText: {
+    fontSize: 9,
+    fontFamily: 'monospace',
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  driverCol: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  driverText: { fontSize: 9, fontFamily: 'monospace', fontWeight: 'bold' },
+  seatMatrix: { gap: 10 },
+  seatRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  seatPair: { flexDirection: 'row', gap: 8 },
+  aisleCol: { width: 28, alignItems: 'center' },
+  aisleLetter: { fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold', opacity: 0.6 },
+  seatCell: {
+    width: 44,
+    height: 46,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  seatCellText: { fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' },
+  seatBottomRim: { width: 20, height: 2, borderRadius: 1, opacity: 0.4, marginTop: 2 },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'android' ? 24 : 34,
+    borderTopWidth: 1,
+    elevation: 6,
+  },
+  dockLeft: { flex: 1, paddingRight: 10 },
+  dockHint: { fontSize: 11, fontWeight: '600', lineHeight: 15 },
+  continueBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 12,
+  },
+  continueBtnText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\features\search\components\ScheduleCard.tsx
+================================================================================
+import React from 'react';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../../theme/ThemeContext';
+import { DepartureSchedule } from '../../../types';
+
+interface ScheduleCardProps {
+  schedule: DepartureSchedule;
+  onSelect: () => void;
+}
+
+export function ScheduleCard({ schedule, onSelect }: ScheduleCardProps) {
+  const { tokens } = useTheme();
+
+  return (
+    <View style={[styles.card, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline, shadowColor: tokens.shadow }]}>
+      {/* Non-Overflowing Header */}
+      <View style={styles.cardHeader}>
+        <View style={styles.headerLeft}>
+          <View style={styles.operatorRow}>
+            <Text numberOfLines={1} style={[styles.operatorName, { color: tokens.text.bright }]}>
+              {schedule.busModel}
+            </Text>
+            <View style={[styles.verifiedPill, { backgroundColor: tokens.canvas.subtle, borderColor: tokens.border.subtle }]}>
+              <Ionicons name="shield-checkmark" size={11} color={tokens.signal.emerald} />
+              <Text style={[styles.verifiedText, { color: tokens.text.primary }]}>VERIFIED</Text>
+            </View>
+          </View>
+
+          <View style={[styles.busClassBadge, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+            <Text style={[styles.busClassBadgeText, { color: tokens.brand.primary }]}>AC Executive Seater</Text>
+          </View>
+        </View>
+
+        <View style={styles.priceCol}>
+          <Text style={[styles.priceNumber, { color: tokens.text.bright }]}>₹{schedule.baseFareInr}</Text>
+          <Text style={[styles.priceSub, { color: tokens.text.muted }]}>per seat (tax included)</Text>
+        </View>
+      </View>
+
+      {/* Timeline Row */}
+      <View style={[styles.timelineRow, { borderColor: tokens.border.hairline }]}>
+        <View style={styles.timePoint}>
+          <Text style={[styles.timeMain, { color: tokens.text.bright }]}>{schedule.departureTime}</Text>
+          <Text style={[styles.standSub, { color: tokens.text.secondary }]}>Origin Stand</Text>
+        </View>
+
+        <View style={styles.durationCol}>
+          <Text style={[styles.durationText, { color: tokens.text.muted }]}>48h 00m</Text>
+          <View style={styles.routeTrack}>
+            <View style={[styles.trackLine, { backgroundColor: tokens.border.strong }]} />
+            <Ionicons name="bus" size={14} color={tokens.brand.primary} />
+            <View style={[styles.trackLine, { backgroundColor: tokens.border.strong }]} />
+          </View>
+          <Text style={[styles.nonStopText, { color: tokens.signal.emerald }]}>Non-stop Route</Text>
+        </View>
+
+        <View style={[styles.timePoint, { alignItems: 'flex-end' }]}>
+          <Text style={[styles.timeMain, { color: tokens.text.bright }]}>{schedule.arrivalTime}</Text>
+          <Text style={[styles.standSub, { color: tokens.text.secondary }]}>Dest Stand</Text>
+        </View>
+      </View>
+
+      {/* Footer */}
+      <View style={styles.cardFooter}>
+        <View style={styles.seatsLeftRow}>
+          <Ionicons name="people-outline" size={15} color={tokens.signal.emerald} style={{ marginRight: 6 }} />
+          <Text style={[styles.seatsLeftText, { color: tokens.signal.emerald }]}>
+            {schedule.availableSeats} seats available
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.selectBtn, { backgroundColor: tokens.brand.primary }]}
+          onPress={onSelect}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.selectBtnText}>Select Seats</Text>
+          <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    gap: 14,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  headerLeft: { flex: 1, minWidth: 0 },
+  operatorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  operatorName: { fontSize: 15, fontWeight: '900', letterSpacing: -0.2 },
+  verifiedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    borderWidth: 1,
+  },
+  verifiedText: { fontSize: 8.5, fontWeight: '700', fontFamily: 'monospace' },
+  busClassBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  busClassBadgeText: { fontSize: 9.5, fontWeight: '700' },
+  priceCol: { alignItems: 'flex-end', flexShrink: 0 },
+  priceNumber: { fontSize: 20, fontWeight: '900' },
+  priceSub: { fontSize: 9.5, marginTop: 1 },
+  timelineRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+  },
+  timePoint: { minWidth: 70 },
+  timeMain: { fontSize: 16, fontWeight: '900' },
+  standSub: { fontSize: 10.5, marginTop: 2 },
+  durationCol: { flex: 1, alignItems: 'center', paddingHorizontal: 6 },
+  durationText: { fontSize: 9.5, fontFamily: 'monospace' },
+  routeTrack: { flexDirection: 'row', alignItems: 'center', width: '100%', gap: 4, marginVertical: 4 },
+  trackLine: { flex: 1, height: 1.5 },
+  nonStopText: { fontSize: 9, fontWeight: '600' },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  seatsLeftRow: { flexDirection: 'row', alignItems: 'center' },
+  seatsLeftText: { fontSize: 11, fontWeight: '700' },
+  selectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  selectBtnText: { color: '#FFFFFF', fontSize: 11.5, fontWeight: '700' },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\screens\LiveTrackingScreen.tsx
+================================================================================
+import React, { useState, useMemo, useRef } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import { WebView } from 'react-native-webview';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+
+interface LiveTrackingScreenProps {
+  onBack?: () => void;
+}
+
+export function LiveTrackingScreen({ onBack }: LiveTrackingScreenProps) {
+  const { theme, tokens } = useTheme();
+
+  // Actual physical terminal coordinates
+  const currentLatitude = 26.4539;
+  const currentLongitude = 80.3508;
+  const [speedKmh] = useState(0);
+
+  const webViewRef = useRef<WebView>(null);
+  const isDark = theme === 'dark';
+
+  const mapHtml = useMemo(() => {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #map { width: 100vw; height: 100vh; background: ${tokens.canvas.bg}; overflow: hidden; }
+    .leaflet-control-attribution { display: none !important; }
+
+    .dark-osm img {
+      filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(90%) !important;
+    }
+
+    .bus-marker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -50%);
+    }
+    .pulse-ring {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(43, 117, 255, 0.35);
+      border: 2px solid ${tokens.brand.primary};
+      animation: pulse 2s infinite ease-out;
+    }
+    .bus-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      background: ${tokens.brand.primary};
+      border: 2px solid #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px rgba(43, 117, 255, 0.8);
+      z-index: 5;
+    }
+    .bus-badge svg { width: 20px; height: 20px; fill: #FFFFFF; }
+    .bus-pill {
+      margin-top: 4px;
+      background: ${tokens.surface.card};
+      color: ${tokens.text.bright};
+      font-family: monospace;
+      font-size: 9.5px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid ${tokens.brand.primary};
+      white-space: nowrap;
+      z-index: 6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    @keyframes pulse { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+
+    .stop-dot { width: 14px; height: 14px; border-radius: 7px; background: #FFFFFF; border: 3px solid ${tokens.brand.primary}; }
+    .stop-dest { border-color: ${tokens.telemetry.cyan}; background: #E0F2FE; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    const realBusPos = [${currentLatitude}, ${currentLongitude}];
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(realBusPos, 12);
+
+    const tileLayer = ${isDark}
+      ? L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'dark-osm' })
+      : L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+
+    tileLayer.addTo(map);
+
+    // Stops along the NH-27 Corridor
+    const stops = [
+      { name: "Kanpur Central", lat: 26.4539, lng: 80.3508, dest: false },
+      { name: "Unnao Bypass", lat: 26.5458, lng: 80.4912, dest: false },
+      { name: "Nawabganj Toll", lat: 26.6542, lng: 80.6521, dest: false },
+      { name: "Lucknow Alambagh", lat: 26.8156, lng: 80.9022, dest: true }
+    ];
+
+    stops.forEach(s => {
+      const icon = L.divIcon({
+        className: 'custom-stop',
+        html: '<div class="stop-dot ' + (s.dest ? 'stop-dest' : '') + '"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      });
+      L.marker([s.lat, s.lng], { icon: icon }).bindPopup('<b>' + s.name + '</b>').addTo(map);
+    });
+
+    // Dual-Layer Polyline for Road Geometry
+    const glowLine = L.polyline([], {
+      color: '${tokens.telemetry.cyan}',
+      weight: 8,
+      opacity: 0.35,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(map);
+
+    const roadLine = L.polyline([], {
+      color: '${tokens.brand.primary}',
+      weight: 4.5,
+      opacity: 0.95,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(map);
+
+    // Query OSRM to get true street-level geometry
+    const osrmUrl = 'https://router.project-osrm.org/route/v1/driving/80.3508,26.4539;80.4912,26.5458;80.6521,26.6542;80.9022,26.8156?overview=full&geometries=geojson';
+
+    fetch(osrmUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data.routes && data.routes[0]) {
+          const roadPath = data.routes[0].geometry.coordinates.map(pt => [pt[1], pt[0]]);
+          glowLine.setLatLngs(roadPath);
+          roadLine.setLatLngs(roadPath);
+          map.fitBounds(roadLine.getBounds(), { padding: [50, 50] });
+        }
+      })
+      .catch(err => {
+        // Fallback highway coordinates if offline
+        const fallback = [
+          [26.4539, 80.3508], [26.4468, 80.3752], [26.4410, 80.4021], [26.4682, 80.4285],
+          [26.5458, 80.4912], [26.6120, 80.5750], [26.6542, 80.6521], [26.7011, 80.7250],
+          [26.7321, 80.7932], [26.7680, 80.8450], [26.8156, 80.9022]
+        ];
+        glowLine.setLatLngs(fallback);
+        roadLine.setLatLngs(fallback);
+      });
+
+    // Coach Marker pinned to Real Physical Station
+    const busSvgHtml = '<div class="pulse-ring"></div><div class="bus-badge"><svg viewBox="0 0 24 24"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg></div><div class="bus-pill">SHAGHAF BUSSES</div>';
+
+    const busIcon = L.divIcon({
+      className: 'bus-marker',
+      html: busSvgHtml,
+      iconSize: [52, 52],
+      iconAnchor: [26, 26]
+    });
+    const busMarker = L.marker(realBusPos, { icon: busIcon }).addTo(map);
+
+    window.recenterBus = function() {
+      map.setView(realBusPos, 14, { animate: true });
+    };
+  </script>
+</body>
+</html>
+    `;
+  }, [theme, tokens]);
+
+  const handleRecenter = () => {
+    const js = `if (typeof window.recenterBus === 'function') { window.recenterBus(); } true;`;
+    if (webViewRef.current) {
+      webViewRef.current.injectJavaScript(js);
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas.bg }]}>
+      <View style={styles.mapViewport}>
+        {Platform.OS === 'web' ? (
+          <iframe
+            key={theme}
+            srcDoc={mapHtml}
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            title="OpenStreetMap Real Road Tracker"
+          />
+        ) : (
+          <WebView
+            key={theme}
+            ref={webViewRef}
+            originWhitelist={['*']}
+            source={{ html: mapHtml }}
+            style={styles.webView}
+            scrollEnabled={false}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+          />
+        )}
+
+        {/* Top Floating Header with Back Button */}
+        <View style={[styles.floatingTopHud, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline, shadowColor: tokens.shadow }]}>
+          {onBack && (
+            <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.8}>
+              <Ionicons name="arrow-back" size={18} color={tokens.text.primary} />
+            </TouchableOpacity>
+          )}
+
+          <View style={{ flex: 1, marginLeft: onBack ? 8 : 0 }}>
+            <View style={[styles.beaconPill, { backgroundColor: tokens.signal.subtle, borderColor: tokens.signal.emerald }]}>
+              <View style={[styles.beaconDot, { backgroundColor: tokens.signal.emerald }]} />
+              <Text style={[styles.beaconText, { color: tokens.signal.emerald }]}>REAL ROAD ROUTING • ACTIVE</Text>
+            </View>
+            <Text style={[styles.hudTitle, { color: tokens.text.bright }]}>SHAGHAF BUSSES</Text>
+            <Text style={[styles.hudSub, { color: tokens.text.secondary }]}>At Terminal • Ready for Boarding</Text>
+          </View>
+
+          <View style={[styles.speedGauge, { backgroundColor: tokens.surface.sunken, borderColor: tokens.border.subtle }]}>
+            <Text style={[styles.speedNumber, { color: tokens.brand.primary }]}>{speedKmh}</Text>
+            <Text style={[styles.speedUnit, { color: tokens.text.muted }]}>KM/H</Text>
+          </View>
+        </View>
+
+        {/* Recenter Target Button */}
+        <TouchableOpacity style={[styles.recenterBtn, { backgroundColor: tokens.surface.card, borderColor: tokens.brand.primary }]} onPress={handleRecenter}>
+          <Ionicons name="locate" size={20} color={tokens.brand.primary} />
+        </TouchableOpacity>
+
+        {/* Bottom Drawer Card */}
+        <View style={[styles.bottomDrawer, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline, shadowColor: tokens.shadow }]}>
+          <View style={[styles.drawerHead, { borderBottomColor: tokens.border.hairline }]}>
+            <View>
+              <Text style={[styles.nextStopTag, { color: tokens.telemetry.cyan }]}>CORRIDOR HIGHWAY</Text>
+              <Text style={[styles.nextStopTitle, { color: tokens.text.bright }]}>Kanpur Central ⇄ Lucknow ISBT</Text>
+            </View>
+            <View style={[styles.etaBadge, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+              <Text style={[styles.etaBadgeText, { color: tokens.brand.primary }]}>OSRM SNAPPED</Text>
+            </View>
+          </View>
+
+          <View style={styles.drawerStatsGrid}>
+            <View style={[styles.statCell, { backgroundColor: tokens.surface.sunken, borderColor: tokens.border.hairline }]}>
+              <Text style={[styles.cellLabel, { color: tokens.text.muted }]}>STATION</Text>
+              <Text style={[styles.cellValBrand, { color: tokens.brand.primary }]}>Jhakarkati Bay 4</Text>
+            </View>
+            <View style={[styles.statCell, { backgroundColor: tokens.surface.sunken, borderColor: tokens.border.hairline }]}>
+              <Text style={[styles.cellLabel, { color: tokens.text.muted }]}>PATH GEOMETRY</Text>
+              <Text style={[styles.cellValEmerald, { color: tokens.signal.emerald }]}>Turn-By-Turn</Text>
+            </View>
+            <View style={[styles.statCell, { backgroundColor: tokens.surface.sunken, borderColor: tokens.border.hairline }]}>
+              <Text style={[styles.cellLabel, { color: tokens.text.muted }]}>HIGHWAY</Text>
+              <Text style={[styles.cellValCyan, { color: tokens.telemetry.cyan }]}>NH-27 / AH-1</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  mapViewport: { flex: 1, width: '100%', height: '100%', position: 'relative' },
+  webView: { flex: 1 },
+  floatingTopHud: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    right: 14,
+    borderRadius: 20,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+  },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  beaconPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+    borderWidth: 1,
+  },
+  beaconDot: { width: 5, height: 5, borderRadius: 2.5 },
+  beaconText: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: '900' },
+  hudTitle: { fontSize: 13, fontWeight: '900', fontFamily: 'monospace' },
+  hudSub: { fontSize: 10, marginTop: 1 },
+  speedGauge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  speedNumber: { fontSize: 24, fontWeight: '900', fontFamily: 'monospace' },
+  speedUnit: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: 'bold' },
+  recenterBtn: {
+    position: 'absolute',
+    right: 16,
+    bottom: 156,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    elevation: 6,
+  },
+  bottomDrawer: {
+    position: 'absolute',
+    bottom: 16,
+    left: 14,
+    right: 14,
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    gap: 12,
+    elevation: 4,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+  },
+  drawerHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    paddingBottom: 10,
+  },
+  nextStopTag: { fontSize: 9, fontWeight: '900', fontFamily: 'monospace' },
+  nextStopTitle: { fontSize: 13, fontWeight: 'bold', marginTop: 2 },
+  etaBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  etaBadgeText: { fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold' },
+  drawerStatsGrid: { flexDirection: 'row', gap: 8 },
+  statCell: {
+    flex: 1,
+    padding: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  cellLabel: { fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' },
+  cellValBrand: { fontSize: 12, fontFamily: 'monospace', fontWeight: 'bold', marginTop: 2 },
+  cellValEmerald: { fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold', marginTop: 2 },
+  cellValCyan: { fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold', marginTop: 2 },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\screens\PassengerManifestScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+import { DepartureSchedule } from '../types';
+
+interface PassengerManifestScreenProps {
+  schedule: DepartureSchedule;
+  selectedSeats: string[];
+  totalFare: number;
+  onBack: () => void;
+  onProceedToPayment: (bookingData: any) => void;
+}
+
+export function PassengerManifestScreen({
+  schedule,
+  selectedSeats,
+  totalFare,
+  onBack,
+  onProceedToPayment,
+}: PassengerManifestScreenProps) {
+  const { tokens } = useTheme();
+
+  const [pickupStand, setPickupStand] = useState('Jhakarkati Bus Stand (BUS STAND)');
+  const [dropStand, setDropStand] = useState('Amausi Airport (AIRPORT)');
+
+  const [passengers, setPassengers] = useState(
+    selectedSeats.map((seatLabel, i) => ({
+      seatLabel,
+      name: i === 0 ? 'xsxsxs' : 'sxsws',
+      age: '25',
+      gender: 'Male',
+    }))
+  );
+
+  const updatePassenger = (index: number, field: string, val: string) => {
+    setPassengers((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: val };
+      return copy;
+    });
+  };
+
+  const handleContinue = () => {
+    onProceedToPayment({
+      schedule,
+      pickupStand,
+      dropStand,
+      passengers,
+      totalFare,
+      bookingRef: 'BKG-2026-02672',
+      amountDue: 1065,
+    });
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas.bg }]}>
+      {/* Top Header */}
+      <View style={[styles.topBar, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+          <Ionicons name="arrow-back" size={18} color={tokens.text.primary} />
+          <Text style={[styles.backText, { color: tokens.text.primary }]}>Change Seats</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Pickup & Drop Stand Pickers */}
+        <View style={[styles.card, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline }]}>
+          <View style={styles.standField}>
+            <Text style={[styles.label, { color: tokens.text.muted }]}>PICKUP STAND</Text>
+            <View style={[styles.dropdownPill, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}>
+              <Text style={[styles.dropdownText, { color: tokens.text.bright }]}>{pickupStand}</Text>
+              <Ionicons name="chevron-down" size={16} color={tokens.text.muted} />
+            </View>
+          </View>
+
+          <View style={styles.standField}>
+            <Text style={[styles.label, { color: tokens.text.muted }]}>DROP STAND</Text>
+            <View style={[styles.dropdownPill, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.card }]}>
+              <Text style={[styles.dropdownText, { color: tokens.text.bright }]}>{dropStand}</Text>
+              <Ionicons name="chevron-down" size={16} color={tokens.text.muted} />
+            </View>
+          </View>
+        </View>
+
+        {/* Passenger Details Stack */}
+        <View style={[styles.card, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline }]}>
+          <View style={styles.manifestHead}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="person-outline" size={16} color={tokens.brand.primary} />
+              <Text style={[styles.manifestTitle, { color: tokens.text.bright }]}>
+                PASSENGER DETAILS ({selectedSeats.length} SEATS)
+              </Text>
+            </View>
+            <Text style={[styles.oneTicketSub, { color: tokens.text.muted }]}>1 ticket per seat</Text>
+          </View>
+
+          {passengers.map((p, idx) => (
+            <View key={p.seatLabel} style={[styles.paxBox, { backgroundColor: tokens.canvas.subtle, borderColor: tokens.border.subtle }]}>
+              <View style={styles.paxHead}>
+                <View style={[styles.paxNumBadge, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+                  <Text style={[styles.paxNumText, { color: tokens.brand.primary }]}>Passenger {idx + 1}</Text>
+                </View>
+
+                <View style={[styles.seatTag, { backgroundColor: tokens.surface.card, borderColor: tokens.border.subtle }]}>
+                  <Ionicons name="bus-outline" size={13} color={tokens.brand.primary} />
+                  <Text style={[styles.seatTagText, { color: tokens.text.bright }]}>Seat {p.seatLabel}</Text>
+                </View>
+              </View>
+
+              <View style={styles.formRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.fieldSmallLabel, { color: tokens.text.muted }]}>FULL NAME (AS ON GOVT ID)</Text>
+                  <TextInput
+                    style={[styles.textInput, { color: tokens.text.bright, borderColor: tokens.border.strong, backgroundColor: tokens.surface.card }]}
+                    value={p.name}
+                    onChangeText={(v) => updatePassenger(idx, 'name', v)}
+                  />
+                </View>
+
+                <View style={{ width: 64 }}>
+                  <Text style={[styles.fieldSmallLabel, { color: tokens.text.muted }]}>AGE</Text>
+                  <TextInput
+                    style={[styles.textInput, { color: tokens.text.bright, borderColor: tokens.border.strong, backgroundColor: tokens.surface.card }]}
+                    value={p.age}
+                    keyboardType="numeric"
+                    onChangeText={(v) => updatePassenger(idx, 'age', v)}
+                  />
+                </View>
+
+                <View style={{ width: 84 }}>
+                  <Text style={[styles.fieldSmallLabel, { color: tokens.text.muted }]}>GENDER</Text>
+                  <View style={[styles.genderPill, { borderColor: tokens.border.strong, backgroundColor: tokens.surface.card }]}>
+                    <Text style={[styles.genderText, { color: tokens.text.bright }]}>{p.gender}</Text>
+                    <Ionicons name="chevron-down" size={13} color={tokens.text.muted} />
+                  </View>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Bottom Sticky Confirmation Bar */}
+      <View style={[styles.bottomBar, { backgroundColor: tokens.surface.card, borderColor: tokens.border.subtle, shadowColor: tokens.shadow }]}>
+        <View>
+          <Text style={[styles.holdLabel, { color: tokens.text.muted }]}>Confirmed Hold ({selectedSeats.length} seats)</Text>
+          <Text style={[styles.holdAmount, { color: tokens.text.bright }]}>₹{totalFare}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.proceedBtn, { backgroundColor: tokens.brand.primary }]}
+          onPress={handleContinue}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.proceedBtnText}>Proceed to Payment</Text>
+          <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  topBar: {
+    height: 52,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backText: { fontSize: 13, fontWeight: '700' },
+  scrollContent: { padding: 16, paddingBottom: 160, gap: 14 },
+  card: {
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 16,
+    gap: 14,
+  },
+  standField: { gap: 4 },
+  label: { fontSize: 9.5, fontFamily: 'monospace', fontWeight: 'bold' },
+  dropdownPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  dropdownText: { fontSize: 12.5, fontWeight: '600' },
+  manifestHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  manifestTitle: { fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' },
+  oneTicketSub: { fontSize: 10 },
+  paxBox: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    gap: 10,
+  },
+  paxHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  paxNumBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  paxNumText: { fontSize: 10, fontWeight: '800', fontFamily: 'monospace' },
+  seatTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  seatTagText: { fontSize: 10, fontWeight: '800', fontFamily: 'monospace' },
+  formRow: { flexDirection: 'row', gap: 8 },
+  fieldSmallLabel: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: 'bold', marginBottom: 4 },
+  textInput: {
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  genderPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 9,
+  },
+  genderText: { fontSize: 11.5, fontWeight: '600' },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'android' ? 24 : 34,
+    borderTopWidth: 1,
+    elevation: 6,
+  },
+  holdLabel: { fontSize: 10, fontWeight: '600' },
+  holdAmount: { fontSize: 18, fontWeight: '900', marginTop: 1 },
+  proceedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  proceedBtnText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\screens\PaymentScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+
+interface PaymentScreenProps {
+  bookingData: any;
+  onPaymentSuccess: () => void;
+}
+
+export function PaymentScreen({ bookingData, onPaymentSuccess }: PaymentScreenProps) {
+  const { tokens } = useTheme();
+  const [selectedMethod, setSelectedMethod] = useState<'UPI' | 'CARD' | 'NETBANKING'>('UPI');
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas.bg }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Booking Summary Card */}
+        <View style={[styles.card, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline }]}>
+          <View style={styles.refRow}>
+            <View>
+              <Text style={[styles.metaLabel, { color: tokens.text.muted }]}>BOOKING REFERENCE</Text>
+              <Text style={[styles.refValue, { color: tokens.text.bright }]}>{bookingData?.bookingRef || 'BKG-2026-02672'}</Text>
+            </View>
+
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={[styles.metaLabel, { color: tokens.text.muted }]}>AMOUNT DUE</Text>
+              <Text style={[styles.dueAmount, { color: tokens.text.bright }]}>₹{bookingData?.amountDue || 1065}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.summaryDetails, { borderColor: tokens.border.hairline }]}>
+            <View style={styles.detailLine}>
+              <Text style={[styles.detailKey, { color: tokens.text.secondary }]}>Seats Allocated:</Text>
+              <Text style={[styles.detailVal, { color: tokens.text.bright }]}>M4, N4</Text>
+            </View>
+            <View style={styles.detailLine}>
+              <Text style={[styles.detailKey, { color: tokens.text.secondary }]}>Pickup Point:</Text>
+              <Text style={[styles.detailVal, { color: tokens.text.bright }]}>Jhakarkati Bus Stand</Text>
+            </View>
+            <View style={styles.detailLine}>
+              <Text style={[styles.detailKey, { color: tokens.text.secondary }]}>Drop Point:</Text>
+              <Text style={[styles.detailVal, { color: tokens.text.bright }]}>Amausi Airport</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Payment Methods Card */}
+        <View style={[styles.card, { backgroundColor: tokens.surface.card, borderColor: tokens.border.hairline }]}>
+          <Text style={[styles.sectionTitle, { color: tokens.text.bright }]}>SELECT PAYMENT METHOD</Text>
+
+          <View style={styles.methodsList}>
+            {/* UPI Option */}
+            <TouchableOpacity
+              style={[
+                styles.methodPill,
+                {
+                  borderColor: selectedMethod === 'UPI' ? tokens.brand.primary : tokens.border.subtle,
+                  backgroundColor: selectedMethod === 'UPI' ? tokens.brand.subtle : tokens.surface.card,
+                },
+              ]}
+              onPress={() => setSelectedMethod('UPI')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="qr-code-outline" size={20} color={tokens.brand.primary} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.methodName, { color: tokens.text.bright }]}>UPI Instant Pay</Text>
+                <Text style={[styles.methodSub, { color: tokens.text.secondary }]}>GPay, Paytm, PhonePe, BHIM</Text>
+              </View>
+              <View style={[styles.fastestBadge, { backgroundColor: tokens.signal.subtle }]}>
+                <Text style={[styles.fastestText, { color: tokens.signal.emerald }]}>Fastest</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Card Option */}
+            <TouchableOpacity
+              style={[
+                styles.methodPill,
+                {
+                  borderColor: selectedMethod === 'CARD' ? tokens.brand.primary : tokens.border.subtle,
+                  backgroundColor: selectedMethod === 'CARD' ? tokens.brand.subtle : tokens.surface.card,
+                },
+              ]}
+              onPress={() => setSelectedMethod('CARD')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="card-outline" size={20} color={tokens.brand.primary} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.methodName, { color: tokens.text.bright }]}>Credit / Debit Card</Text>
+                <Text style={[styles.methodSub, { color: tokens.text.secondary }]}>Visa, Mastercard, RuPay</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Net Banking Option */}
+            <TouchableOpacity
+              style={[
+                styles.methodPill,
+                {
+                  borderColor: selectedMethod === 'NETBANKING' ? tokens.brand.primary : tokens.border.subtle,
+                  backgroundColor: selectedMethod === 'NETBANKING' ? tokens.brand.subtle : tokens.surface.card,
+                },
+              ]}
+              onPress={() => setSelectedMethod('NETBANKING')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="business-outline" size={20} color={tokens.brand.primary} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.methodName, { color: tokens.text.bright }]}>Net Banking</Text>
+                <Text style={[styles.methodSub, { color: tokens.text.secondary }]}>All major Indian banks</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Primary Pay Action Button */}
+        <TouchableOpacity
+          style={[styles.payBtn, { backgroundColor: tokens.brand.primary }]}
+          onPress={onPaymentSuccess}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.payBtnText}>Pay ₹{bookingData?.amountDue || 1065}</Text>
+          <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 160, gap: 14 },
+  card: {
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 16,
+    gap: 12,
+  },
+  refRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  metaLabel: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: 'bold' },
+  refValue: { fontSize: 13, fontWeight: '900', fontFamily: 'monospace', marginTop: 2 },
+  dueAmount: { fontSize: 22, fontWeight: '900', marginTop: 2 },
+  summaryDetails: { paddingTop: 10, borderTopWidth: 1, gap: 6 },
+  detailLine: { flexDirection: 'row', justifyContent: 'space-between' },
+  detailKey: { fontSize: 11 },
+  detailVal: { fontSize: 11, fontWeight: 'bold' },
+  sectionTitle: { fontSize: 11, fontFamily: 'monospace', fontWeight: '900' },
+  methodsList: { gap: 10 },
+  methodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  methodName: { fontSize: 12.5, fontWeight: 'bold' },
+  methodSub: { fontSize: 10, marginTop: 1 },
+  fastestBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  fastestText: { fontSize: 9.5, fontWeight: 'bold' },
+  payBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 6,
+  },
+  payBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+});
+
+================================================================================
+FILE: apps\passenger-app\src\screens\MyTicketsScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Image,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+import { PassengerTicket } from '../types';
+
+interface MyTicketsScreenProps {
+  onTrackLive?: () => void;
+}
+
+export function MyTicketsScreen({ onTrackLive }: MyTicketsScreenProps) {
+  const { tokens } = useTheme();
+  const [activeTicket, setActiveTicket] = useState<PassengerTicket | null>(null);
+
+  const sampleTickets: PassengerTicket[] = [
+    {
+      ticketId: '12ca9d99-3adc-4a21-8dff-1fbda4c8b674',
+      bookingId: 'dc8bbb9f-8aa6-417c-93d0-2f908dc517eb',
+      primaryPassengerName: 'XSXSXS',
+      primarySeatLabel: 'M4, N4',
+      allSeatLabels: ['M4', 'N4'],
+      passengerCount: 2,
+      scheduleId: '0334c2f4-57ec-5651-857f-483257fd3f2b',
+      departureTime: '--:--',
+      routeTitle: 'JHAKARKATI BUS STAND → AMAUSI AIRPORT',
+      qrPayload: 'v1:eyJhbGxTZWF0TGFiZWxzIjpbIk00IiwiTjQiXSwiYm9va2luZ0lkIjoiQktHLTIwMjYtMDI2NzIifQ==:c2lnbmF0dXJl',
+      fareInr: 1065,
+      status: 'CONFIRMED',
+    },
+  ];
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas.bg }]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {sampleTickets.map((t) => (
+          <View key={t.ticketId} style={styles.stubContainer}>
+            {/* The Scalloped Dual-Theme Ticket Card */}
+            <View style={[styles.ticketCard, { backgroundColor: tokens.surface.card, borderColor: tokens.border.subtle, shadowColor: tokens.shadow }]}>
+              
+              {/* Upper Section */}
+              <View style={[styles.upperSection, { borderBottomColor: tokens.border.strong }]}>
+                {/* Scalloped Cutouts */}
+                <View style={[styles.scallopLeft, { backgroundColor: tokens.canvas.bg, borderColor: tokens.border.subtle }]} />
+                <View style={[styles.scallopRight, { backgroundColor: tokens.canvas.bg, borderColor: tokens.border.subtle }]} />
+
+                {/* Status Ribbon */}
+                <View style={styles.ribbonRow}>
+                  <View style={[styles.verifiedPill, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+                    <Text style={[styles.verifiedPillText, { color: tokens.brand.primary }]}>VERIFIED PASS</Text>
+                  </View>
+
+                  <View style={styles.confirmedRow}>
+                    <View style={[styles.greenDot, { backgroundColor: tokens.signal.emerald }]} />
+                    <Text style={[styles.confirmedText, { color: tokens.signal.emerald }]}>Confirmed</Text>
+                  </View>
+                </View>
+
+                {/* Clean 2-Column Route Layout */}
+                <View style={styles.routeHeaderRow}>
+                  <View style={styles.stationColLeft}>
+                    <Text style={[styles.stationTitle, { color: tokens.text.bright }]}>JHAKARKATI</Text>
+                    <Text style={[styles.stationTitle, { color: tokens.text.bright }]}>BUS STAND</Text>
+                  </View>
+
+                  <View style={styles.arrowContainer}>
+                    <Ionicons name="arrow-forward" size={18} color={tokens.telemetry.cyan} />
+                  </View>
+
+                  <View style={styles.stationColRight}>
+                    <Text style={[styles.stationTitle, { color: tokens.text.bright, textAlign: 'right' }]}>AMAUSI</Text>
+                    <Text style={[styles.stationTitle, { color: tokens.text.bright, textAlign: 'right' }]}>AIRPORT</Text>
+                  </View>
+                </View>
+
+                <Text style={[styles.subRouteText, { color: tokens.text.muted }]}>
+                  Jhakarkati Bus Stand → Amausi Airport
+                </Text>
+
+                {/* 3-Column Info Grid */}
+                <View style={styles.detailsGrid}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.gridLabel, { color: tokens.text.muted }]}>DEPARTURE</Text>
+                    <Text style={[styles.gridVal, { color: tokens.text.bright }]}>--:--</Text>
+                  </View>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={[styles.gridLabel, { color: tokens.text.muted }]}>SEAT ALLOC</Text>
+                    <Text style={[styles.gridVal, { color: tokens.brand.primary }]}>{t.primarySeatLabel}</Text>
+                  </View>
+                  <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                    <Text style={[styles.gridLabel, { color: tokens.text.muted }]}>COACH CLASS</Text>
+                    <Text style={[styles.gridVal, { color: tokens.text.bright }]}>AC Executive</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Lower Section with Optical White QR Island */}
+              <View style={[styles.lowerSection, { backgroundColor: tokens.surface.hover }]}>
+                <View style={styles.passengerInfo}>
+                  <Text style={[styles.paxName, { color: tokens.text.bright }]}>{t.primaryPassengerName}</Text>
+                  <Text style={[styles.pnrCode, { color: tokens.text.muted }]}>
+                    PNR: <Text style={{ color: tokens.text.bright, fontWeight: 'bold' }}>BKG-2026-02672</Text>
+                  </Text>
+                  <View style={styles.signedBadge}>
+                    <Ionicons name="shield-checkmark-outline" size={13} color={tokens.signal.emerald} />
+                    <Text style={[styles.signedText, { color: tokens.signal.emerald }]}>Ed25519 Signed</Text>
+                  </View>
+                </View>
+
+                {/* Optical QR Island */}
+                <TouchableOpacity
+                  style={[styles.qrIsland, { borderColor: tokens.border.hairline }]}
+                  onPress={() => setActiveTicket(t)}
+                  activeOpacity={0.85}
+                >
+                  <Image
+                    source={{
+                      uri: 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=BKG-2026-02672',
+                    }}
+                    style={{ width: 72, height: 72 }}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Track Bus Live Action Button with working onPress */}
+            <TouchableOpacity
+              style={[styles.trackBusBtn, { backgroundColor: tokens.brand.primary }]}
+              onPress={onTrackLive}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="radio-outline" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.trackBusBtnText}>Track Bus Live on Map</Text>
+            </TouchableOpacity>
+
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Enlarged QR Modal */}
+      <Modal visible={activeTicket !== null} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: tokens.surface.card, borderColor: tokens.border.strong }]}>
+            <View style={styles.modalHead}>
+              <Text style={[styles.modalTitle, { color: tokens.text.bright }]}>BOARDING QR PASS</Text>
+              <TouchableOpacity onPress={() => setActiveTicket(null)}>
+                <Ionicons name="close" size={20} color={tokens.text.primary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalQrBox}>
+              <Image
+                source={{
+                  uri: 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=BKG-2026-02672',
+                }}
+                style={{ width: 210, height: 210 }}
+              />
+            </View>
+
+            <Text style={[styles.modalHint, { color: tokens.text.secondary }]}>
+              Show this QR to the Conductor or Driver Terminal Scanner
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.modalDoneBtn, { backgroundColor: tokens.brand.primary }]}
+              onPress={() => setActiveTicket(null)}
+            >
+              <Text style={styles.modalDoneBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 140, gap: 18 },
+  stubContainer: { gap: 16 },
+  ticketCard: {
+    borderRadius: 24,
+    borderWidth: 1.5,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+  },
+  upperSection: {
+    padding: 20,
+    paddingBottom: 26,
+    borderBottomWidth: 1.5,
+    borderStyle: 'dashed',
+    position: 'relative',
+    gap: 8,
+  },
+  scallopLeft: {
+    position: 'absolute',
+    bottom: -12,
+    left: -12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  scallopRight: {
+    position: 'absolute',
+    bottom: -12,
+    right: -12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  ribbonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  verifiedPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  verifiedPillText: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: 'bold' },
+  confirmedRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  greenDot: { width: 6, height: 6, borderRadius: 3 },
+  confirmedText: { fontSize: 10.5, fontWeight: '700' },
+  routeHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+  },
+  stationColLeft: { flex: 1 },
+  stationColRight: { flex: 1, alignItems: 'flex-end' },
+  arrowContainer: { paddingHorizontal: 6 },
+  stationTitle: { fontSize: 15, fontWeight: '900', letterSpacing: -0.3, lineHeight: 20 },
+  subRouteText: { fontSize: 10.5, marginTop: -2 },
+  detailsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 10,
+  },
+  gridLabel: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: 'bold' },
+  gridVal: { fontSize: 13, fontWeight: '800', marginTop: 3 },
+  lowerSection: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  passengerInfo: { gap: 4 },
+  paxName: { fontSize: 13.5, fontWeight: '800' },
+  pnrCode: { fontSize: 11, fontFamily: 'monospace' },
+  signedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  signedText: { fontSize: 10, fontWeight: '600' },
+  qrIsland: {
+    width: 82,
+    height: 82,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  trackBusBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  trackBusBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 20,
+    alignItems: 'center',
+    gap: 14,
+  },
+  modalHead: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
+  modalTitle: { fontSize: 13, fontWeight: '900', fontFamily: 'monospace' },
+  modalQrBox: { padding: 12, backgroundColor: '#FFFFFF', borderRadius: 16 },
+  modalHint: { fontSize: 11, textAlign: 'center', lineHeight: 15 },
+  modalDoneBtn: { width: '100%', paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
+  modalDoneBtnText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+});

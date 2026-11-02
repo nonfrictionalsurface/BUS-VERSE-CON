@@ -1,24 +1,30 @@
-import { api } from '@/lib/api/client';
-import { InitiatePaymentRequest, PaymentInitiationResponse, PaymentStatusResponse } from '../types';
+﻿import { api } from '@/lib/api/client';
 
-export async function initiatePayment(payload: InitiatePaymentRequest): Promise<PaymentInitiationResponse> {
-  // RULE 8.6: Payments REQUIRE a fresh unique Idempotency-Key on every attempt
-  const idempotencyKey = crypto.randomUUID();
-  const response = await api.post<PaymentInitiationResponse>('/passenger/payments', payload, {
-    idempotencyKey,
-  });
-  return response.data;
+export interface InitiatePaymentResponse {
+  paymentId: string;
+  checkoutUrl: string;
+  status: string;
 }
 
-export async function fetchPaymentStatus(paymentId: string): Promise<PaymentStatusResponse> {
-  const response = await api.get<PaymentStatusResponse>(`/passenger/payments/${paymentId}`);
-  return response.data;
-}
+export const paymentsApi = {
+  initiatePayment: async (bookingId: string): Promise<InitiatePaymentResponse> => {
+    // RULE 8.6: Fresh Idempotency-Key UUID on every user retry
+    const idempotencyKey = crypto.randomUUID();
+    const res = await api.post<InitiatePaymentResponse>(
+      '/passenger/payments',
+      { bookingId, method: 'UPI' },
+      { idempotencyKey }
+    );
+    return res.data;
+  },
 
-export async function devMockConfirmPayment(paymentId: string): Promise<{ status: string }> {
-  // Development shortcut: Simulates Razorpay captured webhook on localhost
-  const response = await api.post<{ status: string }>('/dev/mock-confirm-payment', {
-    paymentId,
-  });
-  return response.data;
-}
+  getPaymentStatus: async (paymentId: string) => {
+    const res = await api.get<{ status: string; paymentId: string }>(`/passenger/payments/${paymentId}`);
+    return res.data;
+  },
+
+  mockConfirmPaymentDev: async (paymentId: string) => {
+    const res = await api.post<{ status: string; paymentId: string }>('/dev/mock-confirm-payment', { paymentId });
+    return res.data;
+  },
+};

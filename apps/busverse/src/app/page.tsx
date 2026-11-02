@@ -1,100 +1,79 @@
-'use client';
+﻿'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { SearchForm } from '@/features/search/components/SearchForm';
-import { SearchResults } from '@/features/search/components/SearchResults';
-import { SearchFilters, ScheduleSearchResult } from '@/features/search/types';
-import { searchSchedules } from '@/features/search/api/search.api';
-import { Sparkles } from 'lucide-react';
+import { ScheduleCard } from '@/features/search/components/ScheduleCard';
+import { AuthModal } from '@/features/auth/components/AuthModal';
+import { searchApi, ScheduleSearchResult } from '@/features/search/api/search.api';
+import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
-  const [filters, setFilters] = useState<SearchFilters>({
-    originCity: null,
-    destinationCity: null,
-    date: new Date().toISOString().split('T')[0],
-    sortBy: 'departureTime',
-  });
-
+  const searchParams = useSearchParams();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [schedules, setSchedules] = useState<ScheduleSearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
-    if (!filters.originCity || !filters.destinationCity || !filters.date) return;
+  const fromCityId = searchParams.get('from');
+  const toCityId = searchParams.get('to');
+  const travelDate = searchParams.get('date');
+  const fromName = searchParams.get('fromName');
+  const toName = searchParams.get('toName');
 
-    setIsLoading(true);
-    setHasSearched(true);
-    try {
-      const results = await searchSchedules({
-        originCityId: filters.originCity.id,
-        destinationCityId: filters.destinationCity.id,
-        date: filters.date,
-        sortBy: filters.sortBy,
-      });
-      setSchedules(results);
-    } catch (err) {
-      console.error('Failed to search schedules:', err);
-      setSchedules([]);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (fromCityId && toCityId && travelDate) {
+      setLoading(true);
+      searchApi
+        .searchSchedules(fromCityId, toCityId, travelDate)
+        .then(setSchedules)
+        .catch(console.error)
+        .finally(() => setLoading(false));
     }
-  };
-
-  const handleSortChange = (newSort: 'departureTime' | 'fare') => {
-    setFilters((prev) => ({ ...prev, sortBy: newSort }));
-    setSchedules((prev) => {
-      const copy = [...prev];
-      if (newSort === 'fare') {
-        return copy.sort((a, b) => {
-          const fareA = typeof a.fare === 'object' ? a.fare.amountPaise : a.fare;
-          const fareB = typeof b.fare === 'object' ? b.fare.amountPaise : b.fare;
-          return fareA - fareB;
-        });
-      } else {
-        return copy.sort((a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
-      }
-    });
-  };
+  }, [fromCityId, toCityId, travelDate]);
 
   return (
-    <div className="min-h-screen bg-canvas pb-20">
-      {/* Retains Profile Badge and View Tickets Vault navigation */}
-      <AppHeader />
+    <div className="min-h-screen bg-canvas">
+      <AppHeader onOpenAuth={() => setAuthModalOpen(true)} />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 md:pt-12">
-        <div className="text-center max-w-2xl mx-auto mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-subtle border border-brand-border text-brand-primary text-xs font-bold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Next-Gen Transit Reservations</span>
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="mb-8 text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand-primary/30 bg-brand-primary-subtle px-3 py-1 font-mono text-[10px] font-bold text-brand-primary">
+            LIVE TRANSIT CORRIDOR
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-ink-bright tracking-tight leading-tight">
-            Seamless Intercity Travel Across India
+          <h1 className="mt-3 font-sans text-3xl sm:text-4xl font-extrabold tracking-tight text-ink-bright">
+            Every intercity bus. One realtime platform.
           </h1>
-          <p className="text-sm text-ink-secondary mt-2">
-            Real-time seat locks, authenticated Ed25519 boarding passes, and live GPS telemetry.
+          <p className="mt-2 text-sm text-ink-secondary">
+            Verified operators across Delhi, Kanpur, and Lucknow with real-time seat locks and GPS tracking.
           </p>
         </div>
 
-        <div className="mb-10">
-          <SearchForm
-            filters={filters}
-            onChange={setFilters}
-            onSearch={handleSearch}
-            isSearching={isLoading}
-          />
-        </div>
+        <SearchForm />
 
-        <div className="max-w-4xl mx-auto">
-          <SearchResults
-            schedules={schedules}
-            isLoading={isLoading}
-            hasSearched={hasSearched}
-            sortBy={filters.sortBy}
-            onSortChange={handleSortChange}
-          />
-        </div>
+        {/* Results Section */}
+        {fromCityId && toCityId && (
+          <div className="mt-8 space-y-4">
+            <h2 className="font-sans text-lg font-bold text-ink-bright">
+              Available Buses: {fromName} → {toName}
+            </h2>
+
+            {loading ? (
+              <div className="flex h-40 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
+              </div>
+            ) : schedules.length > 0 ? (
+              schedules.map((sch) => <ScheduleCard key={sch.scheduleId} schedule={sch} />)
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border-strong p-8 text-center text-xs text-ink-secondary">
+                No published schedules available for this route on the selected date.
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }

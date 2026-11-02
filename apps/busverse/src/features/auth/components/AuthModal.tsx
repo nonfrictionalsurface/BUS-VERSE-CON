@@ -1,56 +1,55 @@
-'use client';
+﻿'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { CONFIG } from '@/lib/config';
-import { ShieldCheck, Phone, KeyRound, Loader2, X } from 'lucide-react';
+import { X, ArrowRight, Loader2, KeyRound, Phone } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-  title?: string;
+  onSuccess?: () => void;
 }
 
-function normalizeToE164(input: string): string {
-  const digits = input.replace(/\D/g, '');
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
-  return input.trim().startsWith('+') ? input.trim() : `+${digits}`;
-}
-
-export function AuthModal({
-  isOpen,
-  onClose,
-  onSuccess,
-  title = 'Sign In to Reserve Seat',
-}: AuthModalProps) {
-  const { requestOtp, verifyOtp } = useAuth();
-  const [phone, setPhone] = useState('+91');
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { loginWithTokens } = useAuth();
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   if (!isOpen) return null;
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
-    const cleaned = normalizeToE164(phone);
 
+    const cleanPhone = phone.trim().startsWith('+') ? phone.trim() : `+91${phone.trim()}`;
+    if (!/^\+91[6-9]\d{9}$/.test(cleanPhone)) {
+      setError('Enter a valid 10-digit Indian mobile number');
+      return;
+    }
+
+    setLoading(true);
     try {
-      try {
-        await requestOtp(cleaned, 'LOGIN');
-      } catch (loginErr: any) {
-        // If LOGIN fails because user does not exist, retry with SIGNUP
-        await requestOtp(cleaned, 'SIGNUP');
-      }
-      setPhone(cleaned);
-      setStep('OTP');
+      await api.post('/passenger/auth/otp/request', {
+        phone: cleanPhone,
+        intent: 'LOGIN',
+      });
+      setStep('otp');
+      setResendCooldown(60);
     } catch (err: any) {
-      setError(err.message || 'Please enter a valid 10-digit mobile number (+91XXXXXXXXXX).');
+      setError(err?.message || 'Failed to request verification code');
     } finally {
       setLoading(false);
     }
@@ -59,61 +58,78 @@ export function AuthModal({
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
-    const cleaned = normalizeToE164(phone);
 
+    if (otp.length !== 6) {
+      setError('Please enter the full 6-digit code');
+      return;
+    }
+
+    const cleanPhone = phone.trim().startsWith('+') ? phone.trim() : `+91${phone.trim()}`;
+    setLoading(true);
     try {
-      await verifyOtp(cleaned, otp.trim());
-      onSuccess();
+      const res = await api.post<any>('/passenger/auth/otp/verify', {
+        phone: cleanPhone,
+        otp: otp.trim(),
+      });
+
+      loginWithTokens({
+        accessToken: res.data.accessToken,
+        refreshToken: res.data.refreshToken,
+        user: res.data.user,
+      });
+
       onClose();
+      if (onSuccess) onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Invalid code. In DEV mode, use 123456.');
+      setError(err?.message || 'Invalid or expired OTP code');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas/80 backdrop-blur-md">
-      <div className="w-full max-w-md p-6 rounded-3xl bg-surface-card border border-border-strong shadow-modal relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-sm rounded-2xl border border-border-strong bg-surface-card p-6 shadow-modal">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1 rounded-full text-ink-muted hover:text-ink-primary hover:bg-surface-hover"
+          className="absolute right-4 top-4 text-ink-muted hover:text-ink-bright transition-colors"
         >
-          <X className="w-4 h-4" />
+          <X className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-brand-subtle text-brand-primary flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5" />
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary-subtle text-brand-primary">
+            {step === 'phone' ? <Phone className="h-6 w-6" /> : <KeyRound className="h-6 w-6" />}
           </div>
-          <div>
-            <h2 className="text-base font-bold text-ink-bright">{title}</h2>
-            <p className="text-xs text-ink-secondary">Instant passenger verification</p>
-          </div>
+          <h3 className="font-sans text-lg font-bold text-ink-bright">
+            {step === 'phone' ? 'Enter Phone Number' : 'Verification Code'}
+          </h3>
+          <p className="mt-1 text-xs text-ink-secondary">
+            {step === 'phone'
+              ? 'We will send a 6-digit OTP code to verify your account'
+              : `Code sent to ${phone}. (DEV default: 123456)`}
+          </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-danger-subtle text-danger-crimson text-xs font-semibold">
+          <div className="mb-4 rounded-lg border border-danger-crimson/30 bg-danger-crimson/10 p-3 text-xs text-danger-crimson font-medium">
             {error}
           </div>
         )}
 
-        {step === 'PHONE' ? (
-          <form onSubmit={handleSendOtp} className="space-y-4">
+        {step === 'phone' ? (
+          <form onSubmit={handleRequestOtp} className="space-y-4">
             <div>
-              <label className="block text-xs font-mono font-bold uppercase text-ink-muted mb-1.5">
-                Mobile Number
-              </label>
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">Mobile Number</label>
               <div className="relative flex items-center">
-                <Phone className="absolute left-3 w-4 h-4 text-brand-primary pointer-events-none" />
+                <span className="absolute left-3 font-mono text-xs text-ink-muted">+91</span>
                 <input
                   type="tel"
+                  placeholder="9876543210"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+919876543210"
-                  required
-                  className="w-full pl-9 pr-3 py-2.5 text-sm font-semibold rounded-xl bg-canvas border border-border-strong text-ink-bright focus:outline-none focus:border-brand-primary"
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className="w-full rounded-xl border border-border-subtle bg-surface-sunken pl-12 pr-4 py-2.5 font-mono text-sm text-ink-bright placeholder-ink-muted focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                  autoFocus
                 />
               </div>
             </div>
@@ -121,52 +137,49 @@ export function AuthModal({
             <button
               type="submit"
               disabled={loading || phone.length < 10}
-              className="w-full py-2.5 text-xs font-bold rounded-xl bg-brand-primary text-white hover:bg-brand-hover shadow-glow disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-2.5 text-xs font-bold text-white transition-all hover:bg-brand-hover disabled:opacity-50"
             >
-              {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Send Verification Code</span>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Continue <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label className="block text-xs font-mono font-bold uppercase text-ink-muted mb-1.5">
-                6-Digit Code sent to {phone}
-              </label>
-              <div className="relative flex items-center">
-                <KeyRound className="absolute left-3 w-4 h-4 text-brand-primary pointer-events-none" />
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="123456"
-                  required
-                  className="w-full pl-9 pr-3 py-2.5 text-sm font-mono font-bold tracking-widest rounded-xl bg-canvas border border-border-strong text-ink-bright focus:outline-none focus:border-brand-primary text-center"
-                />
-              </div>
-              {CONFIG.IS_DEV && (
-                <p className="text-[11px] font-mono text-signal-emerald mt-1.5 text-center">
-                  DEV MODE: Enter 123456
-                </p>
-              )}
+              <label className="block text-xs font-semibold text-ink-secondary mb-1">6-Digit Code</label>
+              <input
+                type="text"
+                placeholder="123456"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className="w-full text-center tracking-[0.5em] font-mono text-lg rounded-xl border border-border-subtle bg-surface-sunken py-2.5 text-ink-bright focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                autoFocus
+              />
             </div>
 
-            <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={loading || otp.length < 6}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-primary py-2.5 text-xs font-bold text-white transition-all hover:bg-brand-hover disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify & Proceed'}
+            </button>
+
+            <div className="flex items-center justify-between text-xs pt-1">
               <button
                 type="button"
-                onClick={() => setStep('PHONE')}
-                className="w-1/3 py-2.5 text-xs font-bold rounded-xl border border-border-strong text-ink-secondary hover:bg-surface-hover"
+                onClick={() => setStep('phone')}
+                className="text-ink-muted hover:text-ink-primary font-medium"
               >
-                Back
+                Change Phone
               </button>
               <button
-                type="submit"
-                disabled={loading || otp.length !== 6}
-                className="w-2/3 py-2.5 text-xs font-bold rounded-xl bg-brand-primary text-white hover:bg-brand-hover shadow-glow disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                type="button"
+                disabled={resendCooldown > 0}
+                onClick={handleRequestOtp}
+                className="text-brand-primary font-semibold disabled:text-ink-muted"
               >
-                {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Verify & Continue</span>
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
               </button>
             </div>
           </form>
@@ -174,4 +187,4 @@ export function AuthModal({
       </div>
     </div>
   );
-}
+};

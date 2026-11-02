@@ -31,5 +31,9 @@ export const driversApi = {
   },
   remove: async (id: string): Promise<void> => {
     await api.delete(`/operator/drivers/${id}`);
+  },
+  // Dev-only: verify a driver
+  verify: async (id: string): Promise<void> => {
+    await api.post(`/dev/verify-driver/${id}`, {});
   }
 };

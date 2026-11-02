@@ -6,8 +6,8 @@ import { Driver, KycStatus } from '../api';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { useRemoveDriver } from '../hooks/useDrivers';
-import { Trash2, UserCircle, Phone, CreditCard } from 'lucide-react';
+import { useRemoveDriver, useVerifyDriver } from '../hooks/useDrivers';
+import { Trash2, UserCircle, Phone, CreditCard, CheckCircle2, Sparkles } from 'lucide-react';
 import { isApiError, getErrorMessage } from '@/lib/api/errors';
 
 const getKycBadge = (status: KycStatus) => {
@@ -19,7 +19,7 @@ const getKycBadge = (status: KycStatus) => {
     case 'SIGNED_UP':
       return <Badge tone="amber">{status.replace('_', ' ')}</Badge>;
     case 'INVITED':
-      return <Badge tone="slate">{status}</Badge>;
+      return <Badge tone="amber">{status}</Badge>;
     case 'BLOCKED':
     case 'KYC_FAILED':
     case 'DEACTIVATED':
@@ -31,15 +31,30 @@ const getKycBadge = (status: KycStatus) => {
 
 export function DriverTable({ data, isLoading }: { data?: Driver[]; isLoading: boolean }) {
   const removeMutation = useRemoveDriver();
+  const verifyMutation = useVerifyDriver();
   const [error, setError] = useState<string | null>(null);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   const handleRemove = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this driver?')) return;
+    if (!confirm('Remove this driver?')) return;
     setError(null);
     try {
       await removeMutation.mutateAsync(id);
     } catch (err) {
       setError(isApiError(err) ? getErrorMessage(err.code, err.message) : 'Failed to remove driver.');
+    }
+  };
+
+  const handleVerify = async (id: string, name: string) => {
+    if (!confirm(`Verify ${name}?\n\nThis marks their KYC as VERIFIED (dev mode). They become assignable to trips.`)) return;
+    setError(null);
+    setVerifyingId(id);
+    try {
+      await verifyMutation.mutateAsync(id);
+    } catch (err) {
+      setError(isApiError(err) ? getErrorMessage(err.code, err.message) : 'Failed to verify driver.');
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -49,7 +64,7 @@ export function DriverTable({ data, isLoading }: { data?: Driver[]; isLoading: b
       header: 'Driver',
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-signal-emerald/10 text-brand-text flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-brand/10 text-brand-text flex items-center justify-center">
             <UserCircle size={18} />
           </div>
           <div>
@@ -93,18 +108,41 @@ export function DriverTable({ data, isLoading }: { data?: Driver[]; isLoading: b
     },
     {
       id: 'actions',
-      cell: ({ row }) => (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => handleRemove(row.original.id)}
-          disabled={row.original.onDuty || removeMutation.isPending}
-          title={row.original.onDuty ? "Cannot remove driver while on duty" : "Remove driver"}
-          className="text-danger-crimson hover:bg-danger-crimson/10"
-        >
-          <Trash2 size={16} />
-        </Button>
-      ),
+      cell: ({ row }) => {
+        const driver = row.original;
+        const needsVerify = driver.kycStatus === 'INVITED' || driver.kycStatus === 'SIGNED_UP' || driver.kycStatus === 'KYC_PENDING';
+        return (
+          <div className="flex items-center gap-2">
+            {needsVerify && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => handleVerify(driver.id, driver.name)}
+                loading={verifyingId === driver.id}
+                className="text-brand-text hover:bg-brand/10"
+                title="Dev-only: mark this driver as VERIFIED so they can be assigned to trips"
+              >
+                <Sparkles size={14} className="mr-1" /> Verify
+              </Button>
+            )}
+            {driver.kycStatus === 'VERIFIED' && (
+              <span className="text-xs text-brand-text flex items-center gap-1">
+                <CheckCircle2 size={12} /> Ready to assign
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleRemove(driver.id)}
+              disabled={driver.onDuty || removeMutation.isPending}
+              title={driver.onDuty ? 'Cannot remove driver while on duty' : 'Remove driver'}
+              className="text-danger-crimson hover:bg-danger-crimson/10"
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

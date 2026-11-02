@@ -35,15 +35,19 @@ export function LoginForm() {
   };
 
   const doLogin = async () => {
+    console.log('[LF/doLogin] ENTERED', { mode, emailLen: email.length, pwdLen: password.length, email, hasAt: email.includes('@') });
     setError(null);
     setNotVerifiedEmail(null);
     setVerifyMsg(null);
     setLoading(true);
     try {
+      console.log('[LF/doLogin] calling login...');
       if (mode === 'admin') await loginAdmin(email, password);
       else await loginOperator(email, password);
+      console.log('[LF/doLogin] login returned OK, pushing to', returnTo);
       router.push(returnTo);
     } catch (err) {
+      console.error('[LF/doLogin] CAUGHT', { status: (err as any)?.status, code: (err as any)?.code, message: (err as any)?.message, raw: err });
       if (isApiError(err) && err.code === 'EMAIL_NOT_VERIFIED') {
         setNotVerifiedEmail(email);
         setError('Please verify your email address before signing in.');

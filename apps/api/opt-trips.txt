@@ -1,0 +1,18 @@
+﻿
+> api@0.1.0 test D:\Bus-booking-proj2\BUS_project\apps\api
+> vitest run --passWithNoTests "tests/integration/operator-trips.test.ts"
+
+
+ RUN  v2.1.9 D:/Bus-booking-proj2/BUS_project/apps/api
+
+ Γ£ô tests/integration/operator-trips.test.ts (14 tests) 5640ms
+   Γ£ô POST /v1/operator/trips > happy path ΓÇö creates SCHEDULED trip 1964ms
+   Γ£ô POST /v1/operator/trips > driver from other operator ΓåÆ 404 455ms
+   Γ£ô POST /v1/operator/trips > unverified driver ΓåÆ 403 DRIVER_NOT_VERIFIED 375ms
+   Γ£ô PATCH reassign > reassigns driver on SCHEDULED trip 410ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  18:32:49
+   Duration  7.35s (transform 412ms, setup 45ms, collect 1.07s, tests 5.64s, environment 0ms, prepare 205ms)
+

@@ -1,70 +1,38 @@
-import { api } from '@/lib/api/client';
-import { ScheduleDetail, Seat, SeatLayout, SeatLockResponse } from '../types';
+﻿import { api } from '@/lib/api/client';
 
-export async function fetchScheduleDetail(scheduleId: string): Promise<ScheduleDetail> {
-  const response = await api.get<ScheduleDetail>(`/public/schedules/${scheduleId}`);
-  return response.data;
+export interface SeatAvailabilityItem {
+  id: string;
+  seatRow: string;
+  seatColumn: number;
+  seatLabel: string;
+  seatType: string;
+  isFemaleOnly: boolean;
+  state: 'AVAILABLE' | 'LOCKED' | 'BOOKED';
 }
 
-export interface SeatAvailabilityResult {
-  seats: Seat[];
-  layout: SeatLayout;
+export interface ScheduleAvailabilityResponse {
+  scheduleId: string;
+  rowsCount: number;
+  columnsCount: number;
+  aisleCells: Array<{ row: string; column: number }>;
+  seats: SeatAvailabilityItem[];
 }
 
-function parseBackendSeat(raw: any, index: number): Seat {
-  const id = raw.id || raw.seatId;
-  const label = raw.label || raw.seatLabel || `S${index + 1}`;
-  const row = String(raw.row || raw.seatRow || label.charAt(0) || 'A');
-  const column = Number(raw.column || raw.seatColumn || label.slice(1) || (index % 4) + 1);
+export const seatsApi = {
+  getAvailability: async (scheduleId: string): Promise<ScheduleAvailabilityResponse> => {
+    const res = await api.get<ScheduleAvailabilityResponse>(`/passenger/schedules/${scheduleId}/availability`);
+    return res.data;
+  },
 
-  // Correctly map backend status (which comes as raw.status, not raw.state)
-  let status: 'AVAILABLE' | 'LOCKED' | 'BOOKED' | 'BLOCKED' = 'AVAILABLE';
-  if (raw.status === 'LOCKED') status = 'LOCKED';
-  else if (raw.status === 'BOOKED') status = 'BOOKED';
-  else if (raw.status === 'BLOCKED') status = 'BLOCKED';
+  lockSeat: async (scheduleId: string, seatId: string) => {
+    const res = await api.post<{ lockId: string; expiresAt: string; remainingSeconds: number }>(
+      '/passenger/seat-locks',
+      { scheduleId, seatId }
+    );
+    return res.data;
+  },
 
-  return {
-    id,
-    seatLabel: label,
-    seatRow: row,
-    seatColumn: column,
-    seatType: raw.type || raw.seatType || 'SEATER',
-    isFemaleOnly: Boolean(raw.isFemaleOnly),
-    status,
-    lockedUntil: raw.lockedUntil || null,
-  };
-}
-
-export async function fetchSeatAvailability(scheduleId: string, capacity: number = 40): Promise<SeatAvailabilityResult> {
-  const res = await api.get<any>(`/passenger/schedules/${scheduleId}/availability`);
-  const rawList = res.data?.seats || (Array.isArray(res.data) ? res.data : []);
-
-  // If the backend returns no seats, it means the bus layout is missing OR the bus is PENDING.
-  // Do NOT generate fake seats. Throw an error so the UI can show a proper message.
-  if (!rawList || rawList.length === 0) {
-    throw new Error("Seat layout not available. The bus may be pending approval.");
-  }
-
-  const seats = rawList.map((s: any, idx: number) => parseBackendSeat(s, idx));
-  const backendLayout = res.data?.layout;
-
-  const layout: SeatLayout = {
-    rowsCount: backendLayout?.rowsCount || Math.ceil(seats.length / 4),
-    columnsCount: backendLayout?.columnsCount || 4,
-    aisleCells: backendLayout?.aisleCells || [],
-  };
-
-  return { seats, layout };
-}
-
-export async function lockSeat(scheduleId: string, seatId: string): Promise<SeatLockResponse> {
-  const response = await api.post<SeatLockResponse>('/passenger/seat-locks', {
-    scheduleId,
-    seatId,
-  });
-  return response.data;
-}
-
-export async function releaseSeatLock(lockId: string): Promise<void> {
-  await api.delete(`/passenger/seat-locks/${lockId}`);
-}
+  releaseSeatLock: async (lockId: string) => {
+    await api.delete(`/passenger/seat-locks/${lockId}`);
+  },
+};

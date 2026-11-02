@@ -113,3 +113,28 @@ export const revenueQuerySchema = z.object({
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   groupBy: z.enum(['day','week','month']).default('day'),
 });
+// ---------- Phase 13: Operator trip assignment ----------
+export const tripIdParamSchema = z.object({ id: z.string().uuid() });
+
+export const assignTripBodySchema = z
+  .object({
+    scheduleId: z.string().uuid(),
+    driverId: z.string().uuid(),
+  })
+  .strict();
+
+export const reassignTripBodySchema = z
+  .object({
+    driverId: z.string().uuid(),
+  })
+  .strict();
+
+export const listOperatorTripsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  cursor: z.string().optional(),
+  status: z.enum(['SCHEDULED','IN_PROGRESS','COMPLETED','CANCELLED']).optional(),
+  driverId: z.string().uuid().optional(),
+  busId: z.string().uuid().optional(),
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});

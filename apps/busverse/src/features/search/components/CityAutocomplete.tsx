@@ -1,56 +1,36 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { fetchCities } from '../api/search.api';
-import { City } from '../types';
-import { MapPin, X, Loader2 } from 'lucide-react';
+import { City, searchApi } from '../api/search.api';
+import { MapPin, Loader2 } from 'lucide-react';
 
 interface CityAutocompleteProps {
   label: string;
-  placeholder?: string;
-  value: City | null;
-  onChange: (city: City | null) => void;
-  excludeCityId?: string;
+  placeholder: string;
+  value: string;
+  selectedCity: City | null;
+  onSelect: (city: City) => void;
 }
 
-export function CityAutocomplete({
+export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   label,
-  placeholder = 'Select station...',
-  value,
-  onChange,
-  excludeCityId,
-}: CityAutocompleteProps) {
-  const [query, setQuery] = useState(value ? value.name : '');
-  const [isOpen, setIsOpen] = useState(false);
+  placeholder,
+  selectedCity,
+  onSelect,
+}) => {
+  const [query, setQuery] = useState(selectedCity?.name || '');
   const [cities, setCities] = useState<City[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setQuery(value ? value.name : '');
-  }, [value]);
-
-  useEffect(() => {
-    let active = true;
-    const timer = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchCities(query, 50);
-        if (active) setCities(data);
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    }, 200);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [query]);
+    if (selectedCity) setQuery(selectedCity.name);
+  }, [selectedCity]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -58,87 +38,62 @@ export function CityAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filteredCities = cities.filter((c) => c.id !== excludeCityId);
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchTimer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const results = await searchApi.getCities(query);
+        setCities(results);
+      } catch (err) {
+        console.error('City fetch error', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 200);
 
-  const handleSelect = (city: City) => {
-    onChange(city);
-    setQuery(city.name);
-    setIsOpen(false);
-  };
-
-  const handleClear = () => {
-    onChange(null);
-    setQuery('');
-    setIsOpen(true);
-  };
+    return () => clearTimeout(fetchTimer);
+  }, [query, isOpen]);
 
   return (
-    <div ref={containerRef} className="relative flex-1">
-      <label className="block text-xs font-mono font-bold uppercase tracking-wider text-ink-muted mb-1.5">
+    <div ref={wrapperRef} className="relative flex-1">
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-1">
         {label}
       </label>
-
       <div className="relative flex items-center">
-        <MapPin className="absolute left-3 w-4 h-4 text-brand-primary pointer-events-none" />
-
+        <MapPin className="absolute left-3.5 h-4 w-4 text-brand-primary" />
         <input
           type="text"
+          placeholder={placeholder}
           value={query}
+          onFocus={() => setIsOpen(true)}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
-            if (value && e.target.value !== value.name) {
-              onChange(null);
-            }
           }}
-          onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
-          className="w-full pl-9 pr-9 py-2.5 text-sm font-semibold rounded-xl bg-surface-card border border-border-strong text-ink-bright placeholder-ink-muted focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-subtle transition-all"
+          className="w-full rounded-xl border border-border-subtle bg-surface-sunken pl-10 pr-4 py-3 text-xs font-semibold text-ink-bright placeholder-ink-muted focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
         />
-
-        {isLoading ? (
-          <Loader2 className="absolute right-3 w-4 h-4 text-ink-muted animate-spin" />
-        ) : query ? (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-3 p-0.5 rounded-full hover:bg-surface-hover text-ink-muted hover:text-ink-primary"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        ) : null}
+        {isLoading && <Loader2 className="absolute right-3.5 h-4 w-4 animate-spin text-ink-muted" />}
       </div>
 
-      {isOpen && (
-        <div className="absolute z-30 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto rounded-xl bg-surface-card border border-border-strong shadow-floating p-1.5">
-          {filteredCities.length === 0 ? (
-            <div className="p-3 text-xs text-ink-muted text-center">
-              {isLoading ? 'Searching transit hubs...' : 'No cities found'}
-            </div>
-          ) : (
-            filteredCities.map((city) => (
-              <button
-                key={city.id}
-                type="button"
-                onClick={() => handleSelect(city)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs font-semibold rounded-lg transition-colors ${
-                  value?.id === city.id
-                    ? 'bg-brand-subtle text-brand-primary'
-                    : 'text-ink-primary hover:bg-surface-hover hover:text-ink-bright'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 opacity-60" />
-                  <span>{city.name}</span>
-                </div>
-                <span className="text-[10px] font-mono font-medium text-ink-muted px-1.5 py-0.5 rounded bg-surface-sunken">
-                  {city.state}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
+      {isOpen && cities.length > 0 && (
+        <ul className="absolute left-0 right-0 top-full mt-1.5 max-h-56 overflow-y-auto rounded-xl border border-border-strong bg-surface-card p-1 shadow-floating z-50">
+          {cities.map((city) => (
+            <li
+              key={city.id}
+              onClick={() => {
+                onSelect(city);
+                setQuery(city.name);
+                setIsOpen(false);
+              }}
+              className="flex items-center justify-between rounded-lg px-3 py-2 text-xs text-ink-primary hover:bg-surface-hover cursor-pointer"
+            >
+              <span className="font-semibold">{city.name}</span>
+              <span className="font-mono text-[10px] text-ink-muted">{city.state}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
-}
+};

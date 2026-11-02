@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,7 @@ import {
   ArrowRight, Sparkles, Loader2
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
-import { isApiError, getErrorMessage } from '@/lib/api/errors';
+import { getErrorMessage } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { CONFIG } from '@/lib/config';
 import { Button } from '@/components/ui/Button';
@@ -56,9 +56,9 @@ export function SignupForm() {
     const pan = formData.pan.trim().toUpperCase();
 
     if (formData.companyName.trim().length < 2) return 'Company name is too short.';
-    if (gstin.length !== 15) return `GSTIN must be exactly 15 characters. You entered ${gstin.length}.`;
+    if (gstin.length !== 15) return 'GSTIN must be exactly 15 characters. You entered ' + gstin.length + '.';
     if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return 'GSTIN format is wrong. Must look like: 09AAACH7409R1ZZ.';
-    if (pan.length !== 10) return `PAN must be exactly 10 characters. You entered ${pan.length}.`;
+    if (pan.length !== 10) return 'PAN must be exactly 10 characters. You entered ' + pan.length + '.';
     if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) return 'PAN format is wrong. Must look like: AAACH7409R.';
     if (formData.phone.length < 12) return 'Phone must include country code (e.g., +919876543210).';
     if (formData.password.length < 12) return 'Password must be at least 12 characters.';
@@ -83,9 +83,24 @@ export function SignupForm() {
         password: formData.password,
       }, { skipAuth: true });
       setSuccess(true);
-    } catch (err) {
-      if (isApiError(err)) setError(getErrorMessage(err.code, err.message));
-      else setError('Signup failed. Please check your connection and try again.');
+    } catch (err: any) {
+      console.error('[SignupForm] error:', err, '| code:', err?.code, '| status:', err?.status);
+      const code = err?.code;
+      const rawMessage = err?.message || '';
+
+      if (code === 'EMAIL_ALREADY_REGISTERED') {
+        setError('This email is already registered. Sign in with it, or use a different email address.');
+      } else if (code === 'GSTIN_ALREADY_REGISTERED') {
+        setError('This GSTIN is already registered. Each operator must have a unique GSTIN.');
+      } else if (code === 'PHONE_ALREADY_REGISTERED') {
+        setError('This phone number is already registered.');
+      } else if (code) {
+        setError(getErrorMessage(code, rawMessage || 'Request rejected') + ' (' + code + ')');
+      } else if (rawMessage) {
+        setError(rawMessage);
+      } else {
+        setError('Signup failed: ' + String(err) + '. Check browser console for details.');
+      }
     } finally {
       setLoading(false);
     }
@@ -104,7 +119,6 @@ export function SignupForm() {
     setFormData(f => ({ ...f, pan, gstin }));
   };
 
-  // ---- Dev flow: skip email verify + admin approval, log in immediately ----
   const handleDevLogin = async () => {
     setDevMessage(null);
     setDevLoading(true);
@@ -115,19 +129,20 @@ export function SignupForm() {
         setDevLoading(false);
         return;
       }
-      setDevMessage('Verified + approved. Logging in…');
-
-      // Log in with the password they just set
+      setDevMessage('Verified + approved. Logging in...');
       await loginOperator(formData.email.trim().toLowerCase(), formData.password);
       router.push('/dashboard');
-    } catch (err) {
-      if (isApiError(err)) setDevMessage(getErrorMessage(err.code, err.message));
-      else setDevMessage('Login after auto-approve failed. Try the Sign in page.');
+    } catch (err: any) {
+      const code = err?.code;
+      if (code) {
+        setDevMessage(getErrorMessage(code, err?.message || 'Dev login failed') + ' (' + code + ')');
+      } else {
+        setDevMessage(err?.message || 'Login after auto-approve failed. Try the Sign in page.');
+      }
       setDevLoading(false);
     }
   };
 
-  // ---------- Success state ----------
   if (success) {
     return (
       <div className="w-full max-w-lg animate-in fade-in zoom-in-95">
@@ -151,7 +166,7 @@ export function SignupForm() {
               <p className="text-sm font-semibold text-amber-700 dark:text-amber-500">Production flow</p>
               <p className="text-xs text-amber-600/80 mt-1 leading-relaxed">
                 In a real deployment: an email verification link arrives, you click it, admin reviews
-                your KYC, and you receive an approval email — usually within 24 hours.
+                your KYC, and you receive an approval email, usually within 24 hours.
               </p>
             </div>
           </div>
@@ -181,7 +196,7 @@ export function SignupForm() {
               className="w-full h-11 bg-brand hover:bg-brand-hover"
             >
               {devLoading ? (
-                <><Loader2 size={16} className="mr-2 animate-spin" /> Verifying…</>
+                <><Loader2 size={16} className="mr-2 animate-spin" /> Verifying...</>
               ) : (
                 <><Sparkles size={16} className="mr-2" /> Log in now (skip approval)</>
               )}
@@ -196,14 +211,13 @@ export function SignupForm() {
             </Button>
           </Link>
           <p className="text-[11px] text-ink-muted text-center mt-1">
-            To test the manual approval path: sign in as admin → Approvals → approve this operator.
+            To test the manual approval path: sign in as admin, then Approvals, then approve this operator.
           </p>
         </div>
       </div>
     );
   }
 
-  // ---------- Main form ----------
   return (
     <div className="w-full max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-6">
@@ -248,7 +262,7 @@ export function SignupForm() {
                 trailing={<DiceBtn onClick={randomizeGstin} title="Generate random valid GSTIN (embeds current PAN)" />}
               />
               <p className="text-[10px] text-ink-muted mt-1 leading-tight">
-                2 digits · 5 letters · 4 digits · 1 letter · 1 alnum · Z · 1 alnum
+                2 digits, 5 letters, 4 digits, 1 letter, 1 alnum, Z, 1 alnum
               </p>
             </div>
             <div>
@@ -263,7 +277,7 @@ export function SignupForm() {
                 trailing={<DiceBtn onClick={randomizePan} title="Generate random valid PAN (also updates GSTIN)" />}
               />
               <p className="text-[10px] text-ink-muted mt-1 leading-tight">
-                5 letters · 4 digits · 1 letter
+                5 letters, 4 digits, 1 letter
               </p>
             </div>
           </div>

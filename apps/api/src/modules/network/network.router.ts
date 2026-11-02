@@ -83,4 +83,11 @@ export async function networkRouter(server: FastifyInstance): Promise<void> {
   server.get('/operator/revenue', { preHandler: requireRole(...OPERATOR_ROLES) }, c.getRevenue);
   server.get('/operator/revenue/daily', { preHandler: requireRole(...OPERATOR_ROLES) }, c.getRevenueDaily);
   server.get('/operator/settlements', { preHandler: requireRole(...OPERATOR_ROLES) }, c.listSettlements);
+
+  // trips (Phase 13)
+  server.post('/operator/trips', { preHandler: requireRole(...OPERATOR_ROLES) }, c.assignTrip);
+  server.get('/operator/trips', { preHandler: requireRole(...OPERATOR_ROLES) }, c.listOperatorTrips);
+  server.get('/operator/trips/:id', { preHandler: requireRole(...OPERATOR_ROLES) }, c.getOperatorTrip);
+  server.patch('/operator/trips/:id', { preHandler: requireRole(...OPERATOR_ROLES) }, c.patchOperatorTrip);
+  server.delete('/operator/trips/:id', { preHandler: requireRole(...OPERATOR_ROLES) }, c.deleteOperatorTrip);
 }

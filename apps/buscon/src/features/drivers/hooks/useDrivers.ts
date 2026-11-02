@@ -11,7 +11,6 @@ export function useInviteDriver() {
     mutationFn: (data: InviteDriverInput) => driversApi.invite(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
-      // Real status: dashboard driver counter must update
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'operator'] });
     },
   });
@@ -24,6 +23,16 @@ export function useRemoveDriver() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'operator'] });
+    },
+  });
+}
+
+export function useVerifyDriver() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => driversApi.verify(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
     },
   });
 }

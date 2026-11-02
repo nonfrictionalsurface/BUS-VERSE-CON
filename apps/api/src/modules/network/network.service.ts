@@ -13,6 +13,7 @@ import type {
   BookingDetailDTO, BookingSummaryDTO, BusDTO, CityDTO, DashboardDTO, DriverDTO, ManagerDTO,
   OperatorMeResponse, RevenueDTO, RevenueDailyDTO, RouteDTO,
   ScheduleDetailDTO, ScheduleOperatorDTO, ScheduleSearchResultDTO, SeatLayoutDTO, SettlementDTO, StandDTO,
+  OperatorTripDTO,
 } from './network.types.js';
 
 // ---------- helpers ----------
@@ -503,4 +504,186 @@ export async function listManagers(p: { userId: string }): Promise<ManagerDTO[]>
   if (opUser.role !== 'OWNER') throw networkErrors.notOwnerOnly();
   const rows = await repo.listManagersForOperator(opUser.operatorId);
   return rows.map(toManagerDTO);
+}
+
+// ---------- Phase 13: Operator trip assignment ----------
+type TripRow = NonNullable<Awaited<ReturnType<typeof repo.findTripForOperator>>>;
+
+function toOperatorTripDTO(t: TripRow): OperatorTripDTO {
+  return {
+    tripId: t.id,
+    scheduleId: t.scheduleId,
+    busId: t.busId,
+    driverId: t.driverId,
+    driverName: t.driver.user.name,
+    driverPhone: t.driver.user.phone,
+    busRegistrationNumber: t.bus.registrationNumber,
+    routeSummary: {
+      originCity: t.schedule.route.originCity.name,
+      destinationCity: t.schedule.route.destCity.name,
+    },
+    departureTime: t.schedule.departureTime.toISOString(),
+    arrivalTime: t.schedule.arrivalTime.toISOString(),
+    status: t.status as 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED',
+    startedAt: t.startedAt?.toISOString() ?? null,
+    endedAt: t.endedAt?.toISOString() ?? null,
+    cancelledAt: t.cancelledAt?.toISOString() ?? null,
+    createdAt: t.createdAt.toISOString(),
+  };
+}
+
+export async function assignTrip(p: {
+  userId: string;
+  scheduleId: string;
+  driverId: string;
+}): Promise<OperatorTripDTO> {
+  const opUser = await requireOperator(p.userId);
+
+  // 1. Schedule ownership + status + future departure
+  const schedule = await repo.findScheduleForTripAssignment(p.scheduleId, opUser.operatorId);
+  if (!schedule) throw networkErrors.scheduleNotFound();
+  if (schedule.status !== 'PUBLISHED') {
+    throw errors.invalidSchedule();
+  }
+  if (schedule.departureTime.getTime() <= Date.now()) {
+    throw errors.invalidSchedule();
+  }
+
+  // 2. Driver ownership + KYC + status
+  const driver = await repo.findDriverForTripAssignment(p.driverId, opUser.operatorId);
+  if (!driver) throw networkErrors.driverNotFound();
+  if (driver.kycStatus === 'BLOCKED' || driver.kycStatus === 'DEACTIVATED') {
+    throw errors.driverBlocked();
+  }
+  if (driver.kycStatus !== 'VERIFIED' && driver.kycStatus !== 'ACTIVE') {
+    throw networkErrors.driverKycNotVerified();
+  }
+
+  // 3. No duplicate active trip for this schedule
+  const existingTrip = await repo.findActiveTripForSchedule(p.scheduleId);
+  if (existingTrip) {
+    throw errors.invalidTransition('A trip is already assigned to this schedule');
+  }
+
+  // 4. No overlapping driver trip
+  const driverConflict = await repo.findOverlappingDriverTrip({
+    driverId: p.driverId,
+    departureTime: schedule.departureTime,
+    arrivalTime: schedule.arrivalTime,
+  });
+  if (driverConflict) {
+    throw errors.activeTripExists(driverConflict.id);
+  }
+
+  // 5. Create
+  try {
+    const trip = await repo.createOperatorTrip({
+      scheduleId: p.scheduleId,
+      busId: schedule.busId,
+      driverId: p.driverId,
+    });
+    return toOperatorTripDTO(trip);
+  } catch (err) {
+    rethrowPrismaError(err);
+  }
+}
+export async function listOperatorTrips(p: {
+  userId: string;
+  limit: number;
+  cursor?: string | undefined;
+  status?: string | undefined;
+  driverId?: string | undefined;
+  busId?: string | undefined;
+  from?: string | undefined;
+  to?: string | undefined;
+}): Promise<{ data: OperatorTripDTO[]; nextCursor: string | null }> {
+  const opUser = await requireOperator(p.userId);
+  let cursorCreatedAt: Date | undefined = undefined;
+  if (p.cursor) {
+    try {
+      const decoded = JSON.parse(Buffer.from(p.cursor, 'base64').toString('utf8'));
+      cursorCreatedAt = new Date(decoded.createdAt);
+    } catch {
+      throw errors.invalidRequest('Invalid cursor');
+    }
+  }
+  const fromDate = p.from ? istDayBoundsUtc(p.from).from : undefined;
+  const toDate = p.to ? istDayBoundsUtc(p.to).to : undefined;
+  const rows = await repo.listTripsByOperator({
+    operatorId: opUser.operatorId,
+    limit: p.limit,
+    cursorCreatedAt,
+    status: p.status,
+    driverId: p.driverId,
+    busId: p.busId,
+    fromDate,
+    toDate,
+  });
+  const hasMore = rows.length > p.limit;
+  const data = hasMore ? rows.slice(0, p.limit) : rows;
+  const nextCursor = hasMore
+    ? Buffer.from(JSON.stringify({ createdAt: data[data.length - 1]!.createdAt.toISOString() })).toString('base64')
+    : null;
+  return { data: data.map(toOperatorTripDTO), nextCursor };
+}
+
+export async function getOperatorTrip(p: {
+  userId: string;
+  tripId: string;
+}): Promise<OperatorTripDTO> {
+  const opUser = await requireOperator(p.userId);
+  const trip = await repo.findTripForOperator(p.tripId, opUser.operatorId);
+  if (!trip) throw errors.notFound('Trip not found');
+  return toOperatorTripDTO(trip);
+}
+
+export async function reassignTrip(p: {
+  userId: string;
+  tripId: string;
+  driverId: string;
+}): Promise<OperatorTripDTO> {
+  const opUser = await requireOperator(p.userId);
+  const trip = await repo.findTripForOperator(p.tripId, opUser.operatorId);
+  if (!trip) throw errors.notFound('Trip not found');
+  if (trip.status !== 'SCHEDULED') {
+    throw errors.invalidTransition('Only SCHEDULED trips can be reassigned');
+  }
+  if (trip.driverId === p.driverId) return toOperatorTripDTO(trip);
+
+  const driver = await repo.findDriverForTripAssignment(p.driverId, opUser.operatorId);
+  if (!driver) throw networkErrors.driverNotFound();
+  if (driver.kycStatus === 'BLOCKED' || driver.kycStatus === 'DEACTIVATED') {
+    throw errors.driverBlocked();
+  }
+  if (driver.kycStatus !== 'VERIFIED' && driver.kycStatus !== 'ACTIVE') {
+    throw networkErrors.driverKycNotVerified();
+  }
+
+  const driverConflict = await repo.findOverlappingDriverTrip({
+    driverId: p.driverId,
+    departureTime: trip.schedule.departureTime,
+    arrivalTime: trip.schedule.arrivalTime,
+    excludeTripId: trip.id,
+  });
+  if (driverConflict) throw errors.activeTripExists(driverConflict.id);
+
+  try {
+    const updated = await repo.reassignTripDriver(p.tripId, p.driverId);
+    return toOperatorTripDTO(updated);
+  } catch (err) {
+    rethrowPrismaError(err);
+  }
+}
+
+export async function unassignTrip(p: { userId: string; tripId: string }): Promise<void> {
+  const opUser = await requireOperator(p.userId);
+  const trip = await repo.findTripForOperator(p.tripId, opUser.operatorId);
+  if (!trip) throw errors.notFound('Trip not found');
+  if (trip.status === 'IN_PROGRESS') {
+    throw errors.invalidTransition('Cannot unassign an IN_PROGRESS trip; cancel it first');
+  }
+  if (trip.status !== 'SCHEDULED') {
+    throw errors.invalidTransition('Only SCHEDULED trips can be unassigned');
+  }
+  await repo.softDeleteOperatorTrip(p.tripId);
 }

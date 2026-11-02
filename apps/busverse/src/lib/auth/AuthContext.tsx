@@ -1,124 +1,108 @@
-'use client';
+﻿'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { wsManager } from '../ws/socket';
 import { UserSession } from '../api/types';
 
-interface AuthContextType {
+interface AuthContextValue {
   user: UserSession | null;
-  accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  requestOtp: (phone: string, intent?: 'SIGNUP' | 'LOGIN') => Promise<{ expiresInSeconds: number }>;
-  verifyOtp: (phone: string, otp: string) => Promise<void>;
+  loginWithTokens: (tokens: { accessToken: string; refreshToken: string; user: UserSession }) => void;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserSession | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Synchronize authentication tokens & user state from localStorage on client load
-  useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem('busverse_access_token');
-      const storedUser = localStorage.getItem('busverse_user');
+  const initAuth = async () => {
+    const token = localStorage.getItem('busverse_access_token');
+    const cachedUser = localStorage.getItem('busverse_user');
 
-      if (storedToken && storedUser) {
-        setAccessToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        wsManager.connect(storedToken);
+    if (token) {
+      if (cachedUser) {
+        try {
+          setUser(JSON.parse(cachedUser));
+        } catch {
+          // ignore corrupted cache
+        }
       }
-    } catch (e) {
-      console.error('Failed to parse local authentication cache:', e);
-    } finally {
-      setIsLoading(false);
-    }
+      wsManager.connect(token);
 
-    const handleLogoutEvent = () => {
+      try {
+        const res = await api.get<{ user: UserSession }>('/passenger/me');
+        setUser(res.data.user);
+        localStorage.setItem('busverse_user', JSON.stringify(res.data.user));
+      } catch (err) {
+        console.warn('Silent session validation fallback', err);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    initAuth();
+
+    const handleLogout = () => {
       setUser(null);
-      setAccessToken(null);
       wsManager.disconnect();
     };
 
-    window.addEventListener('busverse:auth:logout', handleLogoutEvent);
-    return () => window.removeEventListener('busverse:auth:logout', handleLogoutEvent);
+    window.addEventListener('busverse:auth:logout', handleLogout);
+    return () => window.removeEventListener('busverse:auth:logout', handleLogout);
   }, []);
 
-  const requestOtp = useCallback(async (phone: string, intent: 'SIGNUP' | 'LOGIN' = 'LOGIN') => {
-    const res = await api.post<{ expiresInSeconds: number }>(
-      '/passenger/auth/otp/request',
-      { phone, intent },
-      { skipAuth: true }
-    );
-    return res.data;
-  }, []);
+  const loginWithTokens = (tokens: { accessToken: string; refreshToken: string; user: UserSession }) => {
+    localStorage.setItem('busverse_access_token', tokens.accessToken);
+    localStorage.setItem('busverse_refresh_token', tokens.refreshToken);
+    localStorage.setItem('busverse_user', JSON.stringify(tokens.user));
+    setUser(tokens.user);
+    wsManager.connect(tokens.accessToken);
+  };
 
-  const verifyOtp = useCallback(async (phone: string, otp: string) => {
-    const res = await api.post<{
-      accessToken: string;
-      refreshToken: string;
-      expiresAt: string;
-      user: UserSession;
-    }>(
-      '/passenger/auth/otp/verify',
-      { phone, otp },
-      { skipAuth: true }
-    );
-
-    const { accessToken: newAccess, refreshToken: newRefresh, user: newUser } = res.data;
-
-    localStorage.setItem('busverse_access_token', newAccess);
-    localStorage.setItem('busverse_refresh_token', newRefresh);
-    localStorage.setItem('busverse_user', JSON.stringify(newUser));
-
-    setAccessToken(newAccess);
-    setUser(newUser);
-    wsManager.connect(newAccess);
-  }, []);
-
-  const logout = useCallback(async () => {
+  const logout = async () => {
     try {
-      if (accessToken) {
-        await api.post('/passenger/auth/logout', {});
-      }
+      await api.post('/passenger/auth/logout');
     } catch {
-      // Local clean-up proceeds even if server revoking network fails
+      // Best-effort logout
     } finally {
       localStorage.removeItem('busverse_access_token');
       localStorage.removeItem('busverse_refresh_token');
       localStorage.removeItem('busverse_user');
       setUser(null);
-      setAccessToken(null);
       wsManager.disconnect();
     }
-  }, [accessToken]);
+  };
+
+  const refreshProfile = async () => {
+    const res = await api.get<{ user: UserSession }>('/passenger/me');
+    setUser(res.data.user);
+    localStorage.setItem('busverse_user', JSON.stringify(res.data.user));
+  };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        accessToken,
-        isAuthenticated: !!user && !!accessToken,
+        isAuthenticated: !!user,
         isLoading,
-        requestOtp,
-        verifyOtp,
+        loginWithTokens,
         logout,
+        refreshProfile,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};

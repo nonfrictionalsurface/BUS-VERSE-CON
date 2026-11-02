@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import type { ScheduleStatus } from './network.types.js';
+import type { Prisma } from '@prisma/client';
 
 export async function listCities(q: string | undefined, limit: number) {
   return prisma.city.findMany({
@@ -448,4 +449,130 @@ export async function activeSeatLockCountsForSchedules(scheduleIds: string[]): P
   const out = new Map<string, number>();
   for (const r of rows) out.set(r.scheduleId, r._count._all);
   return out;
+}
+
+// ============================================================
+//  Phase 13: Operator trip assignment
+// ============================================================
+
+export async function findScheduleForTripAssignment(scheduleId: string, operatorId: string) {
+  return prisma.schedule.findFirst({
+    where: { id: scheduleId, operatorId, deletedAt: null },
+    include: { bus: true, route: { include: { originCity: true, destCity: true } } },
+  });
+}
+
+export async function findDriverForTripAssignment(driverId: string, operatorId: string) {
+  return prisma.driverProfile.findFirst({
+    where: { id: driverId, operatorId, deletedAt: null },
+    include: { user: true },
+  });
+}
+
+export async function findActiveTripForSchedule(scheduleId: string) {
+  return prisma.trip.findFirst({
+    where: { scheduleId, deletedAt: null, status: { in: ['SCHEDULED', 'IN_PROGRESS'] } },
+    select: { id: true, status: true },
+  });
+}
+
+export async function findOverlappingDriverTrip(params: {
+  driverId: string;
+  departureTime: Date;
+  arrivalTime: Date;
+  excludeTripId?: string;
+}): Promise<{ id: string; scheduleId: string } | null> {
+  const rows = await prisma.trip.findMany({
+    where: {
+      driverId: params.driverId,
+      deletedAt: null,
+      status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
+      ...(params.excludeTripId ? { id: { not: params.excludeTripId } } : {}),
+      schedule: {
+        departureTime: { lt: params.arrivalTime },
+        arrivalTime: { gt: params.departureTime },
+      },
+    },
+    select: { id: true, scheduleId: true },
+    take: 1,
+  });
+  return rows[0] ?? null;
+}
+const TRIP_INCLUDE = {
+  schedule: { include: { route: { include: { originCity: true, destCity: true } } } },
+  bus: true,
+  driver: { include: { user: true } },
+} as const;
+
+export async function createOperatorTrip(params: {
+  scheduleId: string;
+  busId: string;
+  driverId: string;
+}) {
+  return prisma.trip.create({
+    data: {
+      scheduleId: params.scheduleId,
+      busId: params.busId,
+      driverId: params.driverId,
+      status: 'SCHEDULED',
+    },
+    include: TRIP_INCLUDE,
+  });
+}
+
+export async function listTripsByOperator(params: {
+  operatorId: string;
+  limit: number;
+  cursorCreatedAt?: Date | undefined;
+  status?: string | undefined;
+  driverId?: string | undefined;
+  busId?: string | undefined;
+  fromDate?: Date | undefined;
+  toDate?: Date | undefined;
+}) {
+  const scheduleFilter: Prisma.ScheduleWhereInput = {
+    operatorId: params.operatorId,
+    deletedAt: null,
+  };
+  if (params.fromDate || params.toDate) {
+    scheduleFilter.departureTime = {
+      ...(params.fromDate ? { gte: params.fromDate } : {}),
+      ...(params.toDate ? { lte: params.toDate } : {}),
+    };
+  }
+  return prisma.trip.findMany({
+    where: {
+      deletedAt: null,
+      schedule: scheduleFilter,
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.driverId ? { driverId: params.driverId } : {}),
+      ...(params.busId ? { busId: params.busId } : {}),
+      ...(params.cursorCreatedAt ? { createdAt: { lt: params.cursorCreatedAt } } : {}),
+    },
+    take: params.limit + 1,
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    include: TRIP_INCLUDE,
+  });
+}
+
+export async function findTripForOperator(tripId: string, operatorId: string) {
+  return prisma.trip.findFirst({
+    where: { id: tripId, deletedAt: null, schedule: { operatorId, deletedAt: null } },
+    include: TRIP_INCLUDE,
+  });
+}
+
+export async function reassignTripDriver(tripId: string, driverId: string) {
+  return prisma.trip.update({
+    where: { id: tripId },
+    data: { driverId },
+    include: TRIP_INCLUDE,
+  });
+}
+
+export async function softDeleteOperatorTrip(tripId: string) {
+  return prisma.trip.update({
+    where: { id: tripId },
+    data: { deletedAt: new Date() },
+  });
 }

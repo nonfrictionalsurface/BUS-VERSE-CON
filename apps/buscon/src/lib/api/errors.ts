@@ -18,24 +18,26 @@ export const ERROR_MESSAGES: Record<string, string> = {
   ACCOUNT_SUSPENDED: 'Your account has been suspended. Contact support.',
   ACCOUNT_DEACTIVATED: 'Your account is inactive. Contact support.',
 
-  // Bus
-  BUS_REGISTRATION_EXISTS: 'A bus with this registration number already exists in your fleet. Use a different number or click 🎲 to generate a unique one.',
+  BUS_REGISTRATION_EXISTS: 'A bus with this registration number already exists in your fleet.',
   BUS_NOT_FOUND: 'Bus not found.',
   BUS_LAYOUT_MISSING: 'This bus has no seat layout configured yet.',
 
-  // Route
   ROUTE_SAME_CITY: 'Origin and destination cities must be different.',
   ROUTE_IN_USE: 'This route is used by existing schedules.',
 
-  // Schedule
   SCHEDULE_CONFLICT: 'This bus already has an overlapping schedule.',
-  SCHEDULE_HAS_BOOKINGS: 'Cannot modify this schedule — bookings exist.',
+  SCHEDULE_HAS_BOOKINGS: 'Cannot delete — passengers have booked this schedule. Cancel and refund first.',
+  SCHEDULE_HAS_ACTIVE_TRIP: 'Cannot delete — this schedule has an active or completed trip.',
+  INVALID_SCHEDULE: 'This schedule cannot be assigned — it must be PUBLISHED and in the future.',
 
-  // Driver
   LICENSE_ALREADY_REGISTERED: 'This driver license is already registered.',
   DRIVER_ON_DUTY: 'Cannot modify a driver who is currently on duty.',
+  DRIVER_NOT_VERIFIED: 'This driver has not completed KYC verification.',
+  DRIVER_BLOCKED: 'This driver is blocked or deactivated.',
 
-  // Layout
+  ACTIVE_TRIP_EXISTS: 'This driver already has an overlapping trip.',
+  INVALID_TRANSITION: 'This action is not valid for the current state.',
+
   CAPACITY_MISMATCH: 'Seat count must match the bus capacity.',
 };
 
@@ -45,10 +47,6 @@ export function getErrorMessage(code: string, fallback?: string): string {
 
 export function isApiError(err: unknown): err is { status: number; code: string; message: string; details?: any } {
   return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    'message' in err &&
-    'status' in err
+    typeof err === 'object' && err !== null && 'code' in err && 'message' in err && 'status' in err
   );
 }

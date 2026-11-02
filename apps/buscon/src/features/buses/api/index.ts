@@ -49,5 +49,14 @@ export const busesApi = {
   },
   updateLayout: async (id: string, data: LayoutPayload): Promise<void> => {
     await api.put(`/operator/buses/${id}/layout`, data);
-  }
+  },
+  getLayout: async (id: string): Promise<LayoutPayload | null> => {
+    try {
+      const res = await api.get<LayoutPayload>(`/operator/buses/${id}/layout`);
+      return res.data;
+    } catch (err: any) {
+      if (err?.status === 404) return null;
+      throw err;
+    }
+  },
 };

@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { routesApi, CreateRouteInput } from '../api';
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { routesApi, CreateRouteInput, CreateRouteStandInput } from '../api';
 
 export function useRoutes() {
   return useQuery({ queryKey: ['routes'], queryFn: routesApi.list });
@@ -10,6 +10,13 @@ export function useCreateRoute() {
   return useMutation({
     mutationFn: (data: CreateRouteInput) => routesApi.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['routes'] }),
+  });
+}
+
+export function useAddStand() {
+  return useMutation({
+    mutationFn: ({ routeId, stand }: { routeId: string; stand: CreateRouteStandInput }) =>
+      routesApi.addStand(routeId, stand),
   });
 }
 

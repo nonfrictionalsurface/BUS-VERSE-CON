@@ -131,3 +131,21 @@ export interface ManagerDTO {
   email: string | null; phone: string; role: 'OWNER' | 'MANAGER';
   invitedAt: string; acceptedAt: string | null;
 }
+// ---------- Phase 13: Operator trip assignment ----------
+export interface OperatorTripDTO {
+  tripId: string;
+  scheduleId: string;
+  busId: string;
+  driverId: string;
+  driverName: string | null;
+  driverPhone: string;
+  busRegistrationNumber: string;
+  routeSummary: { originCity: string; destinationCity: string };
+  departureTime: string;
+  arrivalTime: string;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  startedAt: string | null;
+  endedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+}

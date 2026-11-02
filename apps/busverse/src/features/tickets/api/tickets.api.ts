@@ -1,43 +1,26 @@
-import { api } from '@/lib/api/client';
-import { TicketData, RefundPreviewData, LiveTripSnapshot } from '../types';
-import { BookingResponse } from '@/features/booking/types';
+﻿import { api } from '@/lib/api/client';
 
-export async function fetchBookingTicket(bookingId: string): Promise<TicketData> {
-  const response = await api.get<TicketData>(`/passenger/bookings/${bookingId}/ticket`);
-  return response.data;
-}
-
-export async function fetchRefundPreview(bookingId: string): Promise<RefundPreviewData> {
-  const response = await api.get<RefundPreviewData>(`/passenger/bookings/${bookingId}/refund-preview`);
-  return response.data;
-}
-
-export async function executeCancelBooking(bookingId: string): Promise<{
+export interface TicketPayload {
+  ticketId: string;
+  bookingId: string;
+  qrPayload: string;
   status: string;
-  refund: {
-    refundId: string;
-    tier: string;
-    amountPaise: number;
-    status: string;
-  };
-}> {
-  const response = await api.post<any>(`/passenger/bookings/${bookingId}/cancel`, {});
-  return response.data;
+  issuedAt: string;
 }
 
-export async function fetchPassengerBookings(limit = 20, cursor?: string | null): Promise<{
-  data: BookingResponse[];
-  nextCursor?: string | null;
-}> {
-  const url = `/passenger/bookings?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`;
-  const response = await api.get<BookingResponse[]>(url);
-  return {
-    data: response.data || [],
-    nextCursor: response.meta?.nextCursor,
-  };
-}
+export const ticketsApi = {
+  getTicket: async (bookingId: string): Promise<TicketPayload> => {
+    const res = await api.get<TicketPayload>(`/passenger/bookings/${bookingId}/ticket`);
+    return res.data;
+  },
 
-export async function fetchLiveTripSnapshot(tripId: string): Promise<LiveTripSnapshot> {
-  const response = await api.get<LiveTripSnapshot>(`/passenger/trips/${tripId}/live`);
-  return response.data;
-}
+  getRefundPreview: async (bookingId: string) => {
+    const res = await api.get<any>(`/passenger/bookings/${bookingId}/refund-preview`);
+    return res.data;
+  },
+
+  cancelBooking: async (bookingId: string) => {
+    const res = await api.post<any>(`/passenger/bookings/${bookingId}/cancel`);
+    return res.data;
+  },
+};

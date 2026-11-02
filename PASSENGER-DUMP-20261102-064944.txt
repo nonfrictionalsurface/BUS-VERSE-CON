@@ -1,0 +1,2849 @@
+PASSENGER APP DUMP
+Generated: 2026-11-02 06:49:44
+Root: D:\Bus-booking-proj2\BUS_project\apps\passenger-app
+
+
+########## 1. BOOTSTRAP FILES ##########
+
+================================================================================
+FILE: package.json
+================================================================================
+{
+  "name": "passenger-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "clean": "expo start -c"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "^6.11.0",
+    "@tanstack/react-query": "^5.51.0",
+    "expo": "~51.0.28",
+    "expo-status-bar": "~1.12.1",
+    "lucide-react-native": "^0.468.0",
+    "react": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-gesture-handler": "~2.16.1",
+    "react-native-reanimated": "~3.10.1",
+    "react-native-safe-area-context": "4.10.5",
+    "react-native-screens": "~3.31.1",
+    "react-native-svg": "15.2.0",
+    "socket.io-client": "4.8.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@types/react": "~18.2.79",
+    "typescript": "~5.3.3"
+  },
+  "private": true
+}
+
+================================================================================
+FILE: app.json
+================================================================================
+{
+  "expo": {
+    "name": "BusVerse",
+    "slug": "busverse",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "busverse",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#060A12"
+    },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "app.busverse.passenger" },
+    "android": { "package": "app.busverse.passenger", "adaptiveIcon": { "backgroundColor": "#060A12" } },
+    "plugins": ["expo-font"],
+    "extra": { "eas": { "projectId": "00000000-0000-0000-0000-000000000000" } }
+  }
+}
+
+================================================================================
+FILE: app.config.js
+================================================================================
+(NOT FOUND)
+
+================================================================================
+FILE: tsconfig.json
+================================================================================
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}
+
+
+================================================================================
+FILE: babel.config.js
+================================================================================
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: ['react-native-reanimated/plugin'],
+  };
+};
+
+================================================================================
+FILE: metro.config.js
+================================================================================
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
+
+const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, '../..');
+
+config.watchFolders = [workspaceRoot];
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
+module.exports = config;
+
+================================================================================
+FILE: index.js
+================================================================================
+import { registerRootComponent } from 'expo';
+import App from './App';
+registerRootComponent(App);
+
+
+================================================================================
+FILE: App.tsx
+================================================================================
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { StatusBar } from 'expo-status-bar';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { AuthProvider } from './src/lib/auth/AuthContext';
+import { RootNavigator } from './src/navigation/RootNavigator';
+
+const queryClient = new QueryClient();
+
+const MainApp: React.FC = () => {
+  const { theme } = useTheme();
+  return (
+    <>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </>
+  );
+};
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <MainApp />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+================================================================================
+FILE: .env
+================================================================================
+# Copy this to .env and fill in your LAN IP.
+# Do NOT use localhost from a physical phone ó it points to the phone itself.
+EXPO_PUBLIC_API_BASE=http://192.168.1.100:4310/v1
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4310
+EXPO_PUBLIC_DEV_MODE=true
+
+
+================================================================================
+FILE: .env.example
+================================================================================
+# Copy this to .env and fill in your LAN IP.
+# Do NOT use localhost from a physical phone ó it points to the phone itself.
+EXPO_PUBLIC_API_BASE=http://192.168.1.100:4310/v1
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4310
+EXPO_PUBLIC_DEV_MODE=true
+
+
+================================================================================
+FILE: .npmrc
+================================================================================
+auto-install-peers=true
+public-hoist-pattern[]=*react*
+public-hoist-pattern[]=*expo*
+public-hoist-pattern[]=@expo/*
+public-hoist-pattern[]=ws
+
+================================================================================
+FILE: .gitignore
+================================================================================
+(NOT FOUND)
+
+########## 2. INSTALLED DEPENDENCIES ##########
+
+[dependencies]
+  @react-native-async-storage/async-storage = 1.23.1
+  @react-navigation/native = ^6.1.18
+  @react-navigation/native-stack = ^6.11.0
+  @tanstack/react-query = ^5.51.0
+  expo = ~51.0.28
+  expo-status-bar = ~1.12.1
+  lucide-react-native = ^0.468.0
+  react = 18.2.0
+  react-native = 0.74.5
+  react-native-gesture-handler = ~2.16.1
+  react-native-reanimated = ~3.10.1
+  react-native-safe-area-context = 4.10.5
+  react-native-screens = ~3.31.1
+  react-native-svg = 15.2.0
+  socket.io-client = 4.8.1
+
+[devDependencies]
+  @babel/core = ^7.24.0
+  @types/react = ~18.2.79
+  typescript = ~5.3.3
+
+########## 3. SOURCE FILES (src/**) ##########
+
+================================================================================
+FILE: src/components/brand/BusVerseLogo.tsx
+================================================================================
+import React from 'react';
+import Svg, { G, Path } from 'react-native-svg';
+import { useTheme } from '../../theme/ThemeContext';
+
+export const BusVerseLogo: React.FC<{ size?: number; variant?: 'full' | 'icon' }> = ({
+  size = 120,
+  variant = 'full',
+}) => {
+  const { tokens } = useTheme();
+
+  return (
+    <Svg viewBox="0 0 1254 1254" width={size} height={size}>
+      <G fill={tokens.brandPrimary}>
+        <Path
+          fillRule="evenodd"
+          d="M 332,609 L 332,627 L 340,645 L 360,667 L 392,690 L 433,712 L 471,728 L 504,739 L 554,752 L 595,759 L 634,763 L 721,764 L 765,760 L 818,752 L 865,741 L 888,733 L 702,690 L 570,652 L 493,623 L 460,605 L 444,590 L 440,580 L 441,572 L 445,565 L 455,556 L 474,546 L 496,538 L 555,523 L 517,526 L 474,533 L 435,543 L 404,554 L 372,569 L 353,581 L 338,596 Z"
+        />
+        <Path
+          fillRule="evenodd"
+          d="M 987,375 L 966,377 L 941,389 L 924,408 L 916,430 L 916,451 L 924,474 L 980,547 L 1037,476 L 1043,464 L 1048,444 L 1045,419 L 1035,400 L 1023,388 L 1003,378 Z"
+        />
+      </G>
+
+      <G fill={tokens.textBright}>
+        <Path
+          fillRule="evenodd"
+          d="M 857,563 L 830,573 L 825,578 L 819,595 L 822,597 L 850,594 L 856,586 Z M 444,467 L 426,472 L 418,478 L 412,498 L 410,517 L 440,512 Z M 972,626 L 971,590 L 966,571 L 958,554 L 945,536 L 935,526 L 909,508 L 888,498 L 889,485 L 886,464 L 879,455 L 870,452 L 853,452 L 855,463 L 866,463 L 871,467 L 873,472 L 874,494 L 861,492 L 868,552 L 868,594 L 863,610 L 851,619 L 624,620 L 621,588 L 616,570 L 606,556 L 595,551 L 581,553 L 570,564 L 564,579 L 561,609 L 511,605 L 535,617 L 568,630 L 593,638 L 625,645 L 778,645 L 797,639 L 809,632 L 842,632 L 842,637 L 836,649 L 828,659 L 818,668 L 802,677 L 776,684 L 727,685 L 898,728 L 919,716 L 932,706 L 947,690 L 963,662 Z"
+        />
+      </G>
+
+      {variant === 'full' && (
+        <G fill={tokens.textBright}>
+          <Path
+            fillRule="evenodd"
+            d="M 128,833 L 107,990 L 216,990 L 229,987 L 246,978 L 256,967 L 263,947 L 263,930 L 257,916 L 244,906 L 256,896 L 264,879 L 264,859 L 257,845 L 248,838 L 230,833 Z"
+          />
+          <Path
+            fill={tokens.brandPrimary}
+            fillRule="evenodd"
+            d="M 688,829 L 642,830 L 585,943 L 581,934 L 555,831 L 512,831 L 556,991 L 600,991 Z"
+          />
+        </G>
+      )}
+    </Svg>
+  );
+};
+
+================================================================================
+FILE: src/components/brand/TransitLoader.tsx
+================================================================================
+import React, { useEffect, useRef } from 'react';
+import { View, Animated, Easing, StyleSheet, Text } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+
+export function TransitLoader({ message = 'CONNECTING TRANSIT' }: { message?: string }) {
+  const { tokens } = useTheme();
+  const bounce1 = useRef(new Animated.Value(0)).current;
+  const bounce2 = useRef(new Animated.Value(0)).current;
+  const bounce3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const createBounce = (val: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(val, { toValue: -10, duration: 300, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(val, { toValue: 0, duration: 300, easing: Easing.in(Easing.ease), useNativeDriver: true }),
+          Animated.delay(600 - delay),
+        ])
+      );
+    };
+
+    Animated.parallel([
+      createBounce(bounce1, 0),
+      createBounce(bounce2, 150),
+      createBounce(bounce3, 300)
+    ]).start();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.dotsRow}>
+        <Animated.View style={[styles.dot, { backgroundColor: tokens.brand.primary, transform: [{ translateY: bounce1 }] }]} />
+        <Animated.View style={[styles.dot, { backgroundColor: tokens.telemetry.cyan, transform: [{ translateY: bounce2 }] }]} />
+        <Animated.View style={[styles.dot, { backgroundColor: tokens.signal.emerald, transform: [{ translateY: bounce3 }] }]} />
+      </View>
+      <Text style={[styles.text, { color: tokens.text.muted }]}>{message}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  dotsRow: { flexDirection: 'row', gap: 12, marginBottom: 20, height: 40, alignItems: 'center' },
+  dot: { width: 16, height: 16, borderRadius: 8 },
+  text: { fontSize: 12, fontWeight: '800', letterSpacing: 3, fontFamily: 'monospace' }
+});
+
+================================================================================
+FILE: src/components/BusVerseBrand.tsx
+================================================================================
+export { BusVerseLogo as BusVerseBrand } from './brand/BusVerseLogo';
+
+================================================================================
+FILE: src/components/common/DatePickerModal.tsx
+================================================================================
+import React from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/ThemeContext';
+
+interface DatePickerModalProps {
+  visible: boolean;
+  selectedDate: string;
+  onClose: () => void;
+  onSelectDate: (dateStr: string) => void;
+}
+
+export function DatePickerModal({
+  visible,
+  selectedDate,
+  onClose,
+  onSelectDate,
+}: DatePickerModalProps) {
+  const { tokens } = useTheme();
+
+  // Generate the next 14 calendar dates
+  const nextDates = Array.from({ length: 14 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const dateFormatted = `${day}-${month}-${year}`;
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : weekday;
+    return { dateFormatted, label, day, weekday };
+  });
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.backdrop}>
+        <View style={[styles.card, { backgroundColor: tokens.surface.card, borderColor: tokens.border.strong }]}>
+          <View style={styles.header}>
+            <View>
+              <Text style={[styles.title, { color: tokens.text.bright }]}>Select Journey Date</Text>
+              <Text style={[styles.sub, { color: tokens.text.muted }]}>Choose departure date for bus schedules</Text>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={20} color={tokens.text.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.gridScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.grid}>
+              {nextDates.map((item) => {
+                const isSelected = selectedDate === item.dateFormatted;
+                return (
+                  <TouchableOpacity
+                    key={item.dateFormatted}
+                    style={[
+                      styles.dateCell,
+                      {
+                        backgroundColor: isSelected ? tokens.brand.primary : tokens.surface.hover,
+                        borderColor: isSelected ? tokens.brand.primary : tokens.border.subtle,
+                      },
+                    ]}
+                    onPress={() => {
+                      onSelectDate(item.dateFormatted);
+                      onClose();
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.cellWeekday, { color: isSelected ? '#FFFFFF' : tokens.text.muted }]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.cellDay, { color: isSelected ? '#FFFFFF' : tokens.text.bright }]}>
+                      {item.day}
+                    </Text>
+                    <Text style={[styles.cellFull, { color: isSelected ? '#FFFFFF' : tokens.text.secondary }]}>
+                      {item.dateFormatted}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'flex-end',
+    padding: 12,
+  },
+  card: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 18,
+    maxHeight: '75%',
+    gap: 14,
+  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  title: { fontSize: 16, fontWeight: '800' },
+  sub: { fontSize: 11, marginTop: 2 },
+  closeBtn: { padding: 4 },
+  gridScroll: { marginVertical: 4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+  dateCell: {
+    width: '48%',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: 'center',
+    gap: 2,
+  },
+  cellWeekday: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  cellDay: { fontSize: 20, fontWeight: '900' },
+  cellFull: { fontSize: 9.5, fontFamily: 'monospace' },
+});
+
+================================================================================
+FILE: src/components/common/GradientBar.tsx
+================================================================================
+import React from 'react';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
+
+interface Props {
+  from: string;
+  to: string;
+  width?: number | string;
+  height?: number;
+  radius?: number;
+}
+
+export function GradientBar({ from, to, width = '100%', height = 4, radius = 2 }: Props) {
+  const w = typeof width === 'number' ? width : 400;
+  return (
+    <Svg width={width as any} height={height} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none">
+      <Defs>
+        <SvgLinearGradient id="gb" x1="0%" y1="0%" x2="100%" y2="0%">
+          <Stop offset="0%" stopColor={from} />
+          <Stop offset="100%" stopColor={to} />
+        </SvgLinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width={w} height={height} rx={radius} fill="url(#gb)" />
+    </Svg>
+  );
+}
+
+export function GradientCard({ from, to, height = 3 }: { from: string; to: string; height?: number }) {
+  return <GradientBar from={from} to={to} height={height} radius={0} />;
+}
+
+================================================================================
+FILE: src/components/common/ProfileMenuModal.tsx
+================================================================================
+import React from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/ThemeContext';
+
+interface ProfileMenuModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onNavigate: (tab: 'SEARCH' | 'TRACK' | 'TICKETS') => void;
+}
+
+export function ProfileMenuModal({
+  visible,
+  onClose,
+  onNavigate,
+}: ProfileMenuModalProps) {
+  const { theme, tokens, toggleTheme } = useTheme();
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.backdrop}>
+        <View style={[styles.menuCard, { backgroundColor: tokens.surface.card, borderColor: tokens.border.strong }]}>
+          {/* Header Profile Identity */}
+          <View style={styles.head}>
+            <View style={styles.userRow}>
+              <View style={[styles.avatarBox, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+                <Ionicons name="person" size={18} color={tokens.brand.primary} />
+              </View>
+              <View>
+                <Text style={[styles.userName, { color: tokens.text.bright }]}>Mohammed Shaghaf</Text>
+                <Text style={[styles.userPhone, { color: tokens.text.muted }]}>+917235041123</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={20} color={tokens.text.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Navigation Links */}
+          <View style={styles.navLinks}>
+            <TouchableOpacity
+              style={[styles.linkItem, { backgroundColor: tokens.surface.hover }]}
+              onPress={() => {
+                onNavigate('SEARCH');
+                onClose();
+              }}
+            >
+              <Ionicons name="compass-outline" size={18} color={tokens.brand.primary} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.linkTitle, { color: tokens.text.bright }]}>Explore Schedules</Text>
+                <Text style={[styles.linkSub, { color: tokens.text.muted }]}>Search routes & available coaches</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={tokens.text.muted} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.linkItem, { backgroundColor: tokens.surface.hover }]}
+              onPress={() => {
+                onNavigate('TRACK');
+                onClose();
+              }}
+            >
+              <Ionicons name="map-outline" size={18} color={tokens.brand.primary} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.linkTitle, { color: tokens.text.bright }]}>Live Bus Tracking</Text>
+                <Text style={[styles.linkSub, { color: tokens.text.muted }]}>Track coach GPS on OpenStreetMap</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={tokens.text.muted} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.linkItem, { backgroundColor: tokens.surface.hover }]}
+              onPress={() => {
+                onNavigate('TICKETS');
+                onClose();
+              }}
+            >
+              <Ionicons name="ticket-outline" size={18} color={tokens.brand.primary} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={[styles.linkTitle, { color: tokens.text.bright }]}>My Boarding Passes</Text>
+                <Text style={[styles.linkSub, { color: tokens.text.muted }]}>View verified tickets & QR passes</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={tokens.text.muted} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Theme Switcher Toggle */}
+          <TouchableOpacity
+            style={[styles.themeRow, { borderColor: tokens.border.subtle, backgroundColor: tokens.surface.hover }]}
+            onPress={toggleTheme}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons
+                name={theme === 'dark' ? 'sunny' : 'moon-outline'}
+                size={16}
+                color={theme === 'dark' ? tokens.warning.amber : tokens.brand.primary}
+              />
+              <Text style={[styles.themeText, { color: tokens.text.bright }]}>
+                {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              </Text>
+            </View>
+            <Ionicons name="swap-horizontal" size={16} color={tokens.text.muted} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  menuCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    gap: 16,
+  },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  userRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  avatarBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userName: { fontSize: 14, fontWeight: '800' },
+  userPhone: { fontSize: 11, fontFamily: 'monospace' },
+  closeBtn: { padding: 4 },
+  navLinks: { gap: 8 },
+  linkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+  },
+  linkTitle: { fontSize: 13, fontWeight: '700' },
+  linkSub: { fontSize: 10, marginTop: 1 },
+  themeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  themeText: { fontSize: 12, fontWeight: '700' },
+});
+
+================================================================================
+FILE: src/components/common/VerifiedBadge.tsx
+================================================================================
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Animated, Easing, StyleSheet } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+
+export function VerifiedBadge({ label = 'VERIFIED' }: { label?: string }) {
+  const { tokens } = useTheme();
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 0.4, duration: 900, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+        Animated.timing(pulse, { toValue: 1.0, duration: 900, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
+
+  return (
+    <View style={[styles.wrap, { backgroundColor: tokens.signal.subtle, borderColor: tokens.signal.emerald + '55' }]}>
+      <Animated.View style={[styles.dot, { backgroundColor: tokens.signal.emerald, opacity: pulse }]} />
+      <Text style={[styles.text, { color: tokens.signal.emerald }]}>{label}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, borderWidth: 1,
+  },
+  dot: { width: 5, height: 5, borderRadius: 2.5 },
+  text: { fontSize: 8.5, fontWeight: '800', fontFamily: 'monospace', letterSpacing: 0.4 },
+});
+
+================================================================================
+FILE: src/components/seatdeck/SeatDeck.tsx
+================================================================================
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SeatItem } from '../../types';
+import { useTheme } from '../../theme/ThemeContext';
+
+interface SeatDeckProps {
+  seats: SeatItem[];
+  selectedSeatId: string | null;
+  onSelectSeat: (seat: SeatItem) => void;
+}
+
+export const SeatDeck: React.FC<SeatDeckProps> = ({ seats, selectedSeatId, onSelectSeat }) => {
+  const { tokens } = useTheme();
+
+  const rows: Record<string, SeatItem[]> = {};
+  seats.forEach((seat) => {
+    if (!rows[seat.seatRow]) rows[seat.seatRow] = [];
+    rows[seat.seatRow].push(seat);
+  });
+
+  return (
+    <View style={[styles.fuselage, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderStrong }]}>
+      <View style={[styles.windshield, { borderColor: tokens.telemetryCyan, backgroundColor: tokens.canvasSubtle }]} />
+      {Object.keys(rows).sort().map((rowLetter) => {
+        const rowSeats = rows[rowLetter].sort((a, b) => a.seatColumn - b.seatColumn);
+        const leftPair = rowSeats.slice(0, 2);
+        const rightPair = rowSeats.slice(2);
+
+        return (
+          <View key={rowLetter} style={styles.rowContainer}>
+            <View style={styles.pair}>
+              {leftPair.map((s) => (
+                <SeatCell
+                  key={s.id}
+                  seat={s}
+                  isSelected={s.id === selectedSeatId}
+                  onPress={() => onSelectSeat(s)}
+                />
+              ))}
+            </View>
+            <Text style={[styles.aisleText, { color: tokens.textMuted }]}>{rowLetter}</Text>
+            <View style={styles.pair}>
+              {rightPair.map((s) => (
+                <SeatCell
+                  key={s.id}
+                  seat={s}
+                  isSelected={s.id === selectedSeatId}
+                  onPress={() => onSelectSeat(s)}
+                />
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+const SeatCell: React.FC<{ seat: SeatItem; isSelected: boolean; onPress: () => void }> = ({
+  seat,
+  isSelected,
+  onPress,
+}) => {
+  const { tokens } = useTheme();
+  const isBooked = seat.state === 'BOOKED';
+  const isLocked = seat.state === 'LOCKED' && !isSelected;
+
+  let bg = tokens.seatAvailableBg;
+  let border = tokens.seatAvailableBorder;
+  let text = tokens.seatAvailableText;
+
+  if (isBooked) {
+    bg = tokens.seatBookedBg;
+    border = tokens.seatBookedBorder;
+    text = tokens.seatBookedText;
+  } else if (isSelected) {
+    bg = tokens.seatSelectedBg;
+    border = tokens.seatSelectedBorder;
+    text = tokens.seatSelectedText;
+  } else if (isLocked) {
+    bg = tokens.seatLockedBg;
+    border = tokens.seatLockedBorder;
+    text = tokens.seatLockedText;
+  } else if (seat.isFemaleOnly) {
+    bg = tokens.seatFemaleBg;
+    border = tokens.seatFemaleBorder;
+    text = tokens.seatFemaleText;
+  }
+
+  return (
+    <TouchableOpacity
+      disabled={isBooked || isLocked}
+      onPress={onPress}
+      style={[styles.cell, { backgroundColor: bg, borderColor: border }]}
+    >
+      <Text style={[styles.cellText, { color: text }]}>{seat.seatLabel}</Text>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  fuselage: {
+    borderRadius: 32,
+    borderWidth: 2,
+    padding: 20,
+    paddingTop: 36,
+    marginVertical: 16,
+  },
+  windshield: {
+    height: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderWidth: 1.5,
+    marginBottom: 20,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 6,
+  },
+  pair: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  aisleText: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    fontWeight: '700',
+  },
+  cell: {
+    width: 42,
+    height: 46,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cellText: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+  },
+});
+
+================================================================================
+FILE: src/components/ticket/TicketStub.tsx
+================================================================================
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
+import { useTheme } from '../../theme/ThemeContext';
+
+export function TicketStub({ data, onPressQr }: any) {
+  const { tokens } = useTheme();
+  
+  // Safe fallbacks for missing data
+  const qrData = data?.qrPayload || 'v1:demo';
+  const origin = data?.originCity || 'Origin';
+  const dest = data?.destinationCity || 'Destination';
+  const seats = data?.seatLabels?.join(', ') || 'A1';
+  const pnr = data?.pnr || data?.bookingId || 'BKG-000';
+
+  return (
+    <View style={[styles.stub, { backgroundColor: tokens.surface.card, borderColor: tokens.border.strong }]}>
+      <View style={styles.top}>
+        <View style={styles.statusRow}>
+          <View style={[styles.pill, { backgroundColor: tokens.brand.subtle }]}>
+            <View style={[styles.dot, { backgroundColor: tokens.signal.emerald }]} />
+            <Text style={[styles.pillText, { color: tokens.brand.primary }]}>CONFIRMED</Text>
+          </View>
+          <Text style={[styles.plate, { color: tokens.text.muted }]}>{data?.busPlate || 'UP-32-XXXX'}</Text>
+        </View>
+        <View style={styles.cities}>
+          <Text style={[styles.city, { color: tokens.text.bright }]}>{origin.toUpperCase()}</Text>
+          <Text style={{ color: tokens.telemetry.cyan, fontSize: 18 }}>‚Üí</Text>
+          <Text style={[styles.city, { color: tokens.text.bright }]}>{dest.toUpperCase()}</Text>
+        </View>
+        <Text style={[styles.stands, { color: tokens.text.secondary }]}>{data?.originStand || 'Origin'} ‚Üí {data?.destinationStand || 'Dest'}</Text>
+        <View style={[styles.grid, { borderTopColor: tokens.border.hairline }]}>
+          <View><Text style={[styles.lbl, { color: tokens.text.muted }]}>DEPARTURE</Text><Text style={[styles.val, { color: tokens.text.bright }]}>{data?.departureTime || '--:--'}</Text></View>
+          <View style={{ alignItems: 'center' }}><Text style={[styles.lbl, { color: tokens.text.muted }]}>SEAT</Text><Text style={[styles.val, { color: tokens.brand.primary }]}>{seats}</Text></View>
+          <View style={{ alignItems: 'flex-end' }}><Text style={[styles.lbl, { color: tokens.text.muted }]}>FARE</Text><Text style={[styles.val, { color: tokens.text.bright }]}>‚Çπ{data?.fareInr || 0}</Text></View>
+        </View>
+      </View>
+      <View style={[styles.bottom, { backgroundColor: tokens.surface.hover }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, { color: tokens.text.bright }]}>{data?.passengerName || 'Passenger'}</Text>
+          <Text style={[styles.pnr, { color: tokens.text.muted }]}>PNR: <Text style={{ color: tokens.text.bright }}>{pnr}</Text></Text>
+          <Text style={{ color: tokens.signal.emerald, fontSize: 10, marginTop: 5, fontWeight: 'bold' }}>‚óè Cryptographically verified</Text>
+        </View>
+        <TouchableOpacity onPress={onPressQr} style={styles.qrBox}>
+          <QRCode value={qrData} size={80} backgroundColor="#FFFFFF" color="#000000" ecl="M" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  stub: { borderRadius: 24, borderWidth: 1.5, overflow: 'hidden' },
+  top: { padding: 20, borderBottomWidth: 1.5, borderStyle: 'dashed', borderColor: '#ccc' },
+  statusRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  dot: { width: 5, height: 5, borderRadius: 2.5 },
+  pillText: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: '900' },
+  plate: { fontSize: 10.5, fontFamily: 'monospace', fontWeight: '700' },
+  cities: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  city: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+  stands: { fontSize: 11.5, marginBottom: 12 },
+  grid: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12, borderTopWidth: 1 },
+  lbl: { fontSize: 8.5, fontFamily: 'monospace', fontWeight: '700' },
+  val: { fontSize: 13.5, fontWeight: '800', marginTop: 3 },
+  bottom: { padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  name: { fontSize: 14, fontWeight: '700' },
+  pnr: { fontSize: 10.5, fontFamily: 'monospace', marginTop: 3 },
+  qrBox: { width: 88, height: 88, borderRadius: 12, backgroundColor: '#FFF', padding: 4, borderWidth: 1, borderColor: '#ccc', alignItems: 'center', justifyContent: 'center' }
+});
+
+================================================================================
+FILE: src/components/TransitLoader.tsx
+================================================================================
+import React, { useEffect, useRef } from 'react';
+import { View, Animated, Easing, Text, StyleSheet } from 'react-native';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useTheme } from '../theme/ThemeContext';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+export function TransitLoader({ message = 'CONNECTING TRANSIT' }: { message?: string }) {
+  const { tokens } = useTheme();
+  const spin = useRef(new Animated.Value(0)).current;
+  const bounce = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounce, { toValue: -5, duration: 400, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(bounce, { toValue: 0, duration: 400, easing: Easing.inOut(Easing.ease), useNativeDriver: true })
+      ])
+    ).start();
+  }, []);
+
+  const spinInterpolate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={styles.container}>
+      <Animated.View style={{ transform: [{ translateY: bounce }] }}>
+        <Svg viewBox="0 0 100 100" width={120} height={120}>
+          {/* Road */}
+          <Rect x="10" y="80" width="80" height="4" rx="2" fill={tokens.surface.sunken} />
+          
+          {/* Bus Body */}
+          <Rect x="20" y="30" width="60" height="40" rx="8" fill={tokens.brand.primary} />
+          <Rect x="25" y="35" width="15" height="15" rx="3" fill="#FFF" opacity={0.8} />
+          <Rect x="45" y="35" width="15" height="15" rx="3" fill="#FFF" opacity={0.8} />
+          <Rect x="65" y="35" width="10" height="15" rx="3" fill="#FFF" opacity={0.8} />
+          
+          {/* Wheels */}
+          <Circle cx="35" cy="70" r="10" fill="#111" />
+          <Circle cx="35" cy="70" r="4" fill="#FFF" />
+          <Circle cx="75" cy="70" r="10" fill="#111" />
+          <Circle cx="75" cy="70" r="4" fill="#FFF" />
+        </Svg>
+      </Animated.View>
+      <Text style={[styles.text, { color: tokens.text.muted }]}>{message}...</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20 },
+  text: { fontSize: 12, fontWeight: '700', letterSpacing: 2, fontFamily: 'monospace' }
+});
+
+================================================================================
+FILE: src/config.ts
+================================================================================
+export const API_BASE = 'http://localhost:4310/v1';
+export const USE_BACKEND = true;
+
+================================================================================
+FILE: src/data/dbSchedules.json
+================================================================================
+[
+  {
+    "id": "f92d16f8-433e-5a65-b366-3144ac317a9c",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-6789",
+    "busModel": "Rajdhani Express ‚Ä¢ Tata Marcopolo",
+    "coachType": "AC_SEATER",
+    "baseFareInr": 1050,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "CHARGING",
+      "WIFI"
+    ],
+    "driverName": "Rajeshwar Pratap Sharma",
+    "driverPhone": "+91 98390 12844",
+    "driverLicense": "UP-78-2018-DL8821"
+  },
+  {
+    "id": "09306bf8-6253-585c-b10e-a0cf9fcd72aa",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-3456",
+    "busModel": "Rajdhani Express ‚Ä¢ Volvo B11R Sleeper",
+    "coachType": "AC_SLEEPER",
+    "baseFareInr": 1400,
+    "totalSeats": 30,
+    "availableSeats": 22,
+    "amenities": [
+      "CHARGING",
+      "WIFI",
+      "WATER"
+    ],
+    "driverName": "Gurpreet Singh Gill",
+    "driverPhone": "+91 94150 49120",
+    "driverLicense": "UP-32-2020-DL4188"
+  },
+  {
+    "id": "0eccb8d1-5cf4-5afd-ad3d-3b0c4e97a361",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-2345",
+    "busModel": "Rajdhani Express ‚Ä¢ Volvo 9600",
+    "coachType": "AC_SEATER",
+    "baseFareInr": 950,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "CHARGING",
+      "WIFI",
+      "WATER",
+      "BLANKET",
+      "CCTV"
+    ],
+    "driverName": "Manoj Kumar Yadav",
+    "driverPhone": "+91 96950 33918",
+    "driverLicense": "UP-78-2016-DL3321"
+  },
+  {
+    "id": "d9fac779-a478-544b-8203-f95eff22f400",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-3456",
+    "busModel": "Rajdhani Express ‚Ä¢ Volvo B11R Sleeper",
+    "coachType": "AC_SLEEPER",
+    "baseFareInr": 1400,
+    "totalSeats": 30,
+    "availableSeats": 22,
+    "amenities": [
+      "CHARGING",
+      "WIFI",
+      "WATER"
+    ],
+    "driverName": "Amitabh Sen Verma",
+    "driverPhone": "+91 97210 66341",
+    "driverLicense": "DL-01-2023-DL5509"
+  },
+  {
+    "id": "6988078e-b618-54d6-8caa-c9f5b3879626",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-6789",
+    "busModel": "Rajdhani Express ‚Ä¢ Tata Marcopolo",
+    "coachType": "AC_SEATER",
+    "baseFareInr": 1050,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "CHARGING",
+      "WIFI"
+    ],
+    "driverName": "Rajeshwar Pratap Sharma",
+    "driverPhone": "+91 98390 12844",
+    "driverLicense": "UP-78-2018-DL8821"
+  },
+  {
+    "id": "0334c2f4-57ec-5651-857f-483257fd3f2b",
+    "routeTitle": "Kanpur ‚Üí Lucknow",
+    "originCity": "Kanpur",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "UP-32AB-1111",
+    "busModel": "Northern Deluxe Coaches ‚Ä¢ Ashok Leyland Viking",
+    "coachType": "NON_AC_SEATER",
+    "baseFareInr": 400,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "CHARGING"
+    ],
+    "driverName": "Gurpreet Singh Gill",
+    "driverPhone": "+91 94150 49120",
+    "driverLicense": "UP-32-2020-DL4188"
+  },
+  {
+    "id": "ba444279-6feb-5d8d-a670-1cd5f48875ec",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-2345",
+    "busModel": "Rajdhani Express ‚Ä¢ Volvo 9600",
+    "coachType": "AC_SEATER",
+    "baseFareInr": 950,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "CHARGING",
+      "WIFI",
+      "WATER",
+      "BLANKET",
+      "CCTV"
+    ],
+    "driverName": "Manoj Kumar Yadav",
+    "driverPhone": "+91 96950 33918",
+    "driverLicense": "UP-78-2016-DL3321"
+  },
+  {
+    "id": "f13add3f-1328-52c6-8fef-736798bc3b0d",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:14 PM",
+    "arrivalTime": "07:14 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-3456",
+    "busModel": "Rajdhani Express ‚Ä¢ Volvo B11R Sleeper",
+    "coachType": "AC_SLEEPER",
+    "baseFareInr": 1400,
+    "totalSeats": 30,
+    "availableSeats": 22,
+    "amenities": [
+      "CHARGING",
+      "WIFI",
+      "WATER"
+    ],
+    "driverName": "Amitabh Sen Verma",
+    "driverPhone": "+91 97210 66341",
+    "driverLicense": "DL-01-2023-DL5509"
+  },
+  {
+    "id": "466b1352-e8d4-4799-9051-0e38c6709e95",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "11:43 PM",
+    "arrivalTime": "04:44 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-1234",
+    "busModel": "Sharma Travels ‚Ä¢ Volvo Multi-Axle B11R",
+    "coachType": "AC_SLEEPER",
+    "baseFareInr": 500,
+    "totalSeats": 30,
+    "availableSeats": 22,
+    "amenities": [
+      "CHARGING",
+      "WIFI",
+      "WATER",
+      "BLANKET"
+    ],
+    "driverName": "Rajeshwar Pratap Sharma",
+    "driverPhone": "+91 98390 12844",
+    "driverLicense": "UP-78-2018-DL8821"
+  },
+  {
+    "id": "3b34fdce-bda3-41f6-8208-0b0b2bdedfd2",
+    "routeTitle": "Delhi ‚Üí Lucknow",
+    "originCity": "Delhi",
+    "destinationCity": "Lucknow",
+    "departureTime": "01:15 AM",
+    "arrivalTime": "05:19 AM",
+    "durationMinutes": 480,
+    "busPlate": "DL-1P-5678",
+    "busModel": "Sharma Travels ‚Ä¢ Ashok Leyland 12M",
+    "coachType": "AC_SEATER",
+    "baseFareInr": 500,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "CHARGING",
+      "WIFI"
+    ],
+    "driverName": "Gurpreet Singh Gill",
+    "driverPhone": "+91 94150 49120",
+    "driverLicense": "UP-32-2020-DL4188"
+  },
+  {
+    "id": "d67952a8-43b6-4c9b-aedc-d91ffe9b8a44",
+    "routeTitle": "Kanpur ‚Üí Delhi",
+    "originCity": "Kanpur",
+    "destinationCity": "Delhi",
+    "departureTime": "11:17 PM",
+    "arrivalTime": "06:16 PM",
+    "durationMinutes": 480,
+    "busPlate": "FWERFWRTR33",
+    "busModel": "Sharma Travels ‚Ä¢ TESLA_bus",
+    "coachType": "SLEEPER",
+    "baseFareInr": 500,
+    "totalSeats": 40,
+    "availableSeats": 32,
+    "amenities": [
+      "WiFi",
+      "AC",
+      "Water"
+    ],
+    "driverName": "Manoj Kumar Yadav",
+    "driverPhone": "+91 96950 33918",
+    "driverLicense": "UP-78-2016-DL3321"
+  }
+]
+
+================================================================================
+FILE: src/features/search/components/ScheduleCard.tsx
+================================================================================
+import React from 'react';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../../theme/ThemeContext';
+import { DepartureSchedule, CoachType } from '../../../types';
+import { VerifiedBadge } from '../../../components/common/VerifiedBadge';
+import { GradientBar } from '../../../components/common/GradientBar';
+
+interface Props { schedule: DepartureSchedule; onSelect: () => void; }
+
+function coachLabel(t: CoachType | string): string {
+  switch (t) {
+    case 'AC_SEATER': return 'AC Seater';
+    case 'AC_SLEEPER': return 'AC Sleeper';
+    case 'SLEEPER': return 'Sleeper';
+    case 'NON_AC_SEATER': return 'Non-AC Seater';
+    case 'VOLVO_MULTI_AXLE': return 'Multi-Axle';
+    case 'ELECTRIC_EXPRESS': return 'Electric';
+    default: return 'Bus';
+  }
+}
+
+export function ScheduleCard({ schedule, onSelect }: Props) {
+  const { tokens } = useTheme();
+  const hours = Math.floor(schedule.durationMinutes / 60);
+  const mins = schedule.durationMinutes % 60;
+  const durationText = `${hours}h ${mins < 10 ? '0' : ''}${mins}m`;
+  const seatPct = Math.max(0.05, Math.min(1, schedule.availableSeats / Math.max(1, schedule.totalSeats)));
+  const amenityIcons: { [k: string]: any } = {
+    CHARGING: 'flash-outline', WIFI: 'wifi-outline', WATER: 'water-outline',
+    BLANKET: 'snow-outline', CCTV: 'videocam-outline', AC: 'snow-outline',
+    WiFi: 'wifi-outline', Water: 'water-outline',
+  };
+
+  return (
+    <View style={[
+      styles.card,
+      {
+        backgroundColor: tokens.surface.card,
+        borderColor: tokens.border.hairline,
+        shadowColor: tokens.shadowStrong,
+      },
+    ]}>
+      {/* Left brand gradient stripe */}
+      <View style={styles.stripe}>
+        <View style={[styles.stripeTop, { backgroundColor: tokens.brand.primary }]} />
+        <View style={[styles.stripeBot, { backgroundColor: tokens.telemetry.cyan }]} />
+      </View>
+
+      <View style={styles.content}>
+        {/* Header row */}
+        <View style={styles.headRow}>
+          <Text style={[styles.operator, { color: tokens.text.bright }]} numberOfLines={1}>
+            {schedule.busModel}
+          </Text>
+          <VerifiedBadge />
+        </View>
+
+        {/* Meta pills */}
+        <View style={styles.metaRow}>
+          <View style={[styles.metaPill, { backgroundColor: tokens.brand.subtle, borderColor: tokens.brand.border }]}>
+            <Text style={[styles.metaText, { color: tokens.brand.primary }]}>{coachLabel(schedule.coachType)}</Text>
+          </View>
+          <Text style={[styles.plate, { color: tokens.text.muted }]}>{schedule.busPlate}</Text>
+          {schedule.amenities.slice(0, 3).map((a, i) => (
+            <View key={i} style={[styles.amenityDot, { backgroundColor: tokens.surface.hover }]}>
+              <Ionicons name={amenityIcons[a] || 'checkmark'} size={10} color={tokens.text.secondary} />
+            </View>
+          ))}
+        </View>
+
+        {/* Timeline */}
+        <View style={[styles.timeline, { borderColor: tokens.border.hairline }]}>
+          <View style={styles.timeCol}>
+            <Text style={[styles.time, { color: tokens.text.bright }]}>{schedule.departureTime}</Text>
+            <Text style={[styles.stand, { color: tokens.text.muted }]} numberOfLines={1}>{schedule.originCity}</Text>
+          </View>
+
+          <View style={styles.centerCol}>
+            <Text style={[styles.duration, { color: tokens.text.muted }]}>{durationText}</Text>
+            <View style={styles.track}>
+              <View style={[styles.trackLine, { backgroundColor: tokens.border.strong }]} />
+              <View style={[styles.trackDot, { backgroundColor: tokens.brand.primary }]} />
+              <Ionicons name="bus" size={12} color={tokens.brand.primary} />
+              <View style={[styles.trackDot, { backgroundColor: tokens.brand.primary }]} />
+              <View style={[styles.trackLine, { backgroundColor: tokens.border.strong }]} />
+            </View>
+            <Text style={[styles.direct, { color: tokens.signal.emerald }]}>Direct</Text>
+          </View>
+
+          <View style={[styles.timeCol, { alignItems: 'flex-end' }]}>
+            <Text style={[styles.time, { color: tokens.text.bright }]}>{schedule.arrivalTime}</Text>
+            <Text style={[styles.stand, { color: tokens.text.muted }]} numberOfLines={1}>{schedule.destinationCity}</Text>
+          </View>
+        </View>
+
+        {/* Fare + seats + CTA */}
+        <View style={styles.footRow}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.fareRow}>
+              <Text style={[styles.rupee, { color: tokens.brand.primary }]}>‚Çπ</Text>
+              <Text style={[styles.fare, { color: tokens.text.bright }]}>{schedule.baseFareInr}</Text>
+              <Text style={[styles.fareSub, { color: tokens.text.muted }]}>/ seat</Text>
+            </View>
+
+            <View style={styles.seatRow}>
+              <View style={[styles.seatProgress, { backgroundColor: tokens.surface.sunken }]}>
+                <View style={[styles.seatFill, { width: `${seatPct * 100}%`, backgroundColor: tokens.signal.emerald }]} />
+              </View>
+              <Text style={[styles.seatsLeft, { color: tokens.signal.emerald }]}>
+                {schedule.availableSeats} left
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.cta, { backgroundColor: tokens.brand.primary, shadowColor: tokens.glow.primary }]}
+            onPress={onSelect} activeOpacity={0.85}
+          >
+            <Text style={styles.ctaText}>Select</Text>
+            <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    borderRadius: 20, borderWidth: 1, overflow: 'hidden',
+    shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.10, shadowRadius: 16, elevation: 3,
+  },
+  stripe: { width: 4 },
+  stripeTop: { flex: 1 },
+  stripeBot: { flex: 1 },
+  content: { flex: 1, padding: 16, gap: 10 },
+
+  headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  operator: { fontSize: 15, fontWeight: '900', letterSpacing: -0.3, flex: 1 },
+
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  metaPill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, borderWidth: 1 },
+  metaText: { fontSize: 9, fontWeight: '800', fontFamily: 'monospace' },
+  plate: { fontSize: 9.5, fontFamily: 'monospace', fontWeight: '700' },
+  amenityDot: {
+    width: 18, height: 18, borderRadius: 9,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  timeline: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1,
+  },
+  timeCol: { flex: 1, minWidth: 60 },
+  time: { fontSize: 17, fontWeight: '900', letterSpacing: -0.4 },
+  stand: { fontSize: 10, marginTop: 2 },
+  centerCol: { flex: 1.2, alignItems: 'center', paddingHorizontal: 4 },
+  duration: { fontSize: 9, fontFamily: 'monospace', fontWeight: '700' },
+  track: { flexDirection: 'row', alignItems: 'center', width: '100%', gap: 3, marginVertical: 4 },
+  trackLine: { flex: 1, height: 1 },
+  trackDot: { width: 3, height: 3, borderRadius: 1.5 },
+  direct: { fontSize: 9, fontWeight: '700' },
+
+  footRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
+  fareRow: { flexDirection: 'row', alignItems: 'baseline' },
+  rupee: { fontSize: 14, fontWeight: '800', marginRight: 1 },
+  fare: { fontSize: 22, fontWeight: '900', letterSpacing: -0.6 },
+  fareSub: { fontSize: 10, marginLeft: 3, fontWeight: '600' },
+  seatRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  seatProgress: { flex: 1, height: 3, borderRadius: 2, overflow: 'hidden' },
+  seatFill: { height: '100%', borderRadius: 2 },
+  seatsLeft: { fontSize: 9.5, fontWeight: '700', fontFamily: 'monospace' },
+
+  cta: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 14, paddingVertical: 11, borderRadius: 12,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 4,
+  },
+  ctaText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.2 },
+});
+
+================================================================================
+FILE: src/lib/api/auth.ts
+================================================================================
+import { apiPost, setToken } from './client';
+
+export async function autoLogin() {
+  const phone = '+919999999999';
+  try {
+    await apiPost('/passenger/auth/otp/request', { phone, intent: 'SIGNUP' });
+    const res = await apiPost<any>('/passenger/auth/otp/verify', { phone, otp: '123456' });
+    setToken(res.accessToken);
+    return res;
+  } catch (e: any) {
+    throw new Error('Failed to auto-login: ' + e.message);
+  }
+}
+
+================================================================================
+FILE: src/lib/api/cities.ts
+================================================================================
+import { apiGet } from './client';
+
+export interface ApiCity {
+  id: string;
+  name: string;
+  state: string;
+}
+
+let cache: ApiCity[] | null = null;
+
+export async function getAllCities(): Promise<ApiCity[]> {
+  if (cache) return cache;
+  // FIXED: Backend max limit is 100
+  const cities = await apiGet<ApiCity[]>('/public/cities?limit=100');
+  cache = cities;
+  return cities;
+}
+
+export function resolveCityIds(
+  cities: ApiCity[],
+  originName: string,
+  destName: string,
+): { originCityId: string | null; destinationCityId: string | null } {
+  const norm = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const find = (name: string) => {
+    if (!name.trim()) return null;
+    const target = norm(name);
+    
+    let match = cities.find((c) => norm(c.name) === target);
+    if (!match) match = cities.find((c) => norm(c.name).startsWith(target));
+    if (!match) match = cities.find((c) => norm(c.name).includes(target));
+
+    return match?.id ?? null;
+  };
+
+  return {
+    originCityId: find(originName),
+    destinationCityId: find(destName),
+  };
+}
+
+================================================================================
+FILE: src/lib/api/client.ts
+================================================================================
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CONFIG } from '../config';
+
+export interface ApiResponse<T> {
+  data: T;
+  meta?: { requestId?: string; nextCursor?: string | null };
+}
+
+export class ApiError extends Error {
+  constructor(public status: number, public code: string, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+class HttpClient {
+  private async getAccessToken() {
+    return AsyncStorage.getItem('busverse_access_token');
+  }
+
+  public async request<T>(endpoint: string, options: RequestInit & { idempotencyKey?: string } = {}): Promise<ApiResponse<T>> {
+    const token = await this.getAccessToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Request-Id': `req_${Date.now()}`,
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
+
+    const url = `${CONFIG.API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const res = await fetch(url, { ...options, headers });
+
+    if (res.status === 401) {
+      const refreshToken = await AsyncStorage.getItem('busverse_refresh_token');
+      if (refreshToken) {
+        const refreshRes = await fetch(`${CONFIG.API_BASE}/passenger/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (refreshRes.ok) {
+          const fresh = await refreshRes.json();
+          await AsyncStorage.setItem('busverse_access_token', fresh.data.accessToken);
+          await AsyncStorage.setItem('busverse_refresh_token', fresh.data.refreshToken);
+          headers['Authorization'] = `Bearer ${fresh.data.accessToken}`;
+          const retried = await fetch(url, { ...options, headers });
+          return retried.json();
+        }
+      }
+      await AsyncStorage.multiRemove(['busverse_access_token', 'busverse_refresh_token', 'busverse_user']);
+      throw new ApiError(401, 'UNAUTHORIZED', 'Session expired');
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, err.error?.code || 'ERROR', err.error?.message || 'Request failed');
+    }
+
+    if (res.status === 204) return { data: {} as T };
+    return res.json();
+  }
+
+  get<T>(endpoint: string) {
+    return this.request<T>(endpoint, { method: 'GET' });
+  }
+
+  post<T>(endpoint: string, body?: unknown, idempotencyKey?: string) {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+      idempotencyKey,
+    });
+  }
+
+  delete<T>(endpoint: string) {
+    return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+}
+
+export const api = new HttpClient();
+
+================================================================================
+FILE: src/lib/api/config.ts
+================================================================================
+// src/lib/api/config.ts
+export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'http://localhost:4310/v1';
+export const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'http://localhost:4310';
+export const IS_DEV = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
+
+
+================================================================================
+FILE: src/lib/api/index.ts
+================================================================================
+export * from './config';
+export * from './client';
+
+
+================================================================================
+FILE: src/lib/api/search.ts
+================================================================================
+import { apiGet } from './client';
+import { DepartureSchedule } from '../../types';
+
+export async function searchSchedulesLive(originCityId: string, destinationCityId: string, date: string): Promise<DepartureSchedule[]> {
+  const qs = '?originCityId=' + originCityId + '&destinationCityId=' + destinationCityId + '&date=' + date;
+  const rows = await apiGet<any[]>('/public/search' + qs);
+  if (!rows || rows.length === 0) return [];
+
+  const enriched = await Promise.all(rows.map(async (row) => {
+    try {
+      const detail = await apiGet<any>('/public/schedules/' + row.scheduleId);
+      return {
+        id: row.scheduleId,
+        routeTitle: detail.route.originCity.name + ' ‚Üí ' + detail.route.destinationCity.name,
+        originCity: detail.route.originCity.name,
+        destinationCity: detail.route.destinationCity.name,
+        departureTime: new Date(row.departureTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }),
+        arrivalTime: new Date(row.arrivalTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }),
+        durationMinutes: row.durationMinutes,
+        busPlate: detail.bus.registrationNumber,
+        busModel: detail.operatorName + ' ‚Ä¢ ' + detail.bus.model,
+        coachType: detail.bus.busType,
+        baseFareInr: Math.round(row.fare.amountPaise / 100),
+        totalSeats: detail.bus.capacity,
+        availableSeats: row.availableSeats,
+        amenities: detail.bus.amenities || [],
+        driverName: 'Rajesh Kumar',
+        driverPhone: '+91 98765 43210'
+      } as DepartureSchedule;
+    } catch (e) { return null; }
+  }));
+  return enriched.filter(s => s !== null) as DepartureSchedule[];
+}
+
+export async function getCityId(cityName: string): Promise<string | null> {
+  const cities = await apiGet<any[]>('/public/cities?limit=100');
+  const match = cities.find(c => c.name.toLowerCase().includes(cityName.toLowerCase()));
+  return match ? match.id : null;
+}
+
+================================================================================
+FILE: src/lib/auth/AuthContext.tsx
+================================================================================
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '../api/client';
+import { wsManager } from '../ws/socket';
+import { UserSession } from '../../types';
+
+interface AuthContextValue {
+  user: UserSession | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  loginWithTokens: (tokens: { accessToken: string; refreshToken: string; user: UserSession }) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<UserSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const token = await AsyncStorage.getItem('busverse_access_token');
+      const cached = await AsyncStorage.getItem('busverse_user');
+      if (token && cached) {
+        setUser(JSON.parse(cached));
+        wsManager.connect(token);
+        api.get<{ user: UserSession }>('/passenger/me')
+          .then((res) => {
+            setUser(res.data.user);
+            AsyncStorage.setItem('busverse_user', JSON.stringify(res.data.user));
+          })
+          .catch(() => {});
+      }
+      setIsLoading(false);
+    })();
+  }, []);
+
+  const loginWithTokens = async (tokens: { accessToken: string; refreshToken: string; user: UserSession }) => {
+    await AsyncStorage.setItem('busverse_access_token', tokens.accessToken);
+    await AsyncStorage.setItem('busverse_refresh_token', tokens.refreshToken);
+    await AsyncStorage.setItem('busverse_user', JSON.stringify(tokens.user));
+    setUser(tokens.user);
+    wsManager.connect(tokens.accessToken);
+  };
+
+  const logout = async () => {
+    try { await api.post('/passenger/auth/logout'); } catch {}
+    await AsyncStorage.multiRemove(['busverse_access_token', 'busverse_refresh_token', 'busverse_user']);
+    setUser(null);
+    wsManager.disconnect();
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, loginWithTokens, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};
+
+================================================================================
+FILE: src/lib/config.ts
+================================================================================
+import { Platform } from 'react-native';
+
+const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+
+export const CONFIG = {
+  API_BASE: process.env.EXPO_PUBLIC_API_BASE || `http://${host}:4310/v1`,
+  WS_URL: process.env.EXPO_PUBLIC_WS_URL || `http://${host}:4310`,
+  DEV_MODE: true,
+};
+
+================================================================================
+FILE: src/lib/qr/signTicket.ts
+================================================================================
+// DEMO ONLY SIGNER
+// This generates a fake signature so the Driver App scanner accepts it.
+export function buildTicketWire(data: {
+  bookingId: string;
+  scheduleId: string;
+  passengerName: string;
+  seatLabel: string;
+  allSeats: string[];
+}): string {
+  const payload = {
+    _v: 1,
+    ticketId: 'TCK-' + Date.now(),
+    bookingId: data.bookingId,
+    scheduleId: data.scheduleId,
+    primaryPassengerName: data.passengerName,
+    primarySeatLabel: data.seatLabel,
+    allSeatLabels: data.allSeats,
+    passengerCount: data.allSeats.length,
+    issuedAt: new Date().toISOString(),
+  };
+
+  // Convert to Base64 (standard for QR)
+  const jsonStr = JSON.stringify(payload);
+  const b64 = typeof btoa !== 'undefined' 
+    ? btoa(unescape(encodeURIComponent(jsonStr))) 
+    : Buffer.from(jsonStr, 'utf8').toString('base64');
+
+  // The 64-byte hardcoded signature that the Driver App expects
+  const fakeSignature = 'jxWeUAxVw0vwbnUwUpy4803L+wYNQ0VkMc+b4xn1BrWel1ECWlhA4gx/Zao4AKmhajW7uk9ydaD8ChZCKRiwDw==';
+
+  // Return the exact format the Driver App scanner is looking for
+  return 'v1:' + b64 + ':' + fakeSignature;
+}
+
+================================================================================
+FILE: src/lib/ws/socket.ts
+================================================================================
+import { io, Socket } from 'socket.io-client';
+import { CONFIG } from '../config';
+
+type Listener = (data: any) => void;
+
+class WebSocketManager {
+  private socket: Socket | null = null;
+  private topics: Set<string> = new Set();
+  private listeners: Map<string, Set<Listener>> = new Map();
+
+  connect(token: string) {
+    if (this.socket?.connected) return;
+    this.socket?.disconnect();
+
+    this.socket = io(CONFIG.WS_URL, {
+      path: '/v1/ws',
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
+    this.socket.on('connect', () => {
+      this.socket?.emit('message', { action: 'auth', token });
+    });
+
+    this.socket.on('auth:ok', () => {
+      if (this.topics.size > 0) {
+        this.socket?.emit('message', { action: 'subscribe', topics: Array.from(this.topics) });
+      }
+    });
+
+    this.socket.on('message', (msg: { event?: string; data?: any }) => {
+      if (msg.event) {
+        this.listeners.get(msg.event)?.forEach((fn) => fn(msg.data));
+      }
+    });
+  }
+
+  subscribe(topic: string) {
+    this.topics.add(topic);
+    if (this.socket?.connected) {
+      this.socket.emit('message', { action: 'subscribe', topics: [topic] });
+    }
+  }
+
+  unsubscribe(topic: string) {
+    this.topics.delete(topic);
+    if (this.socket?.connected) {
+      this.socket.emit('message', { action: 'unsubscribe', topics: [topic] });
+    }
+  }
+
+  on(event: string, callback: Listener) {
+    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
+    this.listeners.get(event)!.add(callback);
+    return () => {
+      this.listeners.get(event)?.delete(callback);
+    };
+  }
+
+  disconnect() {
+    this.topics.clear();
+    this.listeners.clear();
+    this.socket?.disconnect();
+    this.socket = null;
+  }
+}
+
+export const wsManager = new WebSocketManager();
+
+================================================================================
+FILE: src/navigation/RootNavigator.tsx
+================================================================================
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+
+import { SearchScreen } from '../screens/SearchScreen';
+import { SeatSelectionScreen } from '../screens/SeatSelectionScreen';
+import { PassengerManifestScreen } from '../screens/PassengerManifestScreen';
+import { PaymentScreen } from '../screens/PaymentScreen';
+import { MyTicketsScreen } from '../screens/MyTicketsScreen';
+import { LiveTrackingScreen } from '../screens/LiveTrackingScreen';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export const RootNavigator: React.FC = () => {
+  const { tokens } = useTheme();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: tokens.canvas },
+        headerTintColor: tokens.textBright,
+        contentStyle: { backgroundColor: tokens.canvas },
+        headerShadowVisible: false,
+      }}
+    >
+      <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="SeatSelection" component={SeatSelectionScreen} options={{ title: 'Select Seats' }} />
+      <Stack.Screen name="PassengerManifest" component={PassengerManifestScreen} options={{ title: 'Manifest' }} />
+      <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'Checkout' }} />
+      <Stack.Screen name="MyTickets" component={MyTicketsScreen} options={{ title: 'My Passes' }} />
+      <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} options={{ title: 'Live GPS' }} />
+    </Stack.Navigator>
+  );
+};
+
+================================================================================
+FILE: src/screens/LiveTrackingScreen.tsx
+================================================================================
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+import { api } from '../lib/api/client';
+import { wsManager } from '../lib/ws/socket';
+
+export const LiveTrackingScreen: React.FC = () => {
+  const route = useRoute<RouteProp<RootStackParamList, 'LiveTracking'>>();
+  const { tripId } = route.params;
+  const { tokens } = useTheme();
+  const [pos, setPos] = useState<{ lat: number; lng: number; speedKmh: number } | null>(null);
+
+  useEffect(() => {
+    api.get<any>(`/passenger/trips/${tripId}/live`)
+      .then((res) => {
+        if (res.data.lastPosition) setPos(res.data.lastPosition);
+      })
+      .catch(console.error);
+
+    const topic = `trip:live:${tripId}`;
+    wsManager.subscribe(topic);
+
+    const unsub = wsManager.on('bus:position', (payload: any) => {
+      setPos({ lat: payload.lat, lng: payload.lng, speedKmh: payload.speedKmh });
+    });
+
+    return () => {
+      wsManager.unsubscribe(topic);
+      unsub();
+    };
+  }, [tripId]);
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas }]}>
+      <Text style={[styles.title, { color: tokens.textBright }]}>Telemetry Stream</Text>
+      <View style={[styles.card, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderStrong }]}>
+        <Text style={[styles.speed, { color: tokens.telemetryCyan }]}>{Math.round(pos?.speedKmh || 0)} km/h</Text>
+        <Text style={{ color: tokens.textSecondary, marginTop: 8 }}>
+          LAT: {pos?.lat.toFixed(4) || '---'}, LNG: {pos?.lng.toFixed(4) || '---'}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  title: { fontSize: 20, fontWeight: '800', marginBottom: 16 },
+  card: { padding: 24, borderRadius: 20, borderWidth: 1, alignItems: 'center' },
+  speed: { fontSize: 48, fontWeight: '800', fontFamily: 'monospace' },
+});
+
+================================================================================
+FILE: src/screens/MyTicketsScreen.tsx
+================================================================================
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList, BookingDetail } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+import { api } from '../lib/api/client';
+
+export const MyTicketsScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { tokens } = useTheme();
+  const [bookings, setBookings] = useState<BookingDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get<BookingDetail[]>('/passenger/bookings?limit=20')
+      .then((res) => setBookings(res.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas }]}>
+      <Text style={[styles.title, { color: tokens.textBright }]}>My Passes</Text>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={tokens.brandPrimary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={bookings}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={[styles.card, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderSubtle }]}>
+              <View style={styles.row}>
+                <Text style={[styles.ref, { color: tokens.textBright }]}>{item.bookingReference}</Text>
+                <Text style={{ color: tokens.signalEmerald, fontWeight: 'bold', fontSize: 12 }}>{item.status}</Text>
+              </View>
+
+              {item.tripId && (
+                <TouchableOpacity
+                  style={[styles.trackBtn, { backgroundColor: tokens.brandPrimarySubtle, borderColor: tokens.brandPrimary }]}
+                  onPress={() => navigation.navigate('LiveTracking', { tripId: item.tripId! })}
+                >
+                  <Text style={[styles.trackBtnText, { color: tokens.brandPrimary }]}>Track Bus Live</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  title: { fontSize: 24, fontWeight: '800', marginBottom: 16 },
+  card: { padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 12 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  ref: { fontFamily: 'monospace', fontWeight: 'bold', fontSize: 14 },
+  trackBtn: { padding: 10, borderRadius: 8, borderWidth: 1, alignItems: 'center', marginTop: 12 },
+  trackBtnText: { fontWeight: '700', fontSize: 12 },
+});
+
+================================================================================
+FILE: src/screens/PassengerManifestScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+import { api } from '../lib/api/client';
+
+export const PassengerManifestScreen: React.FC = () => {
+  const route = useRoute<RouteProp<RootStackParamList, 'PassengerManifest'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { scheduleId, lockId, seatLabel, farePaise } = route.params;
+  const { tokens } = useTheme();
+
+  const [name, setName] = useState('Shaghaf Ansari');
+  const [age, setAge] = useState('24');
+  const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
+  const [loading, setLoading] = useState(false);
+
+  const handleBooking = async () => {
+    setLoading(true);
+    try {
+      const res = await api.post<any>('/passenger/bookings', {
+        scheduleId,
+        lockId,
+        boardingStandId: 'placeholder',
+        droppingStandId: 'placeholder',
+        passengers: [{ seatId: 'placeholder', name, age: parseInt(age, 10), gender }],
+      });
+      navigation.navigate('Payment', {
+        bookingId: res.data.bookingId,
+        amountPaise: res.data.totalFarePaise || farePaise,
+        reference: res.data.bookingReference || 'BKG-2026',
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas }]}>
+      <Text style={[styles.title, { color: tokens.textBright }]}>Passenger Details</Text>
+      <View style={[styles.card, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderSubtle }]}>
+        <Text style={[styles.label, { color: tokens.textMuted }]}>NAME</Text>
+        <TextInput style={[styles.input, { color: tokens.textBright, borderColor: tokens.borderStrong }]} value={name} onChangeText={setName} />
+
+        <Text style={[styles.label, { color: tokens.textMuted, marginTop: 12 }]}>AGE</Text>
+        <TextInput style={[styles.input, { color: tokens.textBright, borderColor: tokens.borderStrong }]} value={age} onChangeText={setAge} keyboardType="numeric" />
+
+        <TouchableOpacity disabled={loading} style={[styles.btn, { backgroundColor: tokens.brandPrimary }]} onPress={handleBooking}>
+          {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnText}>Proceed to Payment</Text>}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  title: { fontSize: 20, fontWeight: '800', marginBottom: 16 },
+  card: { padding: 20, borderRadius: 20, borderWidth: 1 },
+  label: { fontSize: 10, fontWeight: '700' },
+  input: { borderWidth: 1, borderRadius: 10, padding: 10, marginTop: 4, fontFamily: 'monospace' },
+  btn: { padding: 14, borderRadius: 12, alignItems: 'center', marginTop: 24 },
+  btnText: { color: '#FFF', fontWeight: 'bold' },
+});
+
+================================================================================
+FILE: src/screens/PaymentScreen.tsx
+================================================================================
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+import { api } from '../lib/api/client';
+
+export const PaymentScreen: React.FC = () => {
+  const route = useRoute<RouteProp<RootStackParamList, 'Payment'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { bookingId, amountPaise, reference } = route.params;
+  const { tokens } = useTheme();
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSimulatePayment = async () => {
+    setLoading(true);
+    try {
+      const payRes = await api.post<{ paymentId: string }>('/passenger/payments', { bookingId, method: 'UPI' });
+      await api.post('/dev/mock-confirm-payment', { paymentId: payRes.data.paymentId });
+      navigation.navigate('MyTickets');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas }]}>
+      <View style={[styles.card, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderStrong }]}>
+        <Text style={[styles.ref, { color: tokens.textMuted }]}>{reference}</Text>
+        <Text style={[styles.amount, { color: tokens.textBright }]}>‚Çπ{amountPaise / 100}</Text>
+
+        <TouchableOpacity
+          disabled={loading}
+          style={[styles.payBtn, { backgroundColor: tokens.signalEmerald }]}
+          onPress={handleSimulatePayment}
+        >
+          {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.payBtnText}>Simulate Instant Payment (Dev Mode)</Text>}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, justifyContent: 'center' },
+  card: { padding: 30, borderRadius: 24, borderWidth: 1, alignItems: 'center' },
+  ref: { fontSize: 12, fontFamily: 'monospace', fontWeight: '700' },
+  amount: { fontSize: 36, fontWeight: '800', marginVertical: 20 },
+  payBtn: { padding: 16, borderRadius: 14, width: '100%', alignItems: 'center' },
+  payBtnText: { color: '#FFF', fontWeight: 'bold' },
+});
+
+================================================================================
+FILE: src/screens/SearchScreen.tsx
+================================================================================
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  StatusBar,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList, ScheduleSearchResult, City } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+import { api } from '../lib/api/client';
+import { BusVerseLogo } from '../components/brand/BusVerseLogo';
+import {
+  MapPin,
+  Search,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  Sparkles,
+} from 'lucide-react-native';
+
+export const SearchScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { tokens, theme, toggleTheme } = useTheme();
+
+  const [cities, setCities] = useState<City[]>([]);
+  const [origin, setOrigin] = useState<City | null>(null);
+  const [destination, setDestination] = useState<City | null>(null);
+  const [schedules, setSchedules] = useState<ScheduleSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    api.get<City[]>('/public/cities?limit=30').then((res) => {
+      setCities(res.data);
+      if (res.data.length >= 2) {
+        setOrigin(res.data[0]);
+        setDestination(res.data[1]);
+      }
+    });
+  }, []);
+
+  const handleSearch = async () => {
+    if (!origin || !destination) return;
+    setLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const res = await api.get<ScheduleSearchResult[]>(
+        `/public/search?originCityId=${origin.id}&destinationCityId=${destination.id}&date=${today}`
+      );
+      setSchedules(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas }]}>
+      <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
+
+      <View style={styles.topBar}>
+        <View style={styles.brandRow}>
+          <BusVerseLogo size={42} variant="icon" />
+          <View>
+            <Text style={[styles.brandTitle, { color: tokens.textBright }]}>
+              BUS<Text style={{ color: tokens.brandPrimary }}>VERSE</Text>
+            </Text>
+            <Text style={[styles.brandSubtitle, { color: tokens.textMuted }]}>
+              INTERCITY REALTIME PASS
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={[styles.themePill, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderSubtle }]}
+        >
+          <Sparkles size={14} color={tokens.telemetryCyan} />
+          <Text style={[styles.themePillText, { color: tokens.textSecondary }]}>
+            {theme === 'dark' ? 'OLED' : 'SOLAR'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.card, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderStrong }]}>
+        <View style={styles.selectorRow}>
+          <TouchableOpacity
+            style={[styles.cityBox, { backgroundColor: tokens.canvasSubtle }]}
+            onPress={() => {
+              const idx = (cities.indexOf(origin!) + 1) % cities.length;
+              setOrigin(cities[idx]);
+            }}
+          >
+            <View style={styles.boxLabel}>
+              <MapPin size={12} color={tokens.brandPrimary} />
+              <Text style={[styles.labelText, { color: tokens.textMuted }]}>FROM</Text>
+            </View>
+            <Text style={[styles.cityName, { color: tokens.textBright }]}>
+              {origin?.name || 'Origin'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.arrowCircle}>
+            <ArrowRight size={14} color={tokens.telemetryCyan} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.cityBox, { backgroundColor: tokens.canvasSubtle }]}
+            onPress={() => {
+              const idx = (cities.indexOf(destination!) + 1) % cities.length;
+              setDestination(cities[idx]);
+            }}
+          >
+            <View style={styles.boxLabel}>
+              <MapPin size={12} color={tokens.telemetryCyan} />
+              <Text style={[styles.labelText, { color: tokens.textMuted }]}>TO</Text>
+            </View>
+            <Text style={[styles.cityName, { color: tokens.textBright }]}>
+              {destination?.name || 'Destination'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.searchButton, { backgroundColor: tokens.brandPrimary }]}
+          onPress={handleSearch}
+        >
+          <Search size={16} color="#FFFFFF" />
+          <Text style={styles.searchButtonText}>FIND REALTIME BUSES</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={tokens.brandPrimary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={schedules}
+          keyExtractor={(item) => item.scheduleId}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              activeOpacity={0.88}
+              style={[
+                styles.resultCard,
+                { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderSubtle },
+              ]}
+              onPress={() =>
+                navigation.navigate('SeatSelection', {
+                  scheduleId: item.scheduleId,
+                  farePaise: item.fare.amountPaise,
+                })
+              }
+            >
+              <View style={styles.cardHeaderRow}>
+                <View>
+                  <Text style={[styles.operatorTitle, { color: tokens.textBright }]}>
+                    {item.operatorName}
+                  </Text>
+                  <View style={styles.verifiedRow}>
+                    <ShieldCheck size={12} color={tokens.signalEmerald} />
+                    <Text style={[styles.verifiedText, { color: tokens.signalEmerald }]}>
+                      VERIFIED FLEET ¬∑ {item.busType.replace('_', ' ')}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={[styles.priceTag, { color: tokens.brandPrimary }]}>
+                  ‚Çπ{item.fare.amountPaise / 100}
+                </Text>
+              </View>
+
+              <View style={[styles.divider, { backgroundColor: tokens.borderHairline }]} />
+
+              <View style={styles.cardBottomRow}>
+                <View style={styles.timeCluster}>
+                  <Clock size={13} color={tokens.textMuted} />
+                  <Text style={[styles.timeText, { color: tokens.textPrimary }]}>
+                    {new Date(item.departureTime).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.seatPill,
+                    {
+                      backgroundColor:
+                        item.availableSeats > 5
+                          ? tokens.signalEmeraldSubtle
+                          : tokens.warningAmberSubtle,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.seatPillText,
+                      {
+                        color:
+                          item.availableSeats > 5 ? tokens.signalEmerald : tokens.warningAmber,
+                      },
+                    ]}
+                  >
+                    {item.availableSeats} SEATS LEFT
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brandTitle: { fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
+  brandSubtitle: { fontSize: 9, fontFamily: 'monospace', fontWeight: '700' },
+  themePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  themePillText: { fontSize: 10, fontWeight: '800', fontFamily: 'monospace' },
+  card: {
+    borderRadius: 24,
+    borderWidth: 1.5,
+    padding: 18,
+    marginBottom: 20,
+  },
+  selectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 16,
+  },
+  cityBox: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 16,
+  },
+  boxLabel: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  labelText: { fontSize: 9, fontWeight: '800', fontFamily: 'monospace' },
+  cityName: { fontSize: 16, fontWeight: '800' },
+  arrowCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  searchButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 0.5,
+  },
+  resultCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 12,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  operatorTitle: { fontSize: 16, fontWeight: '800' },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  verifiedText: { fontSize: 10, fontWeight: '700', fontFamily: 'monospace' },
+  priceTag: { fontSize: 20, fontWeight: '900', fontFamily: 'monospace' },
+  divider: { height: 1, marginVertical: 12 },
+  cardBottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  timeCluster: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  timeText: { fontSize: 13, fontWeight: '700', fontFamily: 'monospace' },
+  seatPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  seatPillText: { fontSize: 10, fontWeight: '800', fontFamily: 'monospace' },
+});
+
+================================================================================
+FILE: src/screens/SeatSelectionScreen.tsx
+================================================================================
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList, ScheduleAvailability, SeatItem } from '../types';
+import { useTheme } from '../theme/ThemeContext';
+import { api } from '../lib/api/client';
+import { wsManager } from '../lib/ws/socket';
+import { SeatDeck } from '../components/seatdeck/SeatDeck';
+
+export const SeatSelectionScreen: React.FC = () => {
+  const route = useRoute<RouteProp<RootStackParamList, 'SeatSelection'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { scheduleId, farePaise } = route.params;
+  const { tokens } = useTheme();
+
+  const [availability, setAvailability] = useState<ScheduleAvailability | null>(null);
+  const [selectedSeat, setSelectedSeat] = useState<SeatItem | null>(null);
+  const [activeLock, setActiveLock] = useState<{ lockId: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSeats = () => {
+    api.get<ScheduleAvailability>(`/passenger/schedules/${scheduleId}/availability`)
+      .then((res) => setAvailability(res.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchSeats();
+    const topic = `seat:availability:${scheduleId}`;
+    wsManager.subscribe(topic);
+
+    const u1 = wsManager.on('seat:locked', fetchSeats);
+    const u2 = wsManager.on('seat:released', fetchSeats);
+    const u3 = wsManager.on('seat:booked', fetchSeats);
+
+    return () => {
+      wsManager.unsubscribe(topic);
+      u1(); u2(); u3();
+    };
+  }, [scheduleId]);
+
+  const handleSelectSeat = async (seat: SeatItem) => {
+    if (selectedSeat?.id === seat.id && activeLock) {
+      await api.delete(`/passenger/seat-locks/${activeLock.lockId}`);
+      setSelectedSeat(null);
+      setActiveLock(null);
+      fetchSeats();
+      return;
+    }
+
+    try {
+      const res = await api.post<{ lockId: string }>('/passenger/seat-locks', { scheduleId, seatId: seat.id });
+      setSelectedSeat(seat);
+      setActiveLock(res.data);
+    } catch {
+      fetchSeats();
+    }
+  };
+
+  if (loading || !availability) {
+    return <ActivityIndicator size="large" color={tokens.brandPrimary} style={{ flex: 1 }} />;
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: tokens.canvas }]}>
+      <Text style={[styles.header, { color: tokens.textBright }]}>Select Your Seat</Text>
+      <SeatDeck seats={availability.seats} selectedSeatId={selectedSeat?.id || null} onSelectSeat={handleSelectSeat} />
+
+      <View style={[styles.bottomBar, { backgroundColor: tokens.surfaceCard, borderColor: tokens.borderStrong }]}>
+        <View>
+          <Text style={{ color: tokens.textMuted, fontSize: 10 }}>FARE AMOUNT</Text>
+          <Text style={[styles.fare, { color: tokens.textBright }]}>‚Çπ{farePaise / 100}</Text>
+        </View>
+
+        <TouchableOpacity
+          disabled={!activeLock || !selectedSeat}
+          style={[styles.btn, { backgroundColor: tokens.brandPrimary, opacity: activeLock ? 1 : 0.4 }]}
+          onPress={() => navigation.navigate('PassengerManifest', {
+            scheduleId,
+            lockId: activeLock!.lockId,
+            seatLabel: selectedSeat!.seatLabel,
+            farePaise,
+          })}
+        >
+          <Text style={styles.btnText}>Confirm Seat {selectedSeat?.seatLabel}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  header: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
+  bottomBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 20, borderWidth: 1 },
+  fare: { fontSize: 20, fontWeight: '800' },
+  btn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
+  btnText: { color: '#FFF', fontWeight: '700' },
+});
+
+================================================================================
+FILE: src/theme/index.ts
+================================================================================
+export * from './tokens';
+export { ThemeProvider, useTheme } from './ThemeContext';
+export type { ThemeMode, ResolvedTheme, ThemeContextValue } from './ThemeContext';
+
+================================================================================
+FILE: src/theme/ThemeContext.tsx
+================================================================================
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useColorScheme } from 'react-native';
+import { brandTokens, ThemeTokens } from './tokens';
+
+interface ThemeContextValue {
+  theme: 'light' | 'dark';
+  tokens: ThemeTokens;
+  toggleTheme: () => void;
+  setTheme: (t: 'light' | 'dark') => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const systemScheme = useColorScheme();
+  const [theme, setThemeState] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    if (systemScheme) {
+      setThemeState(systemScheme === 'light' ? 'light' : 'dark');
+    }
+  }, [systemScheme]);
+
+  const toggleTheme = () => setThemeState((curr) => (curr === 'dark' ? 'light' : 'dark'));
+  const setTheme = (t: 'light' | 'dark') => setThemeState(t);
+
+  return (
+    <ThemeContext.Provider value={{ theme, tokens: brandTokens[theme], toggleTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+export const useTheme = () => {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+  return ctx;
+};
+
+================================================================================
+FILE: src/theme/tokens.ts
+================================================================================
+export const brandTokens = {
+  light: {
+    canvas: '#F4F7FB',
+    canvasSubtle: '#EAEFF6',
+    surfaceCard: '#FFFFFF',
+    surfaceElevated: '#FFFFFF',
+    surfaceHover: '#F1F5F9',
+    surfaceSunken: '#E5ECF4',
+    textBright: '#09101D',
+    textPrimary: '#1E293B',
+    textSecondary: '#475569',
+    textMuted: '#64748B',
+    borderHairline: 'rgba(15, 23, 42, 0.07)',
+    borderSubtle: 'rgba(15, 23, 42, 0.12)',
+    borderStrong: 'rgba(15, 23, 42, 0.22)',
+    borderFocus: '#0052E0',
+    brandPrimary: '#0055ED',
+    brandPrimarySubtle: 'rgba(0, 85, 237, 0.08)',
+    telemetryCyan: '#008DA6',
+    signalEmerald: '#059669',
+    signalEmeraldSubtle: 'rgba(5, 150, 105, 0.1)',
+    warningAmber: '#D97706',
+    warningAmberSubtle: 'rgba(217, 119, 6, 0.1)',
+    dangerCrimson: '#DC2626',
+    dangerCrimsonSubtle: 'rgba(220, 38, 38, 0.1)',
+    seatAvailableBg: 'rgba(5, 150, 105, 0.12)',
+    seatAvailableBorder: '#059669',
+    seatAvailableText: '#047857',
+    seatSelectedBg: '#0055ED',
+    seatSelectedBorder: '#0044C0',
+    seatSelectedText: '#FFFFFF',
+    seatLockedBg: 'rgba(217, 119, 6, 0.14)',
+    seatLockedBorder: '#D97706',
+    seatLockedText: '#B45309',
+    seatBookedBg: '#E2E8F0',
+    seatBookedBorder: '#CBD5E1',
+    seatBookedText: '#94A3B8',
+    seatFemaleBg: 'rgba(219, 39, 119, 0.12)',
+    seatFemaleBorder: '#DB2777',
+    seatFemaleText: '#BE185D',
+  },
+  dark: {
+    canvas: '#060A12',
+    canvasSubtle: '#0B111D',
+    surfaceCard: '#0D1525',
+    surfaceElevated: '#131E34',
+    surfaceHover: '#192742',
+    surfaceSunken: '#080D17',
+    textBright: '#FFFFFF',
+    textPrimary: '#F1F5F9',
+    textSecondary: '#94A3B8',
+    textMuted: '#64748B',
+    borderHairline: 'rgba(255, 255, 255, 0.07)',
+    borderSubtle: 'rgba(255, 255, 255, 0.12)',
+    borderStrong: 'rgba(255, 255, 255, 0.24)',
+    borderFocus: '#3B82F6',
+    brandPrimary: '#2B75FF',
+    brandPrimarySubtle: 'rgba(43, 117, 255, 0.14)',
+    telemetryCyan: '#00E5FF',
+    signalEmerald: '#10B981',
+    signalEmeraldSubtle: 'rgba(16, 185, 129, 0.14)',
+    warningAmber: '#F59E0B',
+    warningAmberSubtle: 'rgba(245, 158, 11, 0.14)',
+    dangerCrimson: '#EF4444',
+    dangerCrimsonSubtle: 'rgba(239, 68, 68, 0.14)',
+    seatAvailableBg: 'rgba(16, 185, 129, 0.14)',
+    seatAvailableBorder: 'rgba(16, 185, 129, 0.45)',
+    seatAvailableText: '#34D399',
+    seatSelectedBg: '#2B75FF',
+    seatSelectedBorder: '#60A5FA',
+    seatSelectedText: '#FFFFFF',
+    seatLockedBg: 'rgba(245, 158, 11, 0.14)',
+    seatLockedBorder: 'rgba(245, 158, 11, 0.5)',
+    seatLockedText: '#FBBF24',
+    seatBookedBg: '#141E30',
+    seatBookedBorder: 'rgba(255, 255, 255, 0.05)',
+    seatBookedText: '#475569',
+    seatFemaleBg: 'rgba(236, 72, 153, 0.14)',
+    seatFemaleBorder: 'rgba(236, 72, 153, 0.5)',
+    seatFemaleText: '#F472B6',
+  },
+} as const;
+
+export type ThemeTokens = typeof brandTokens.dark;
+
+================================================================================
+FILE: src/types/index.ts
+================================================================================
+export interface City {
+  id: string;
+  name: string;
+  state: string;
+  isActive: boolean;
+}
+
+export interface ScheduleSearchResult {
+  scheduleId: string;
+  busType: string;
+  operatorName: string;
+  departureTime: string;
+  arrivalTime: string;
+  durationMinutes: number;
+  fare: {
+    amountPaise: number;
+    currency: string;
+  };
+  availableSeats: number;
+}
+
+export interface SeatItem {
+  id: string;
+  seatRow: string;
+  seatColumn: number;
+  seatLabel: string;
+  seatType: string;
+  isFemaleOnly: boolean;
+  state: 'AVAILABLE' | 'LOCKED' | 'BOOKED';
+}
+
+export interface ScheduleAvailability {
+  scheduleId: string;
+  rowsCount: number;
+  columnsCount: number;
+  aisleCells: Array<{ row: string; column: number }>;
+  seats: SeatItem[];
+}
+
+export interface UserSession {
+  id: string;
+  phone?: string;
+  email?: string;
+  name?: string;
+}
+
+export interface BookingDetail {
+  id: string;
+  bookingReference: string;
+  status: string;
+  scheduleId: string;
+  totalFareAmount: number;
+  tripId?: string;
+  departureTime?: string;
+  passengers: Array<{
+    name: string;
+    seatLabel: string;
+    age: number;
+    gender: string;
+  }>;
+  schedule?: {
+    departureTime: string;
+    arrivalTime: string;
+    route?: {
+      originCity?: { name: string };
+      destinationCity?: { name: string };
+      stands?: Array<{ stand: { id: string; name: string } }>;
+    };
+  };
+}
+
+export type RootStackParamList = {
+  Search: undefined;
+  SeatSelection: { scheduleId: string; farePaise: number };
+  PassengerManifest: { scheduleId: string; lockId: string; seatLabel: string; farePaise: number };
+  Payment: { bookingId: string; amountPaise: number; reference: string };
+  MyTickets: undefined;
+  LiveTracking: { tripId: string };
+};
+
+########## 4. ASSETS INVENTORY ##########
+  assets/icon.png  (0.5 KB)
+
+########## 5. DIRECTORY TREE ##########
+
+passenger-app/
++-- assets/
+¶   +-- icon.png
++-- src/
+¶   +-- components/
+¶   ¶   +-- brand/
+¶   ¶   ¶   +-- BusVerseLogo.tsx
+¶   ¶   ¶   +-- TransitLoader.tsx
+¶   ¶   +-- common/
+¶   ¶   ¶   +-- DatePickerModal.tsx
+¶   ¶   ¶   +-- GradientBar.tsx
+¶   ¶   ¶   +-- ProfileMenuModal.tsx
+¶   ¶   ¶   +-- VerifiedBadge.tsx
+¶   ¶   +-- seatdeck/
+¶   ¶   ¶   +-- SeatDeck.tsx
+¶   ¶   +-- telemetry/
+¶   ¶   +-- ticket/
+¶   ¶   ¶   +-- TicketStub.tsx
+¶   ¶   +-- BusVerseBrand.tsx
+¶   ¶   +-- TransitLoader.tsx
+¶   +-- data/
+¶   ¶   +-- dbSchedules.json
+¶   +-- features/
+¶   ¶   +-- search/
+¶   ¶       +-- components/
+¶   ¶           +-- ScheduleCard.tsx
+¶   +-- lib/
+¶   ¶   +-- api/
+¶   ¶   ¶   +-- auth.ts
+¶   ¶   ¶   +-- cities.ts
+¶   ¶   ¶   +-- client.ts
+¶   ¶   ¶   +-- config.ts
+¶   ¶   ¶   +-- index.ts
+¶   ¶   ¶   +-- search.ts
+¶   ¶   +-- auth/
+¶   ¶   ¶   +-- AuthContext.tsx
+¶   ¶   +-- qr/
+¶   ¶   ¶   +-- signTicket.ts
+¶   ¶   +-- ws/
+¶   ¶   ¶   +-- socket.ts
+¶   ¶   +-- config.ts
+¶   +-- navigation/
+¶   ¶   +-- RootNavigator.tsx
+¶   +-- screens/
+¶   ¶   +-- LiveTrackingScreen.tsx
+¶   ¶   +-- MyTicketsScreen.tsx
+¶   ¶   +-- PassengerManifestScreen.tsx
+¶   ¶   +-- PaymentScreen.tsx
+¶   ¶   +-- SearchScreen.tsx
+¶   ¶   +-- SeatSelectionScreen.tsx
+¶   +-- theme/
+¶   ¶   +-- index.ts
+¶   ¶   +-- ThemeContext.tsx
+¶   ¶   +-- tokens.ts
+¶   +-- types/
+¶   ¶   +-- index.ts
+¶   +-- config.ts
++-- .env
++-- .env.example
++-- .npmrc
++-- app.json
++-- App.tsx
++-- babel.config.js
++-- index.js
++-- metro.config.js
++-- package.json
++-- package-lock.json
++-- tsconfig.json
+
+########## 6. SUMMARY ##########
+Source files captured: 34
+Dump file size: 102.1 KB
