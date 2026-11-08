@@ -6,6 +6,7 @@ import type {
   ScheduleDetailDTO, ScheduleOperatorDTO, ScheduleSearchResultDTO, ScheduleStatus,
   SeatDTO, SeatLayoutDTO, SeatType, StandDTO, StandType,
 } from './network.types.js';
+import { specOfRows } from './seat-layout.shared.js';
 
 export function toIso(d: Date | null | undefined): string | null { return d ? d.toISOString() : null; }
 export function toIsoDate(d: Date | null | undefined): string | null { return d ? d.toISOString().slice(0, 10) : null; }
@@ -39,10 +40,10 @@ function parseAisleCells(json: unknown): Array<{ row: string; column: number }> 
     !!c && typeof c === 'object' && typeof (c as { row?: unknown }).row === 'string' && typeof (c as { column?: unknown }).column === 'number');
 }
 export function toSeatDTO(s: Seat): SeatDTO {
-  return { id: s.id, seatRow: s.seatRow, seatColumn: s.seatColumn, seatLabel: s.seatLabel, seatType: s.seatType as SeatType, isFemaleOnly: s.isFemaleOnly };
+  return { id: s.id, key: s.seatKey ?? s.seatLabel, seatRow: s.seatRow, seatColumn: s.seatColumn, seatLabel: s.seatLabel, seatType: s.seatType as SeatType, isFemaleOnly: s.isFemaleOnly };
 }
 export function toSeatLayoutDTO(layout: SeatLayout, seats: Seat[]): SeatLayoutDTO {
-  return { id: layout.id, busId: layout.busId, rowsCount: layout.rowsCount, columnsCount: layout.columnsCount, aisleCells: parseAisleCells(layout.aisleMapJson), seats: seats.map(toSeatDTO) };
+  return { id: layout.id, busId: layout.busId, rowsCount: layout.rowsCount, columnsCount: layout.columnsCount, aisleCells: parseAisleCells(layout.aisleMapJson), seats: seats.map(toSeatDTO), rev: layout.layoutRev, spec: specOfRows(layout, seats) };
 }
 
 type RouteWithRelations = { id: string; operatorId: string; approvalStatus: string; createdAt: Date; originCity: City; destCity: City; stands: Array<{ sequence: number; distanceFromPrevKm: unknown; durationFromPrevMin: number; stand: Stand }>; };

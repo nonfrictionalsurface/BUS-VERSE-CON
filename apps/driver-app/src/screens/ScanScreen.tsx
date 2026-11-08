@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useQueryClient } from '@tanstack/react-query';
@@ -52,10 +52,10 @@ export function ScanScreen({ route, navigation }: any) {
     return (
       <View style={s.root}>
         <Text style={s.title}>Manual Entry</Text>
-        <TextInput style={s.input} value={ref} onChangeText={setRef} placeholder="BKG-XXXX" placeholderTextColor="#555" />
-        <TextInput style={s.input} value={name} onChangeText={setName} placeholder="Passenger Name" placeholderTextColor="#555" />
+        <TextInput style={s.input} value={ref} onChangeText={setRef} placeholder="BKG-XXXX" placeholderTextColor={theme.colors.textMuted} />
+        <TextInput style={s.input} value={name} onChangeText={setName} placeholder="Passenger Name" placeholderTextColor={theme.colors.textMuted} />
         <Pressable style={s.btn} onPress={handleManual}><Text style={s.btnText}>Submit</Text></Pressable>
-        <Pressable onPress={() => setManual(false)} style={{ marginTop: 24 }}><Text style={{ color: theme.colors.primary }}>Use Camera</Text></Pressable>
+        <Pressable onPress={() => setManual(false)} style={{ marginTop: 24 }}><Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>Use Camera</Text></Pressable>
       </View>
     );
   }
@@ -65,7 +65,7 @@ export function ScanScreen({ route, navigation }: any) {
       <View style={s.root}>
         <Text style={s.title}>Need Camera</Text>
         <Pressable style={s.btn} onPress={requestPermission}><Text style={s.btnText}>Allow Camera</Text></Pressable>
-        <Pressable onPress={() => setManual(true)} style={{ marginTop: 24 }}><Text style={{ color: theme.colors.primary }}>Use Manual Entry</Text></Pressable>
+        <Pressable onPress={() => setManual(true)} style={{ marginTop: 24 }}><Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>Use Manual Entry</Text></Pressable>
       </View>
     );
   }
@@ -81,9 +81,9 @@ export function ScanScreen({ route, navigation }: any) {
 }
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.bg, padding: 24, paddingTop: 60, justifyContent: 'center' },
-  title: { color: '#FFF', fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 24 },
+  title: { color: theme.colors.text, fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 24 },
   sub: { color: theme.colors.textMuted, textAlign: 'center', marginBottom: 32 },
-  input: { backgroundColor: theme.colors.surface, color: '#FFF', padding: 16, borderRadius: 12, marginBottom: 12 },
+  input: { backgroundColor: theme.colors.surface, color: theme.colors.text, padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: theme.colors.border },
   btn: { backgroundColor: theme.colors.primary, padding: 16, borderRadius: 12, alignItems: 'center' },
-  btnText: { color: '#000', fontWeight: '800' }
+  btnText: { color: theme.colors.text, fontWeight: '800' }
 });

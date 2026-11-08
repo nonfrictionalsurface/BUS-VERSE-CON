@@ -52,8 +52,11 @@ export interface PassengerMeDTO {
 }
 
 // ── Network enums (network.types.ts) ──
-export type BusType = 'SEATER' | 'AC_SEATER' | 'SLEEPER' | 'AC_SLEEPER' | 'SEMI_SLEEPER';
-export type SeatType = 'SEATER' | 'SLEEPER';
+export type BusType =
+  | 'SEATER' | 'AC_SEATER' | 'NON_AC_SEATER'
+  | 'SLEEPER' | 'AC_SLEEPER' | 'NON_AC_SLEEPER'
+  | 'SEMI_SLEEPER' | 'AC_SEMI_SLEEPER';
+export type SeatType = 'SEATER' | 'SEMI_SLEEPER' | 'SLEEPER';
 export type StandType = 'BUS_STAND' | 'PICKUP_POINT' | 'DROP_POINT';
 export type ScheduleStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED' | 'EXPIRED';
 
@@ -122,6 +125,8 @@ export type SeatState = 'AVAILABLE' | 'LOCKED' | 'MINE' | 'BOOKED';
 
 export interface AvailabilitySeatDTO {
   id: string;
+  /** Stable seat key. Join seats to layout.spec with it. */
+  key: string;
   label: string;
   row: string;
   column: number;
@@ -133,7 +138,14 @@ export interface AvailabilitySeatDTO {
 
 export interface AvailabilityDTO {
   schedule: { id: string; fare: MoneyDTO };
-  layout: { rowsCount: number; columnsCount: number; aisleCells: Array<{ row: number; column: number }> };
+  /** `spec` is the Seat Layout v2 document: parse it with parseLayout() from @busverse/seat-engine. */
+  layout: {
+    rowsCount: number;
+    columnsCount: number;
+    aisleCells: Array<{ row: number; column: number }>;
+    rev: number;
+    spec: Record<string, unknown>;
+  };
   seats: AvailabilitySeatDTO[];
 }
 
@@ -199,6 +211,8 @@ export interface BookingDetailDTO extends BookingSummaryDTO {
   payment: { paymentId: string; status: PaymentStatus; amountPaise: number; currency: string } | null;
   ticket: { ticketId: string; status: TicketStatus; issuedAt: string } | null;
   expiresAt: string | null;
+  /** Trip operating this booking's schedule (live tracking), or null before one exists. */
+  trip: { tripId: string; status: string } | null;
 }
 
 // ── Refund (booking.types.ts) ──
@@ -234,6 +248,8 @@ export interface PaymentDTO {
   amountPaise: number;
   currency: string;
   checkoutUrl: string | null;
+  /** What the app needs to open Razorpay checkout. `mock` = development: confirm via the dev endpoint. */
+  gateway: { provider: 'RAZORPAY'; keyId: string; orderId: string; mock: boolean } | null;
   expiresAt: string;
 }
 
@@ -374,7 +390,13 @@ export type RootStackParamList = {
     sortBy?: 'departureTime' | 'fare';
   };
   SeatSelection: { scheduleId: string; farePaise: number };
-  PassengerManifest: { scheduleId: string; lockId: string; seatLabel: string; farePaise: number };
+  PassengerManifest: {
+    scheduleId: string;
+    farePaise: number;
+    /** One entry per selected seat. The booking API takes any one lockId plus every seatId. */
+    seats: Array<{ seatId: string; label: string; lockId: string; femaleOnly: boolean }>;
+    lockExpiresAt: string;
+  };
   Payment: { bookingId: string; amountPaise: number; reference: string; expiresAt: string };
   MyTickets: undefined;
   Ticket: { bookingId: string };

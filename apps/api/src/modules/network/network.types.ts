@@ -1,6 +1,6 @@
-export const BUS_TYPE = ['SEATER','AC_SEATER','SLEEPER','AC_SLEEPER','SEMI_SLEEPER'] as const;
+export const BUS_TYPE = ['SEATER','AC_SEATER','NON_AC_SEATER','SLEEPER','AC_SLEEPER','NON_AC_SLEEPER','SEMI_SLEEPER','AC_SEMI_SLEEPER'] as const;
 export type BusType = (typeof BUS_TYPE)[number];
-export const SEAT_TYPE = ['SEATER','SLEEPER'] as const;
+export const SEAT_TYPE = ['SEATER','SEMI_SLEEPER','SLEEPER'] as const;
 export type SeatType = (typeof SEAT_TYPE)[number];
 export const STAND_TYPE = ['BUS_STAND','PICKUP_POINT','DROP_POINT'] as const;
 export type StandType = (typeof STAND_TYPE)[number];
@@ -31,8 +31,8 @@ export interface BusDTO {
   capacity: number; busType: BusType; amenities: string[]; approvalStatus: BusApprovalStatus;
   insuranceDocRef: string | null; insuranceExpiresAt: string | null; createdAt: string;
 }
-export interface SeatDTO { id: string; seatRow: string; seatColumn: number; seatLabel: string; seatType: SeatType; isFemaleOnly: boolean; }
-export interface SeatLayoutDTO { id: string; busId: string; rowsCount: number; columnsCount: number; aisleCells: Array<{ row: string; column: number }>; seats: SeatDTO[]; }
+export interface SeatDTO { id: string; key: string; seatRow: string; seatColumn: number; seatLabel: string; seatType: SeatType; isFemaleOnly: boolean; }
+export interface SeatLayoutDTO { id: string; busId: string; rowsCount: number; columnsCount: number; aisleCells: Array<{ row: string; column: number }>; seats: SeatDTO[]; rev: number; spec: Record<string, unknown>; }
 export interface RouteStandDTO { stand: StandDTO; sequence: number; distanceFromPrevKm: number; durationFromPrevMin: number; }
 export interface RouteDTO { id: string; operatorId: string; originCity: CityDTO; destinationCity: CityDTO; approvalStatus: RouteApprovalStatus; stands: RouteStandDTO[]; createdAt: string; }
 

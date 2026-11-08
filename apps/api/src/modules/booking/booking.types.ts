@@ -39,6 +39,8 @@ export interface SeatLockDTO {
 
 export interface AvailabilitySeatDTO {
   id: string;
+  /** Stable seat key. Join seats to layout.spec with it. */
+  key: string;
   label: string;
   row: string;
   column: number;
@@ -50,7 +52,8 @@ export interface AvailabilitySeatDTO {
 
 export interface AvailabilityDTO {
   schedule: { id: string; fare: { amountPaise: number; currency: string } };
-  layout: { rowsCount: number; columnsCount: number; aisleCells: Array<{ row: number; column: number }> };
+  /** `spec` is the Seat Layout v2 document (parse with parseLayout). rowsCount/columnsCount/aisleCells are the legacy view of the first deck. */
+  layout: { rowsCount: number; columnsCount: number; aisleCells: Array<{ row: number; column: number }>; rev: number; spec: Record<string, unknown> };
   seats: AvailabilitySeatDTO[];
 }
 
@@ -84,6 +87,8 @@ export interface BookingDetailDTO extends BookingSummaryDTO {
   payment: { paymentId: string; status: PaymentStatus; amountPaise: number; currency: string } | null;
   ticket: { ticketId: string; status: TicketStatus; issuedAt: string } | null;
   expiresAt: string | null;
+  /** The trip operating this booking's schedule (needed for live tracking), or null before one is assigned. */
+  trip: { tripId: string; status: string } | null;
 }
 
 export interface TicketDTO {

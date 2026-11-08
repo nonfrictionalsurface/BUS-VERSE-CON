@@ -19,6 +19,8 @@ export interface PaymentDTO {
   amountPaise: number;
   currency: string;
   checkoutUrl: string | null;
+  /** What the app needs to open Razorpay checkout. `mock` means development: confirm via the dev endpoint instead. */
+  gateway: { provider: 'RAZORPAY'; keyId: string; orderId: string; mock: boolean } | null;
   expiresAt: string;
 }
 
@@ -72,6 +74,7 @@ export async function initiatePayment(
       amountPaise: Number(row.amountPaise),
       currency: row.currency,
       checkoutUrl: order.checkoutUrl,
+      gateway: { provider: 'RAZORPAY', keyId: order.keyId, orderId: order.orderId, mock: order.mock },
       expiresAt: expiresAt.toISOString(),
     };
     await setCachedResponse(idempotencyKey, bodyHash, 201, result);
@@ -92,6 +95,7 @@ export async function getPaymentStatus(userId: string, paymentId: string): Promi
     amountPaise: Number(payment.amountPaise),
     currency: payment.currency,
     checkoutUrl: null,
+    gateway: null,
     expiresAt: expiresAt.toISOString(),
   };
 }

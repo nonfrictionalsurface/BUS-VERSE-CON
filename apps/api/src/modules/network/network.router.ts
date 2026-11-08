@@ -52,6 +52,7 @@ export async function networkRouter(server: FastifyInstance): Promise<void> {
   // seat layout
   server.get('/operator/buses/:id/layout', { preHandler: requireRole(...OPERATOR_ROLES) }, c.getSeatLayout);
   server.put('/operator/buses/:id/layout', { preHandler: requireRole(...OPERATOR_ROLES) }, c.putSeatLayout);
+  server.post('/operator/buses/:id/layout/validate', { preHandler: requireRole(...OPERATOR_ROLES) }, c.validateSeatLayout);
 
   // routes
   server.get('/operator/routes', { preHandler: requireRole(...OPERATOR_ROLES) }, c.listRoutes);

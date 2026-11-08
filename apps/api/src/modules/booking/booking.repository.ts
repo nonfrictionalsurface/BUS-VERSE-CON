@@ -147,13 +147,14 @@ export async function listActiveLocksForUser(userId: string) {
 export async function findLayoutByBusId(busId: string) {
   return prisma.seatLayout.findFirst({
     where: { busId, deletedAt: null },
-    select: { id: true, rowsCount: true, columnsCount: true, aisleMapJson: true },
+    select: { id: true, rowsCount: true, columnsCount: true, aisleMapJson: true, specJson: true, layoutRev: true },
   });
 }
 
 export interface SeatWithState {
   id: string;
   seat_label: string;
+  seat_key: string | null;
   seat_row: string;
   seat_column: number;
   seat_type: string;
@@ -167,6 +168,7 @@ export async function findSeatsWithState(scheduleId: string, userId: string): Pr
     SELECT
       se.id,
       se.seat_label,
+      se.seat_key,
       se.seat_row,
       se.seat_column,
       se.seat_type,

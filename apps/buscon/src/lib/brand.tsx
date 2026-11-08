@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { cn } from './utils/cn';
 
 export function BusConReveal({ size = 400, className }: { size?: number, className?: string }) {
@@ -66,42 +66,42 @@ export function TransitLoader({ caption = "LOADING...", size = "md" }: { caption
       <svg viewBox="0 0 800 500" width="100%" height="100%">
         <defs>
           <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#15803D" />
-            <stop offset="50%" stopColor="#22C55E" />
-            <stop offset="100%" stopColor="#4ADE80" />
+            <stop offset="0%" stopColor="#B07070" />
+            <stop offset="50%" stopColor="#C48787" />
+            <stop offset="100%" stopColor="#DBA5A5" />
           </linearGradient>
           <linearGradient id="roofGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0A1F14" />
-            <stop offset="100%" stopColor="#04100A" />
+            <stop offset="0%" stopColor="#2E2620" />
+            <stop offset="100%" stopColor="#1A1410" />
           </linearGradient>
           <linearGradient id="glassGrad" x1="20%" y1="0%" x2="80%" y2="100%">
-            <stop offset="0%" stopColor="#1E3A2A" />
-            <stop offset="50%" stopColor="#0E1F16" />
-            <stop offset="100%" stopColor="#08120D" />
+            <stop offset="0%" stopColor="#3D2E22" />
+            <stop offset="50%" stopColor="#2E2620" />
+            <stop offset="100%" stopColor="#1A1410" />
           </linearGradient>
           <linearGradient id="glassSheen" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#A7F3D0" stopOpacity="0" />
-            <stop offset="50%" stopColor="#A7F3D0" stopOpacity="0.35" />
+            <stop offset="0%" stopColor="#F5E6E6" stopOpacity="0" />
+            <stop offset="50%" stopColor="#F5E6E6" stopOpacity="0.35" />
             <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="headlightBeam" x1="0%" y1="50%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#4ADE80" stopOpacity="0.8" />
-            <stop offset="30%" stopColor="#4ADE80" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
+            <stop offset="0%" stopColor="#C48787" stopOpacity="0.8" />
+            <stop offset="30%" stopColor="#C48787" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#B07070" stopOpacity="0" />
           </linearGradient>
           <radialGradient id="underglowGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#4ADE80" stopOpacity="0.6" />
-            <stop offset="60%" stopColor="#22C55E" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
+            <stop offset="0%" stopColor="#C48787" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#B07070" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#B07070" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="taillightGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#FF2A55" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#FF2A55" stopOpacity="0" />
           </radialGradient>
           <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1A3A28" />
-            <stop offset="50%" stopColor="#0A1810" />
-            <stop offset="100%" stopColor="#244A33" />
+            <stop offset="0%" stopColor="#3D2E22" />
+            <stop offset="50%" stopColor="#1A1410" />
+            <stop offset="100%" stopColor="#4A3F36" />
           </linearGradient>
         </defs>
 
@@ -113,8 +113,8 @@ export function TransitLoader({ caption = "LOADING...", size = "md" }: { caption
 
         <g>
           <rect className="loader-ground-bar" x="0" y="340" width="800" height="4" />
-          <line className="loader-road-dash" x1="-100" y1="358" x2="900" y2="358" stroke="#22C55E" strokeWidth="4" strokeLinecap="round" opacity="0.85" />
-          <line className="loader-road-edge" x1="-100" y1="372" x2="900" y2="372" stroke="#4ADE80" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+          <line className="loader-road-dash" x1="-100" y1="358" x2="900" y2="358" stroke="#C48787" strokeWidth="4" strokeLinecap="round" opacity="0.85" />
+          <line className="loader-road-edge" x1="-100" y1="372" x2="900" y2="372" stroke="#DBA5A5" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
         </g>
 
         <ellipse className="loader-underglow-fx" cx="400" cy="336" rx="210" ry="14" fill="url(#underglowGrad)" opacity="0.7" />
@@ -123,43 +123,43 @@ export function TransitLoader({ caption = "LOADING...", size = "md" }: { caption
 
         <g id="bus-chassis-rig">
           <path d="M 290,165 Q 310,154 360,154 L 465,154 Q 505,154 520,165 Z" fill="url(#roofGrad)" />
-          <rect x="340" y="159" width="30" height="3" rx="1.5" fill="#1C3A2A" />
-          <rect x="385" y="159" width="30" height="3" rx="1.5" fill="#1C3A2A" />
-          <rect x="430" y="159" width="30" height="3" rx="1.5" fill="#1C3A2A" />
+          <rect x="340" y="159" width="30" height="3" rx="1.5" fill="#2E2620" />
+          <rect x="385" y="159" width="30" height="3" rx="1.5" fill="#2E2620" />
+          <rect x="430" y="159" width="30" height="3" rx="1.5" fill="#2E2620" />
 
           <path d="M 215,178 Q 210,178 208,186 L 204,295 Q 204,310 218,310 L 255,310 A 38,38 0 0 1 331,310 L 477,310 A 38,38 0 0 1 553,310 L 588,310 Q 605,310 605,296 L 603,260 Q 601,230 582,198 L 568,184 Q 556,178 538,178 Z" fill="url(#bodyGrad)" />
-          <path d="M 204,290 L 204,298 Q 204,310 218,310 L 255,310 A 38,38 0 0 1 331,310 L 477,310 A 38,38 0 0 1 553,310 L 588,310 Q 605,310 605,296 L 604,290 Z" fill="#0A1F14" />
-          <path d="M 204,286 L 254,286 A 38,38 0 0 1 332,286 L 476,286 A 38,38 0 0 1 554,286 L 602,286" fill="none" stroke="#A7F3D0" strokeWidth="2" opacity="0.85" />
+          <path d="M 204,290 L 204,298 Q 204,310 218,310 L 255,310 A 38,38 0 0 1 331,310 L 477,310 A 38,38 0 0 1 553,310 L 588,310 Q 605,310 605,296 L 604,290 Z" fill="#1A1410" />
+          <path d="M 204,286 L 254,286 A 38,38 0 0 1 332,286 L 476,286 A 38,38 0 0 1 554,286 L 602,286" fill="none" stroke="#F5E6E6" strokeWidth="2" opacity="0.85" />
 
-          <path d="M 220,188 L 535,188 Q 552,188 563,200 L 579,222 Q 586,232 588,246 L 589,252 L 220,252 Z" fill="url(#glassGrad)" stroke="#0A1F14" strokeWidth="2" />
+          <path d="M 220,188 L 535,188 Q 552,188 563,200 L 579,222 Q 586,232 588,246 L 589,252 L 220,252 Z" fill="url(#glassGrad)" stroke="#1A1410" strokeWidth="2" />
           <path d="M 280,252 L 325,188 L 350,188 L 305,252 Z" fill="url(#glassSheen)" />
           <path d="M 440,252 L 485,188 L 500,188 L 455,252 Z" fill="url(#glassSheen)" opacity="0.5" />
 
-          <line x1="275" y1="188" x2="275" y2="252" stroke="#0A1F14" strokeWidth="3" />
-          <line x1="340" y1="188" x2="340" y2="252" stroke="#0A1F14" strokeWidth="3" />
-          <line x1="410" y1="188" x2="410" y2="252" stroke="#0A1F14" strokeWidth="3" />
-          <line x1="480" y1="188" x2="480" y2="252" stroke="#0A1F14" strokeWidth="3" />
+          <line x1="275" y1="188" x2="275" y2="252" stroke="#1A1410" strokeWidth="3" />
+          <line x1="340" y1="188" x2="340" y2="252" stroke="#1A1410" strokeWidth="3" />
+          <line x1="410" y1="188" x2="410" y2="252" stroke="#1A1410" strokeWidth="3" />
+          <line x1="480" y1="188" x2="480" y2="252" stroke="#1A1410" strokeWidth="3" />
 
-          <ellipse cx="600" cy="276" rx="4" ry="5" fill="#4ADE80" />
+          <ellipse cx="600" cy="276" rx="4" ry="5" fill="#C48787" />
           <rect x="202" y="262" width="3" height="20" rx="1.5" fill="#FFA3B2" />
 
           <g>
-            <path d="M 258,310 A 35,35 0 0 1 328,310 Z" fill="#050912" />
-            <circle cx="293" cy="310" r="28" fill="#0D1A12" stroke="#04100A" strokeWidth="2" />
+            <path d="M 258,310 A 35,35 0 0 1 328,310 Z" fill="#0F0B08" />
+            <circle cx="293" cy="310" r="28" fill="#1A1410" stroke="#0F0B08" strokeWidth="2" />
             <g className="loader-wheel">
               <circle cx="293" cy="310" r="19" fill="url(#rimGrad)" />
-              <circle cx="293" cy="310" r="13" fill="none" stroke="#4ADE80" strokeWidth="2" strokeDasharray="6 7" />
-              <circle cx="293" cy="310" r="5" fill="#22C55E" />
+              <circle cx="293" cy="310" r="13" fill="none" stroke="#C48787" strokeWidth="2" strokeDasharray="6 7" />
+              <circle cx="293" cy="310" r="5" fill="#B07070" />
             </g>
           </g>
 
           <g>
-            <path d="M 480,310 A 35,35 0 0 1 550,310 Z" fill="#050912" />
-            <circle cx="515" cy="310" r="28" fill="#0D1A12" stroke="#04100A" strokeWidth="2" />
+            <path d="M 480,310 A 35,35 0 0 1 550,310 Z" fill="#0F0B08" />
+            <circle cx="515" cy="310" r="28" fill="#1A1410" stroke="#0F0B08" strokeWidth="2" />
             <g className="loader-wheel">
               <circle cx="515" cy="310" r="19" fill="url(#rimGrad)" />
-              <circle cx="515" cy="310" r="13" fill="none" stroke="#4ADE80" strokeWidth="2" strokeDasharray="6 7" />
-              <circle cx="515" cy="310" r="5" fill="#22C55E" />
+              <circle cx="515" cy="310" r="13" fill="none" stroke="#C48787" strokeWidth="2" strokeDasharray="6 7" />
+              <circle cx="515" cy="310" r="5" fill="#B07070" />
             </g>
           </g>
         </g>

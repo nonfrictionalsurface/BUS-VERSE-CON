@@ -1,68 +1,102 @@
 ﻿'use client';
 
 import React from 'react';
-import { ScheduleAvailabilityResponse, SeatAvailabilityItem } from '../api/seats.api';
+import { Seat, SeatLayout } from '../types';
 import { SeatCell } from './SeatCell';
+import { Disc3 } from 'lucide-react';
 
 interface SeatDeckProps {
-  data: ScheduleAvailabilityResponse;
-  selectedSeats: SeatAvailabilityItem[];
-  onToggleSeat: (seat: SeatAvailabilityItem) => void;
+  seats: Seat[];
+  layout: SeatLayout;
+  selectedSeatId: string | null;
+  onSeatClick: (seat: Seat) => void;
+  disabled?: boolean;
 }
 
-export const SeatDeck: React.FC<SeatDeckProps> = ({ data, selectedSeats, onToggleSeat }) => {
-  // Group seats by row
-  const rowsMap: Record<string, SeatAvailabilityItem[]> = {};
-  data.seats.forEach((seat) => {
-    if (!rowsMap[seat.seatRow]) rowsMap[seat.seatRow] = [];
-    rowsMap[seat.seatRow].push(seat);
-  });
+export function SeatDeck({
+  seats,
+  layout,
+  selectedSeatId,
+  onSeatClick,
+  disabled = false,
+}: SeatDeckProps) {
+  // Build a lookup: "A1" -> seat
+  const seatByLabel = new Map<string, Seat>();
+  seats.forEach((s) => seatByLabel.set(`${String(s.seatRow)}${s.seatColumn}`, s));
 
-  const rowLetters = Object.keys(rowsMap).sort();
+  const rowLetters: string[] = [];
+  for (let r = 0; r < layout.rowsCount; r++) {
+    rowLetters.push(String.fromCharCode(65 + r));
+  }
+
+  const cols = layout.columnsCount;
 
   return (
-    <div className="relative mx-auto w-full max-w-sm rounded-[36px] border-2 border-border-strong bg-surface-card p-6 pt-12 shadow-floating">
-      {/* Driver Windshield Indicator */}
-      <div className="absolute left-6 right-6 top-3 h-5 rounded-t-xl border border-telemetry-cyan bg-gradient-to-b from-telemetry-cyan/20 to-transparent" />
+    <div className="w-full max-w-md mx-auto p-6 sm:p-8 rounded-3xl bg-surface-card border-2 border-border-strong shadow-floating relative">
+      {/* Front Windshield & Steering Cab */}
+      <div className="relative mb-6 pb-4 border-b-2 border-dashed border-border-subtle flex items-center justify-between">
+        <div className="h-6 px-3 rounded-t-lg bg-telemetry-subtle border border-telemetry-cyan flex items-center justify-center text-[10px] font-mono font-bold text-telemetry-cyan uppercase tracking-wider">
+          Windshield
+        </div>
+        <div className="flex items-center gap-1.5 text-ink-muted">
+          <Disc3 className="w-6 h-6 animate-spin text-ink-secondary" style={{ animationDuration: '8s' }} />
+          <span className="text-[10px] font-mono font-semibold uppercase">Driver</span>
+        </div>
+      </div>
 
+      {/* Seat Rows — render exact grid from layout */}
       <div className="space-y-3">
-        {rowLetters.map((rowLetter) => {
-          const rowSeats = rowsMap[rowLetter].sort((a, b) => a.seatColumn - b.seatColumn);
-          const leftPair = rowSeats.slice(0, 2);
-          const rightPair = rowSeats.slice(2);
+        {rowLetters.map((rowChar) => (
+          <div key={rowChar} className="flex items-center gap-1 justify-center">
+            {/* Row letter on left */}
+            <span className="w-5 text-[10px] font-mono font-bold text-ink-muted text-center">
+              {rowChar}
+            </span>
 
-          return (
-            <div key={rowLetter} className="flex items-center justify-between">
-              {/* Left pair */}
-              <div className="flex gap-2">
-                {leftPair.map((seat) => (
+            {/* One cell per column — seat or empty aisle */}
+            {Array.from({ length: cols }, (_, i) => {
+              const colNum = i + 1;
+              const seat = seatByLabel.get(`${rowChar}${colNum}`);
+
+              if (!seat) {
+                // Empty cell — this is an aisle / unassigned coordinate
+                return (
+                  <div
+                    key={`${rowChar}${colNum}`}
+                    className="w-9 h-9 flex items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    <div className="w-1 h-1 rounded-full bg-border-subtle" />
+                  </div>
+                );
+              }
+
+              return (
+                <div key={seat.id} className="w-9">
                   <SeatCell
-                    key={seat.id}
                     seat={seat}
-                    isSelectedByMe={selectedSeats.some((s) => s.id === seat.id)}
-                    onToggle={onToggleSeat}
+                    isSelected={selectedSeatId === seat.id}
+                    onSelect={onSeatClick}
+                    disabled={disabled}
                   />
-                ))}
-              </div>
+                </div>
+              );
+            })}
 
-              {/* Center Aisle */}
-              <div className="w-6 font-mono text-[10px] text-center text-ink-muted">{rowLetter}</div>
+            {/* Row letter on right */}
+            <span className="w-5 text-[10px] font-mono font-bold text-ink-muted text-center">
+              {rowChar}
+            </span>
+          </div>
+        ))}
+      </div>
 
-              {/* Right pair */}
-              <div className="flex gap-2">
-                {rightPair.map((seat) => (
-                  <SeatCell
-                    key={seat.id}
-                    seat={seat}
-                    isSelectedByMe={selectedSeats.some((s) => s.id === seat.id)}
-                    onToggle={onToggleSeat}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      {/* Rear Coach Exit */}
+      <div className="mt-8 pt-3 border-t-2 border-border-subtle text-center">
+        <span className="text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest">
+          Coach Rear Entry
+        </span>
       </div>
     </div>
   );
-};
+}

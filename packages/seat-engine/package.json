@@ -1,0 +1,27 @@
+{
+  "name": "@busverse/seat-engine",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seat Layout Engine v2 - one pure-TypeScript implementation shared by the API, BusVerse passenger, driver and BusCon operator apps.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "react-native": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/fix-dts.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --experimental-strip-types \"test/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

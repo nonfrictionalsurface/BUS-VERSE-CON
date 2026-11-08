@@ -39,6 +39,7 @@ export type ErrorCode =
   | 'TRIP_ALREADY_STARTED'
   | 'SCHEDULE_HAS_BOOKINGS'
   | 'ROUTE_IN_USE'
+  | 'LAYOUT_IN_USE'
   | 'SCHEDULE_CONFLICT'
   | 'IDEMPOTENCY_KEY_REUSED'
   | 'PAYMENT_ALREADY_SUCCEEDED'
@@ -156,6 +157,8 @@ export const errors = {
   scheduleHasBookings: (n: number) =>
     make('SCHEDULE_HAS_BOOKINGS', 409, 'Schedule has bookings', { bookings: n }),
   routeInUse: (n: number) => make('ROUTE_IN_USE', 409, 'Route in use by schedules', { schedules: n }),
+  layoutInUse: (details: Record<string, unknown>) =>
+    make('LAYOUT_IN_USE', 409, 'Seat layout change conflicts with active bookings or seat locks', details),
   scheduleConflict: (conflictingScheduleId: string, departureTime: string, arrivalTime: string) =>
     make('SCHEDULE_CONFLICT', 409, 'Bus has an overlapping schedule', { conflictingScheduleId, departureTime, arrivalTime }),
   busRegistrationExists: () => make('BUS_REGISTRATION_EXISTS', 409, 'Bus registration exists'),

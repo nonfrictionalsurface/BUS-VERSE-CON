@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
 import { ScreenContainer, AppHeader } from '../components/layout';
-import { Card, Button, Skeleton, Banner, useToast } from '../components/ui';
+import { Card, Button, Skeleton, Banner } from '../components/ui';
 import { useSearch, ScheduleCard } from '../features/search';
 import { formatDate } from '../lib/format';
 import type { RootStackParamList } from '../types';
@@ -12,7 +12,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
 export const ResultsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { tokens, typography, spacing } = useTheme();
-  const toast = useToast();
   const {
     originCityId,
     destinationCityId,
@@ -109,7 +108,10 @@ export const ResultsScreen: React.FC<Props> = ({ navigation, route }) => {
                 originCityName={originCityName}
                 destinationCityName={destinationCityName}
                 onSelect={() => {
-                  toast.show('Seat selection ships in M3', 'info', 3000);
+                  navigation.navigate('SeatSelection', {
+                    scheduleId: s.scheduleId,
+                    farePaise: s.fare.amountPaise,
+                  });
                 }}
               />
             ))}

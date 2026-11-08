@@ -60,6 +60,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS uniq_seat_layouts_bus
   ON seat_layouts (bus_id) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_seats_layout_label
   ON seats (layout_id, seat_label) WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_seats_layout_key
+  ON seats (layout_id, seat_key)
+  WHERE deleted_at IS NULL AND seat_key IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_route_stands_sequence
   ON route_stands (route_id, sequence) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_route_stands_stand
@@ -91,9 +95,9 @@ ALTER TABLE users ADD CONSTRAINT chk_users_email_lowercase
 ALTER TABLE operators ADD CONSTRAINT chk_operators_status
   CHECK (status IN ('APPLIED','PENDING_REVIEW','APPROVED','REJECTED','ACTIVE','SUSPENDED','DEACTIVATED'));
 ALTER TABLE buses ADD CONSTRAINT chk_buses_capacity
-  CHECK (capacity > 0 AND capacity <= 60);
+  CHECK (capacity > 0 AND capacity <= 150);
 ALTER TABLE buses ADD CONSTRAINT chk_buses_bus_type
-  CHECK (bus_type IN ('AC_SEATER','AC_SLEEPER','NON_AC_SEATER','NON_AC_SLEEPER','AC_SEMI_SLEEPER'));
+  CHECK (bus_type IN ('SEATER','AC_SEATER','NON_AC_SEATER','SLEEPER','AC_SLEEPER','NON_AC_SLEEPER','SEMI_SLEEPER','AC_SEMI_SLEEPER'));
 ALTER TABLE buses ADD CONSTRAINT chk_buses_approval_status
   CHECK (approval_status IN ('PENDING','APPROVED','REJECTED'));
 ALTER TABLE seats ADD CONSTRAINT chk_seats_seat_type

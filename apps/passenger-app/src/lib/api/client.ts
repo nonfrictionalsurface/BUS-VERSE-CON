@@ -1,8 +1,7 @@
-import { CONFIG } from '../config';
+﻿import { CONFIG } from '../config';
 import type { ApiEnvelope } from '../../types';
 import { userMessageFor } from './errors';
 
-// ── Token store (memory only; refresh token in SecureStore) ──
 let accessToken: string | null = null;
 
 export function setAccessToken(t: string | null): void {
@@ -12,7 +11,6 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
-// Single-flight refresh — one refresh at a time across all concurrent 401s
 let refreshInFlight: Promise<string | null> | null = null;
 let refreshHandler: (() => Promise<string | null>) | null = null;
 
@@ -32,7 +30,6 @@ async function runRefresh(): Promise<string | null> {
   return refreshInFlight;
 }
 
-// ── API error ──
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -46,13 +43,11 @@ export class ApiError extends Error {
   }
 }
 
-// ── Core request ──
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   headers?: Record<string, string>;
   idempotencyKey?: string;
-  /** Skip the auto-refresh-on-401. Used by the refresh call itself. */
   skipRefresh?: boolean;
 };
 
@@ -66,17 +61,32 @@ async function rawFetch<T>(path: string, opts: RequestOptions, token: string | n
   if (opts.idempotencyKey) headers['Idempotency-Key'] = opts.idempotencyKey;
 
   const url = `${CONFIG.API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
-  return fetch(url, {
-    method: opts.method ?? 'GET',
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-  });
+  
+  // BUG FIX: Add a 10-second timeout so the app never hangs forever
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(url, {
+      method: opts.method ?? 'GET',
+      headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return res;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new ApiError(408, 'TIMEOUT', 'The request took too long. Check your connection.');
+    }
+    throw err;
+  }
 }
 
 export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   let res = await rawFetch<T>(path, opts, accessToken);
 
-  // Single-flight refresh on 401 (skip if this IS the refresh call)
   if (res.status === 401 && !opts.skipRefresh) {
     const newToken = await runRefresh();
     if (newToken) {
@@ -85,27 +95,21 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
     }
   }
 
-  // 204 No Content
   if (res.status === 204) return null as unknown as T;
 
   const text = await res.text();
   let parsed: unknown = null;
   if (text) {
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = null;
-    }
+    try { parsed = JSON.parse(text); } catch { parsed = null; }
   }
 
   if (!res.ok) {
-    const err = (parsed as { error?: { code?: string; message?: string; details?: Record<string, unknown>; requestId?: string } } | null)?.error;
+    const err = (parsed as any)?.error;
     const code = err?.code ?? `HTTP_${res.status}`;
     const message = err?.message ?? userMessageFor(code);
     throw new ApiError(res.status, code, message, err?.details, err?.requestId);
   }
 
-  // Envelope: { data: T, meta?: {...} }
   const env = parsed as ApiEnvelope<T> | T | null;
   if (env && typeof env === 'object' && 'data' in env) {
     return (env as ApiEnvelope<T>).data;
@@ -113,7 +117,6 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
   return env as T;
 }
 
-// ── Convenience helpers ──
 export const api = {
   get: <T>(path: string, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...opts, method: 'GET' }),

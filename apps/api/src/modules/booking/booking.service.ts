@@ -5,6 +5,8 @@ import { redis, keys } from '../../lib/redis.js';
 import { writeAuditEvent } from '../../lib/audit.js';
 import { logger } from '../../lib/logger.js';
 import { razorpayAdapter } from '../../integrations/razorpay.js';
+import { compactLayout, legacyAisleCells } from '@busverse/seat-engine';
+import { layoutOfRows } from '../network/seat-layout.shared.js';
 import { bookingErrors } from './booking.errors.js';
 import * as repo from './booking.repository.js';
 import {
@@ -96,10 +98,14 @@ export async function createBooking(
         },
         select: { id: true, bookingReference: true },
       });
+      const liveSeats = await tx.seat.findMany({ where: { id: { in: seatIds }, deletedAt: null }, select: { id: true, seatLabel: true } });
+      if (liveSeats.length !== seatIds.length) throw bookingErrors.invalidSeat();
+      const labelOf = new Map(liveSeats.map((s) => [s.id, s.seatLabel] as const));
       await tx.bookingPassenger.createMany({
         data: payload.passengers.map((p) => ({
           bookingId: booking.id,
           seatId: p.seatId,
+          seatLabel: labelOf.get(p.seatId) ?? null,
           scheduleId: schedule.id,
           name: p.name,
           age: p.age ?? null,
@@ -174,7 +180,7 @@ export async function listMyBookings(
       routeSummary: { originCity: b.schedule.route.originCity.name, destinationCity: b.schedule.route.destCity.name },
       passengerCount: b.passengers.length,
       passengers: b.passengers.map((p) => ({
-        seatId: p.seatId, seatLabel: p.seat.seatLabel, name: p.name, age: p.age, gender: p.gender,
+        seatId: p.seatId, seatLabel: p.seatLabel ?? p.seat.seatLabel, name: p.name, age: p.age, gender: p.gender,
       })),
       totalFarePaise: Number(b.totalFareAmount),
       confirmedAt: b.confirmedAt?.toISOString() ?? null,
@@ -198,6 +204,11 @@ export async function getMyBooking(userId: string, bookingId: string): Promise<B
   });
   if (!b) throw bookingErrors.notFound();
 
+  const trip = await prisma.trip.findFirst({
+    where: { scheduleId: b.scheduleId, deletedAt: null, status: { not: 'CANCELLED' } },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, status: true },
+  });
   const fb = b.fareBreakdownJson as {
     base_fare_paise?: number; tax_paise?: number; convenience_fee_paise?: number; total_paise?: number;
   };
@@ -215,7 +226,7 @@ export async function getMyBooking(userId: string, bookingId: string): Promise<B
     routeSummary: { originCity: b.schedule.route.originCity.name, destinationCity: b.schedule.route.destCity.name },
     passengerCount: b.passengers.length,
     passengers: b.passengers.map((p) => ({
-      seatId: p.seatId, seatLabel: p.seat.seatLabel, name: p.name, age: p.age, gender: p.gender,
+      seatId: p.seatId, seatLabel: p.seatLabel ?? p.seat.seatLabel, name: p.name, age: p.age, gender: p.gender,
     })),
     totalFarePaise: Number(b.totalFareAmount),
     confirmedAt: b.confirmedAt?.toISOString() ?? null,
@@ -233,6 +244,7 @@ export async function getMyBooking(userId: string, bookingId: string): Promise<B
       : null,
     ticket: b.ticket ? { ticketId: b.ticket.id, status: b.ticket.status as any, issuedAt: b.ticket.issuedAt.toISOString() } : null,
     expiresAt,
+    trip: trip ? { tripId: trip.id, status: trip.status } : null,
   };
 }
 // Canonical refund tier calculator per shared/02 §10 + 07 §4.5
@@ -463,7 +475,13 @@ export async function getAvailability(userId: string, scheduleId: string): Promi
   if (!fare) throw bookingErrors.invalidSchedule();
 
   const seatRows = await repo.findSeatsWithState(scheduleId, userId);
-  const aisleMap = layout.aisleMapJson as { _v: number; aisle_cells: Array<{ row: number; col: number }> };
+  const v2 = layoutOfRows(
+    layout,
+    seatRows.map((s) => ({
+      seatRow: s.seat_row, seatColumn: s.seat_column, seatLabel: s.seat_label,
+      seatType: s.seat_type, isFemaleOnly: s.is_female_only, seatKey: s.seat_key,
+    })),
+  );
 
   return {
     schedule: {
@@ -473,10 +491,13 @@ export async function getAvailability(userId: string, scheduleId: string): Promi
     layout: {
       rowsCount: layout.rowsCount,
       columnsCount: layout.columnsCount,
-      aisleCells: (aisleMap.aisle_cells ?? []).map((c) => ({ row: c.row, column: c.col })),
+      aisleCells: legacyAisleCells(v2),
+      rev: layout.layoutRev,
+      spec: compactLayout(v2),
     },
     seats: seatRows.map((s) => ({
       id: s.id,
+      key: s.seat_key ?? s.seat_label,
       label: s.seat_label,
       row: s.seat_row,
       column: s.seat_column,

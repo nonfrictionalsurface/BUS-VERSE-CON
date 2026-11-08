@@ -6,12 +6,13 @@ import { tripIdParamSchema, assignTripBodySchema, reassignTripBodySchema, listOp
 import {
   listCitiesQuerySchema, searchQuerySchema, scheduleIdParamSchema, cityIdParamSchema,
   patchOperatorMeSchema, busIdParamSchema, listBusesQuerySchema, createBusSchema, patchBusSchema,
-  putSeatLayoutSchema, routeIdParamSchema, listRoutesQuerySchema, createRouteSchema,
+  putSeatLayoutSchema, layoutOptionsQuerySchema, routeIdParamSchema, listRoutesQuerySchema, createRouteSchema,
   patchRouteSchema, appendRouteStandSchema,
   listSchedulesQuerySchema, createScheduleSchema, patchScheduleSchema,
   driverIdParamSchema, listDriversQuerySchema, inviteDriverSchema,
   bookingIdParamSchema, listBookingsQuerySchema, revenueQuerySchema,
 } from './network.schema.js';
+import type { SeatLayoutBody } from './seat-layout.service.js';
 
 function requireUser(req: FastifyRequest) {
   if (!req.user) throw errors.unauthorized();
@@ -82,11 +83,23 @@ export async function getSeatLayout(req: FastifyRequest, reply: FastifyReply) {
   const { id } = busIdParamSchema.parse(req.params);
   return reply.send(success(await service.getSeatLayout({ userId: user.userId, busId: id })));
 }
+/** A body with `v: 2` is the v2 layout document; anything else is the legacy rows/columns body. */
+function parseSeatLayoutBody(req: FastifyRequest): SeatLayoutBody {
+  const raw = req.body as { v?: unknown } | null | undefined;
+  if (raw && typeof raw === 'object' && raw.v === 2) {
+    return { kind: 'v2', layout: raw, syncCapacity: layoutOptionsQuerySchema.parse(req.query).syncCapacity };
+  }
+  return { kind: 'legacy', input: putSeatLayoutSchema.parse(raw) };
+}
 export async function putSeatLayout(req: FastifyRequest, reply: FastifyReply) {
   const user = requireUser(req);
   const { id } = busIdParamSchema.parse(req.params);
-  const body = putSeatLayoutSchema.parse(req.body);
-  return reply.send(success(await service.putSeatLayout({ userId: user.userId, busId: id, input: body })));
+  return reply.send(success(await service.putSeatLayout({ userId: user.userId, busId: id, body: parseSeatLayoutBody(req) })));
+}
+export async function validateSeatLayout(req: FastifyRequest, reply: FastifyReply) {
+  const user = requireUser(req);
+  const { id } = busIdParamSchema.parse(req.params);
+  return reply.send(success(await service.validateSeatLayout({ userId: user.userId, busId: id, body: parseSeatLayoutBody(req) })));
 }
 
 // routes

@@ -101,6 +101,16 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 Search buses
               </Button>
             </View>
+            <View style={{ marginTop: spacing.sm }}>
+              <Button variant="secondary" onPress={() => navigation.navigate('MyTickets')} fullWidth>
+                My tickets
+              </Button>
+            </View>
+            <View style={{ marginTop: spacing.sm }}>
+              <Button variant="ghost" onPress={() => navigation.navigate('Profile')} fullWidth>
+                Account
+              </Button>
+            </View>
           </Card>
         ) : (
           <Card elevation="elevated" padding={spacing.lg}>

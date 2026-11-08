@@ -1,63 +1,83 @@
-/* BusCon tokens — vibrant emerald matching icon pack */
+﻿/* BusCon tokens — Coquette (High Contrast Light Mode) */
 
 :root {
-  --canvas-bg: #F2FAF5;
+  --canvas-bg: #FAF8F5;          /* Even lighter cream background */
   --canvas-subtle: #FFFFFF;
   --surface-card: #FFFFFF;
-  --surface-hover: #EFF8F2;
-  --surface-sunken: #E2F0E8;
+  --surface-hover: #F3EFEC;      
+  --surface-sunken: #F0EBE1;     
 
-  --text-bright: #0A1F14;
-  --text-primary: #1E293B;
-  --text-secondary: #5B7A69;
-  --text-muted: #88A395;
+  --text-bright: #2E2620;        /* Darker coffee for max contrast */
+  --text-primary: #2E2620;
+  --text-secondary: #7A6B5F;
+  --text-muted: #9C8E82;
 
-  --border-hairline: #DCEFE4;
-  --border-subtle: #C7E8D3;
-  --border-focus: #22C55E;
+  --border-hairline: #E6DFD6;    
+  --border-subtle: #E6DFD6;
+  --border-strong: #D3C9BB;
+  --border-focus: #C48787;       
 
-  --brand: #22C55E;
-  --brand-emerald: #22C55E;
-  --brand-emerald-hover: #16A34A;
-  --brand-emerald-subtle: rgba(34, 197, 94, 0.10);
-  --brand-emerald-text: #0A2E1A;
+  --brand: #C48787;
+  --brand-emerald: #C48787;      
+  --brand-emerald-hover: #B07070;
+  --brand-emerald-active: #9A5A5A;
+  --brand-emerald-subtle: rgba(196, 135, 135, 0.10);
+  --brand-emerald-border: rgba(196, 135, 135, 0.30);
+  --brand-emerald-text: #FFFFFF; /* White text on Dusty Rose button */
 
-  --sidebar-bg: #0A1410;
-  --sidebar-text: #F0FDF4;
-  --sidebar-muted: #7FA890;
-  --sidebar-hover: #101F16;
-  --sidebar-active: #17301F;
+  --signal-emerald: #C48787;     
+  --warning-amber: #D8A860;
+  --danger-crimson: #D16A6A;
 
-  --shadow-floating: 0 10px 30px -10px rgba(10, 46, 26, 0.08);
-  --shadow-ambient: 0 4px 18px -2px rgba(9, 16, 29, 0.05);
-  --shadow-modal: 0 24px 64px -12px rgba(9, 16, 29, 0.18);
-  --shadow-glow: 0 0 20px rgba(34, 197, 94, 0.25);
+  --sidebar-bg: #2E2620;         /* Darker coffee sidebar for contrast */
+  --sidebar-text: #FAF8F5;       
+  --sidebar-muted: #C4A57B;      
+  --sidebar-hover: #3D332B;
+  --sidebar-active: #4A3F36;
+
+  --shadow-floating: 0 10px 30px -10px rgba(46, 38, 32, 0.08);
+  --shadow-ambient: 0 4px 18px -2px rgba(46, 38, 32, 0.05);
+  --shadow-modal: 0 24px 64px -12px rgba(46, 38, 32, 0.18);
+  --shadow-glow: 0 0 20px rgba(196, 135, 135, 0.25);
 }
 
 [data-theme="dark"] {
-  --canvas-bg: #050C08;
-  --canvas-subtle: #0A1410;
-  --surface-card: #0A1410;
-  --surface-hover: #101F16;
-  --surface-sunken: #040A06;
+  --canvas-bg: #1A1410;          
+  --canvas-subtle: #251C16;
+  --surface-card: #251C16;
+  --surface-hover: #3D2E22;
+  --surface-sunken: #140F0C;
 
-  --text-bright: #F0FDF4;
-  --text-primary: #E7FBEE;
-  --text-secondary: #7FA890;
-  --text-muted: #5B7A69;
+  --text-bright: #FEF9F3;
+  --text-primary: #FEF9F3;
+  --text-secondary: #C4A57B;
+  --text-muted: #A68B66;
 
-  --border-hairline: #17301F;
-  --border-subtle: #1B3A27;
-  --border-focus: #4ADE80;
+  --border-hairline: #3D2E22;
+  --border-subtle: #3D2E22;
+  --border-strong: #4F3D2E;
+  --border-focus: #F59E0B;
 
-  --brand: #4ADE80;
-  --brand-emerald: #4ADE80;
-  --brand-emerald-hover: #22C55E;
-  --brand-emerald-subtle: rgba(74, 222, 128, 0.14);
-  --brand-emerald-text: #04210F;
+  --brand: #F59E0B;              
+  --brand-emerald: #F59E0B;
+  --brand-emerald-hover: #D97706;
+  --brand-emerald-active: #B45309;
+  --brand-emerald-subtle: rgba(245, 158, 11, 0.14);
+  --brand-emerald-border: rgba(245, 158, 11, 0.35);
+  --brand-emerald-text: #1A1410; 
+
+  --signal-emerald: #F59E0B;
+  --warning-amber: #FCD34D;
+  --danger-crimson: #EF4444;
+
+  --sidebar-bg: #140F0C;
+  --sidebar-text: #FEF9F3;
+  --sidebar-muted: #C4A57B;
+  --sidebar-hover: #251C16;
+  --sidebar-active: #3D2E22;
 
   --shadow-floating: 0 16px 48px -8px rgba(0, 0, 0, 0.75);
   --shadow-ambient: 0 8px 24px -4px rgba(0, 0, 0, 0.50);
   --shadow-modal: 0 28px 72px -12px rgba(0, 0, 0, 0.90);
-  --shadow-glow: 0 0 24px rgba(74, 222, 128, 0.35);
+  --shadow-glow: 0 0 24px rgba(245, 158, 11, 0.35);
 }

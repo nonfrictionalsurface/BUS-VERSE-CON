@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { theme } from '../theme/tokens';
 import { useAuth } from '../lib/auth/AuthContext';
@@ -27,10 +27,16 @@ export function OtpScreen({ route }: any) {
       <Text style={s.title}>Enter OTP</Text>
       <Text style={s.sub}>Sent to {phone}</Text>
       
-      <TextInput style={s.input} value={otp} onChangeText={setOtp} keyboardType="number-pad" />
+      <TextInput 
+        style={s.input} 
+        value={otp} 
+        onChangeText={setOtp} 
+        keyboardType="number-pad" 
+        placeholderTextColor={theme.colors.textMuted}
+      />
       
       {error ? (
-        <View style={{ backgroundColor: '#450a0a', padding: 12, borderRadius: 8, marginBottom: 16 }}>
+        <View style={{ backgroundColor: '#FDE8E8', padding: 12, borderRadius: 8, marginBottom: 16 }}>
           <Text style={{ color: theme.colors.danger, textAlign: 'center', fontWeight: 'bold' }}>{error}</Text>
         </View>
       ) : null}
@@ -45,7 +51,7 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.bg, justifyContent: 'center', padding: 24 },
   title: { color: theme.colors.primary, fontSize: 28, fontWeight: '900', marginBottom: 8, textAlign: 'center' },
   sub: { color: theme.colors.textMuted, textAlign: 'center', marginBottom: 32 },
-  input: { backgroundColor: theme.colors.surface, color: '#FFF', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 16, textAlign: 'center', fontSize: 24, letterSpacing: 8 },
+  input: { backgroundColor: theme.colors.surface, color: theme.colors.text, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 16, textAlign: 'center', fontSize: 24, letterSpacing: 8 },
   btn: { backgroundColor: theme.colors.primary, padding: 16, borderRadius: 12, alignItems: 'center' },
-  btnText: { color: '#000', fontWeight: '800' }
+  btnText: { color: theme.colors.text, fontWeight: '800' }
 });

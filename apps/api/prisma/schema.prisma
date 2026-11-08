@@ -325,6 +325,9 @@ model SeatLayout {
   rowsCount    Int       @map("rows_count")
   columnsCount Int       @map("columns_count")
   aisleMapJson Json      @default("{\"_v\":1,\"aisle_cells\":[]}") @map("aisle_map_json") @db.JsonB
+  specJson      Json?     @map("spec_json") @db.JsonB
+  schemaVersion Int       @default(1) @map("schema_version")
+  layoutRev     Int       @default(1) @map("layout_rev")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
@@ -342,7 +345,8 @@ model Seat {
   layoutId     String    @map("layout_id") @db.Uuid
   seatRow      String    @map("seat_row") @db.VarChar(3)
   seatColumn   Int       @map("seat_column")
-  seatLabel    String    @map("seat_label") @db.VarChar(4)
+  seatLabel    String    @map("seat_label") @db.VarChar(8)
+  seatKey      String?   @map("seat_key") @db.VarChar(16)
   seatType     String    @default("SEATER") @map("seat_type") @db.VarChar(20)
   isFemaleOnly Boolean   @default(false) @map("is_female_only")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -498,6 +502,7 @@ model BookingPassenger {
   id         String    @id @default(uuid()) @db.Uuid
   bookingId  String    @map("booking_id") @db.Uuid
   seatId     String    @map("seat_id") @db.Uuid
+  seatLabel  String?   @map("seat_label") @db.VarChar(8)
   scheduleId String    @map("schedule_id") @db.Uuid
   name       String    @db.VarChar(100)
   age        Int?

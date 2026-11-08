@@ -23,6 +23,7 @@
         "db:verify": "tsx scripts/db-verify.ts"
     },
     "dependencies": {
+        "@busverse/seat-engine": "workspace:*",
         "@aws-sdk/client-s3": "^3.1159.0",
         "@aws-sdk/s3-request-presigner": "^3.1159.0",
         "@fastify/cors": "^11.3.1",

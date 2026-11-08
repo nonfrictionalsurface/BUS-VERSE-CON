@@ -19,3 +19,4 @@ export type { ToastType } from './Toast';
 export { Spinner } from './Spinner';
 export { Skeleton } from './Skeleton';
 export { Avatar } from './Avatar';
+export { Chip } from './Chip';

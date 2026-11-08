@@ -8,7 +8,7 @@ import {
   toScheduleDetail, toScheduleOperatorDTO, toScheduleSearchResult, toSeatLayoutDTO,
   toDriverDTO, toBookingSummaryDTO, toBookingDetailDTO, toManagerDTO,
 } from './network.mappers.js';
-import { replaceSeatLayout, type PutSeatLayoutInput } from './seat-layout.service.js';
+import { saveSeatLayout, previewSeatLayout, type LayoutPreview, type SeatLayoutBody } from './seat-layout.service.js';
 import type {
   BookingDetailDTO, BookingSummaryDTO, BusDTO, CityDTO, DashboardDTO, DriverDTO, ManagerDTO,
   OperatorMeResponse, RevenueDTO, RevenueDailyDTO, RouteDTO,
@@ -132,14 +132,21 @@ export async function getSeatLayout(p: { userId: string; busId: string }): Promi
   const seats = await repo.findSeatsByLayoutId(layout.id);
   return toSeatLayoutDTO(layout, seats);
 }
-export async function putSeatLayout(p: { userId: string; busId: string; input: PutSeatLayoutInput }): Promise<SeatLayoutDTO> {
+export async function putSeatLayout(p: { userId: string; busId: string; body: SeatLayoutBody }): Promise<SeatLayoutDTO> {
   const opUser = await requireOperator(p.userId);
   const bus = await repo.findBusByIdForOperator(p.busId, opUser.operatorId);
   if (!bus) throw networkErrors.busNotFound();
   try {
-    const { layout, seats } = await replaceSeatLayout({ busId: p.busId, busCapacity: bus.capacity, input: p.input });
+    const { layout, seats } = await saveSeatLayout({ busId: p.busId, busCapacity: bus.capacity, body: p.body });
     return toSeatLayoutDTO(layout, seats);
   } catch (err) { rethrowPrismaError(err); }
+}
+/** Dry run: validate + diff + conflicts. Writes nothing. */
+export async function validateSeatLayout(p: { userId: string; busId: string; body: SeatLayoutBody }): Promise<LayoutPreview> {
+  const opUser = await requireOperator(p.userId);
+  const bus = await repo.findBusByIdForOperator(p.busId, opUser.operatorId);
+  if (!bus) throw networkErrors.busNotFound();
+  return previewSeatLayout({ busId: p.busId, busCapacity: bus.capacity, body: p.body });
 }
 
 // ---------- routes ----------

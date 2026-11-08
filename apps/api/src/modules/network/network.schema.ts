@@ -21,7 +21,7 @@ export const listBusesQuerySchema = z.object({ status: z.enum(['PENDING','APPROV
 export const createBusSchema = z.object({
   registrationNumber: z.string().trim().min(5).max(20).regex(/^[A-Z0-9-]+$/i, 'Invalid registration number'),
   model: z.string().trim().min(1).max(100).optional(),
-  capacity: z.number().int().min(1).max(60),
+  capacity: z.number().int().min(1).max(150),
   busType: z.enum(BUS_TYPE),
   amenities: z.array(z.string().trim().min(1).max(50)).max(20).default([]),
   insuranceDocRef: z.string().trim().min(1).max(200).optional(),
@@ -44,6 +44,10 @@ export const putSeatLayoutSchema = z.object({
   rowsCount: z.number().int().min(1).max(20),
   columnsCount: z.number().int().min(1).max(6),
   seats: z.array(seatInputSchema).min(1).max(120),
+});
+/** Query options for the v2 layout endpoints (body is the v2 layout document itself). */
+export const layoutOptionsQuerySchema = z.object({
+  syncCapacity: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
 });
 
 export const routeIdParamSchema = z.object({ id: z.string().uuid() });

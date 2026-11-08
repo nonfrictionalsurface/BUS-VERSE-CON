@@ -1,9 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PhoneScreen } from '../screens/PhoneScreen';
 import { OtpScreen } from '../screens/OtpScreen';
 import { TripsListScreen } from '../screens/TripsListScreen';
 import { TripDetailScreen } from '../screens/TripDetailScreen';
+import { TripSummaryScreen } from '../screens/TripSummaryScreen';
 import { ScanScreen } from '../screens/ScanScreen';
 import { ManifestScreen } from '../screens/ManifestScreen';
 import { MapScreen } from '../screens/MapScreen';
@@ -22,6 +23,7 @@ export function MainStack({ isAuth }: { isAuth: boolean }) {
         <>
           <Stack.Screen name="TripsList" component={TripsListScreen} />
           <Stack.Screen name="TripDetail" component={TripDetailScreen} />
+          <Stack.Screen name="TripSummary" component={TripSummaryScreen} />
           <Stack.Screen name="Scan" component={ScanScreen} />
           <Stack.Screen name="Manifest" component={ManifestScreen} />
           <Stack.Screen name="Map" component={MapScreen} />

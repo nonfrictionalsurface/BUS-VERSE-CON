@@ -1,3 +1,4 @@
+import type { LayoutIssue } from '@busverse/seat-engine';
 import { errors } from '../../lib/errors.js';
 
 export const networkErrors = {
@@ -10,6 +11,8 @@ export const networkErrors = {
   driverNotFound: () => errors.notFound('Driver not found'),
   bookingNotFound: () => errors.notFound('Booking not found'),
   layoutHasBookings: () => errors.invalidRequest('Cannot modify seat layout of a bus with existing bookings'),
+  layoutInvalid: (issues: readonly LayoutIssue[]) => errors.invalidRequest(issues[0]?.message ?? 'Invalid seat layout', { issues }),
+  layoutInUse: (conflicts: readonly unknown[]) => errors.layoutInUse({ conflicts }),
   invalidSeatCoordinates: (d?: string) => errors.invalidRequest(d ?? 'Invalid seat coordinates'),
   duplicateSeatCoordinates: (label: string) => errors.invalidRequest(`Duplicate seat at ${label}`),
   busNotApproved: () => errors.invalidRequest('Bus is not approved'),
