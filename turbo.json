@@ -19,3 +19,12 @@
     }
   }
 }
+
+
+{
+  "pipeline": {
+    "build": {
+      "outputs": [".next/**", "!.next/cache/**"]
+    }
+  }
+}
