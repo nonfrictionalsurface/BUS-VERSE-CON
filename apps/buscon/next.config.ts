@@ -1,19 +1,15 @@
-import type { NextConfig } from 'next';
+﻿import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@tanstack/react-table'],
   async rewrites() {
     const backend =
-      process.env.NODE_ENV === 'production'
+      process.env.API_URL ||
+      (process.env.NODE_ENV === 'production'
         ? 'https://busverse-api.onrender.com'
-        : 'http://localhost:4310';
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: `${backend}/v1/:path*`,
-      },
-    ];
+        : 'http://localhost:4310');
+    return [{ source: '/api/v1/:path*', destination: `${backend}/v1/:path*` }];
   },
 };
 

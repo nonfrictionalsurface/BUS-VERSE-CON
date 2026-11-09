@@ -11,7 +11,7 @@ interface Options {
   timeoutMs?: number;
 }
 
-const DEFAULT_TIMEOUT_MS = 20_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
 let isRefreshing = false;
 let subscribers: Array<(token: string) => void> = [];
 
