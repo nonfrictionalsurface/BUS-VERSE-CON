@@ -29,7 +29,7 @@ function isZodError(err: unknown): err is { issues: unknown[]; message: string }
 }
 
 export async function registerErrorHandler(server: FastifyInstance): Promise<void> {
-  server.setErrorHandler((error, request, reply) => {
+  server.setErrorHandler((error, request, reply) => { request.log.error({ err: { name: error.name, message: error.message, code: (error as any).code, stack: error.stack } }, 'unhandled error');
     // === DIAGNOSTIC — always fires in test mode, before any branching ===
     if (process.env.NODE_ENV === 'test') {
       console.log('[err-handler-ROOT]', {

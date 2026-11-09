@@ -14,14 +14,16 @@ export async function findUserByEmail(email: string) {
 
 export async function findOperatorByEmail(email: string) {
   return prisma.operatorUser.findFirst({
-    where: { user: { email }, deletedAt: null },
+    where: { userId: (await prisma.user.findFirstOrThrow({ where: { email, deletedAt: null }, select: { id: true } })).id, deletedAt: null },
     include: { user: true },
   });
 }
 
 export async function findAdminByEmail(email: string) {
+  const user = await prisma.user.findFirst({ where: { email, deletedAt: null }, select: { id: true } });
+  if (!user) return null;
   return prisma.adminUser.findFirst({
-    where: { user: { email }, deletedAt: null },
+    where: { userId: user.id, deletedAt: null },
     include: { user: true },
   });
 }
