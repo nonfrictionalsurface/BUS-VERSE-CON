@@ -1,10 +1,10 @@
-{
+﻿{
   "name": "busverse-v2",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3412",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start -p 3412",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
