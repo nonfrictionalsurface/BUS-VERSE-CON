@@ -9,11 +9,14 @@ import { ApiError } from '../lib/api';
 import { useWsEvent, useWsTopic } from '../lib/ws';
 import { formatBookingReference, formatMoney } from '../lib/format';
 import { AppHeader, ScreenContainer } from '../components/layout';
-import { Banner, Button, Card, Spinner, useToast } from '../components/ui';
+import { Banner, Button, Card, PageLoader, useToast } from '../components/ui';
 import { LockCountdown } from '../features/seats';
 import { bookingKeys, useBooking } from '../features/booking/hooks/useBookings';
 import { initiatePayment, mockConfirmPayment } from '../features/payment/api/payment.api';
-import { RazorpayCheckout, type CheckoutMessage } from '../features/payment/components/RazorpayCheckout';
+import {
+  RazorpayCheckout,
+  type CheckoutMessage,
+} from '../features/payment/components/RazorpayCheckout';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Payment'>;
 type Phase = 'starting' | 'ready' | 'checkout' | 'confirming' | 'failed';
@@ -41,29 +44,40 @@ export const PaymentScreen: React.FC<Props> = ({ navigation, route }) => {
       setPayment(await initiatePayment(bookingId));
       setPhase('ready');
     } catch (err) {
-      setMessage(err instanceof ApiError ? err.message : 'Could not start the payment. Please try again.');
+      setMessage(
+        err instanceof ApiError ? err.message : 'Could not start the payment. Please try again.',
+      );
       setPhase('failed');
     }
   }, [bookingId]);
+
   useEffect(() => {
     void start();
   }, [start]);
 
-  // The booking is confirmed by the server (gateway webhook). The socket is the fast path, polling the fallback.
   useWsTopic(`booking:${bookingId}`);
+
   const refresh = useCallback(() => {
     void qc.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) });
   }, [qc, bookingId]);
+
   useWsEvent('booking:confirmed', refresh);
   useWsEvent('booking:expired', refresh);
   useWsEvent('booking:cancelled', refresh);
 
   useEffect(() => {
     if (status === 'CONFIRMED' || status === 'CHECKED_IN') {
-      navigation.reset({ index: 1, routes: [{ name: 'Home' }, { name: 'Ticket', params: { bookingId } }] });
+      navigation.reset({
+        index: 1,
+        routes: [{ name: 'Home' }, { name: 'Ticket', params: { bookingId } }],
+      });
     } else if (status === 'EXPIRED' || status === 'FAILED' || status === 'CANCELLED') {
       setPhase('failed');
-      setMessage(status === 'EXPIRED' ? 'The payment time ran out and your seats were released.' : 'This booking can no longer be paid.');
+      setMessage(
+        status === 'EXPIRED'
+          ? 'The payment time ran out and your seats were released.'
+          : 'This booking can no longer be paid.',
+      );
     }
   }, [status, bookingId, navigation]);
 
@@ -95,7 +109,10 @@ export const PaymentScreen: React.FC<Props> = ({ navigation, route }) => {
       await mockConfirmPayment(payment.paymentId);
       refresh();
     } catch (err) {
-      toast.show(err instanceof ApiError ? err.message : 'Could not confirm the test payment.', 'error');
+      toast.show(
+        err instanceof ApiError ? err.message : 'Could not confirm the test payment.',
+        'error',
+      );
       setPhase('ready');
     }
   };
@@ -105,12 +122,17 @@ export const PaymentScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.navigate('MyTickets');
       return;
     }
-    Alert.alert('Leave payment?', 'Your seats stay held until the timer ends. You can finish paying from My tickets.', [
-      { text: 'Stay', style: 'cancel' },
-      { text: 'Leave', onPress: () => navigation.navigate('MyTickets') },
-    ]);
+    Alert.alert(
+      'Leave payment?',
+      'Your seats stay held until the timer ends. You can finish paying from My tickets.',
+      [
+        { text: 'Stay', style: 'cancel' },
+        { text: 'Leave', onPress: () => navigation.navigate('MyTickets') },
+      ],
+    );
   };
 
+  // Razorpay hosted checkout full-screen (real gateway only)
   if (phase === 'checkout' && payment?.gateway && !payment.gateway.mock) {
     return (
       <View style={{ flex: 1, backgroundColor: tokens.canvasBg }}>
@@ -133,17 +155,20 @@ export const PaymentScreen: React.FC<Props> = ({ navigation, route }) => {
       <AppHeader title="Payment" onBackPress={leave} />
       <View style={{ paddingHorizontal: spacing.sm, paddingBottom: spacing.xl, gap: spacing.sm }}>
         <Card elevation="elevated" padding={spacing.lg}>
-          <Text style={[typography.caption, { color: tokens.textMuted }]}>{`Booking ${formatBookingReference(reference)}`}</Text>
-          <Text style={[typography.hero, { color: tokens.textBright, marginTop: 4 }]}>{formatMoney(payment?.amountPaise ?? amountPaise)}</Text>
+          <Text style={[typography.caption, { color: tokens.textMuted }]}>
+            {`Booking ${formatBookingReference(reference)}`}
+          </Text>
+          <Text style={[typography.hero, { color: tokens.textBright, marginTop: 4 }]}>
+            {formatMoney(payment?.amountPaise ?? amountPaise)}
+          </Text>
         </Card>
 
-        {waiting ? <LockCountdown expiresAt={new Date(expiresAt).getTime()} onExpire={refresh} /> : null}
+        {waiting ? (
+          <LockCountdown expiresAt={new Date(expiresAt).getTime()} onExpire={refresh} />
+        ) : null}
 
         {phase === 'starting' ? (
-          <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: 12 }}>
-            <Spinner size="lg" />
-            <Text style={[typography.body, { color: tokens.textSecondary }]}>Preparing secure payment...</Text>
-          </View>
+          <PageLoader message="PREPARING PAYMENT" minHeight={280} />
         ) : null}
 
         {phase === 'ready' && payment ? (
@@ -159,23 +184,32 @@ export const PaymentScreen: React.FC<Props> = ({ navigation, route }) => {
               {`Pay ${formatMoney(payment.amountPaise)}`}
             </Button>
           ) : (
-            <Banner type="error" message="Payments are not available right now. Please try again shortly." action={{ label: 'Retry', onPress: () => void start() }} />
+            <Banner
+              type="error"
+              message="Payments are not available right now. Please try again shortly."
+              action={{ label: 'Retry', onPress: () => void start() }}
+            />
           )
         ) : null}
 
         {phase === 'confirming' ? (
-          <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: 12 }}>
-            <Spinner size="lg" />
-            <Text style={[typography.body, { color: tokens.textSecondary, textAlign: 'center' }]}>Confirming your payment. Please do not close the app.</Text>
+          <View>
+            <PageLoader message="CONFIRMING PAYMENT" width={220} minHeight={240} />
             {slow ? (
-              <>
-                <Text style={[typography.caption, { color: tokens.textMuted, textAlign: 'center' }]}>
-                  This is taking longer than usual. If money was deducted, your ticket will appear in My tickets shortly.
+              <View style={{ gap: 12, marginTop: 8 }}>
+                <Text
+                  style={[
+                    typography.caption,
+                    { color: tokens.textMuted, textAlign: 'center' },
+                  ]}
+                >
+                  This is taking longer than usual. If money was deducted, your ticket will
+                  appear in My tickets shortly.
                 </Text>
                 <Button variant="secondary" onPress={() => navigation.navigate('MyTickets')}>
                   Go to My tickets
                 </Button>
-              </>
+              </View>
             ) : null}
           </View>
         ) : null}

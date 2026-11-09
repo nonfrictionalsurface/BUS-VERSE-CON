@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme';
-import { Modal, Button, Input, Spinner } from '../../../components/ui';
+import { Modal, Button, Input, PageLoader } from '../../../components/ui';
 import { formatPhone } from '../../../lib/format';
 import { useOtpFlow } from '../hooks/useOtpFlow';
 
@@ -151,12 +151,7 @@ export const AuthModal: React.FC<Props> = ({ open, onClose, onSuccess }) => {
       )}
 
       {flow.step === 'success' && (
-        <View style={{ paddingVertical: spacing.lg, alignItems: 'center', gap: spacing.md }}>
-          <Spinner size="lg" />
-          <Text style={[typography.body, { color: tokens.textSecondary }]}>
-            Signing you in...
-          </Text>
-        </View>
+        <PageLoader message="SIGNING IN" width={200} minHeight={200} backgroundColor="transparent" />
       )}
     </Modal>
   );

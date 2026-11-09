@@ -1,48 +1,33 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../../theme';
+import { useCleanTheme } from '../../../theme/passengerAdapter';
 
-type LegendItem = { label: string; bg: string; border: string };
+export function SeatLegend() {
+  const theme = useCleanTheme();
 
-export const SeatLegend: React.FC = () => {
-  const { tokens, typography, radius } = useTheme();
-  const items: LegendItem[] = [
-    { label: 'Available', bg: tokens.seatAvailableBg, border: tokens.seatAvailableBorder },
-    { label: 'Female', bg: tokens.seatFemaleBg, border: tokens.seatFemaleBorder },
-    { label: 'Selected', bg: tokens.seatSelectedBg, border: tokens.seatSelectedBorder },
-    { label: 'Locked', bg: tokens.seatLockedBg, border: tokens.seatLockedBorder },
-    { label: 'Booked', bg: tokens.seatBookedBg, border: tokens.seatBookedBorder },
+  const items = [
+    { bg: theme.colors.surface, border: theme.colors.border, label: 'Available' },
+    { bg: theme.colors.primary, border: theme.colors.primary, label: 'Selected' },
+    { bg: theme.isDark ? 'rgba(245,158,11,0.15)' : 'rgba(216,168,96,0.2)', border: theme.colors.warning, label: 'Locked' },
+    { bg: theme.colors.surfaceElevated, border: theme.colors.borderSubtle, label: 'Booked' },
+    { bg: theme.isDark ? 'rgba(236,72,153,0.15)' : 'rgba(219,39,119,0.1)', border: '#DB2777', label: 'Female' },
   ];
 
   return (
-    <View style={styles.wrap}>
+    <View style={styles.row}>
       {items.map((it) => (
         <View key={it.label} style={styles.item}>
-          <View
-            style={[
-              styles.dot,
-              { backgroundColor: it.bg, borderColor: it.border, borderRadius: radius.xs },
-            ]}
-          />
-          <Text style={[typography.caption, { color: tokens.textSecondary, marginLeft: 6 }]}>
-            {it.label}
-          </Text>
+          <View style={[styles.chip, { backgroundColor: it.bg, borderColor: it.border }]} />
+          <Text style={[styles.text, { color: theme.colors.textMuted }]}>{it.label}</Text>
         </View>
       ))}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-    marginVertical: 12,
-  },
-  item: { flexDirection: 'row', alignItems: 'center' },
-  dot: { width: 14, height: 14, borderWidth: 1.5 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  chip: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5 },
+  text: { fontSize: 11 },
 });
-
-export default SeatLegend;

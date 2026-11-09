@@ -20,3 +20,5 @@ export { Spinner } from './Spinner';
 export { Skeleton } from './Skeleton';
 export { Avatar } from './Avatar';
 export { Chip } from './Chip';
+
+export { PageLoader } from './PageLoader';

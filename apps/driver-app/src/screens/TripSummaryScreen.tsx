@@ -1,13 +1,6 @@
-﻿import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Platform,
-} from 'react-native';
-import { theme } from '../theme/tokens';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { useCleanTheme } from '../theme/clean';
 
 export type TripSummaryParams = {
   tripId: string;
@@ -52,17 +45,66 @@ function formatTime(iso: string): string {
 }
 
 export function TripSummaryScreen({ route, navigation }: any) {
+  const theme = useCleanTheme();
   const p: TripSummaryParams = route.params;
+
+  const s = useMemo(
+    () =>
+      StyleSheet.create({
+        root: { flex: 1, backgroundColor: theme.colors.bg },
+        content: {
+          padding: 20,
+          paddingTop: Platform.OS === 'ios' ? 70 : 50,
+          paddingBottom: 40,
+        },
+        header: { alignItems: 'center', marginBottom: 24 },
+        checkmark: { color: theme.colors.primary, fontSize: 56, fontWeight: '700', marginBottom: 8 },
+        title: { color: theme.colors.text, fontSize: 22, fontWeight: '700', marginBottom: 4 },
+        subtitle: { color: theme.colors.textMuted, fontSize: 14, fontWeight: '500' },
+        card: {
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 12,
+        },
+        route: { color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 6 },
+        meta: { color: theme.colors.textMuted, fontSize: 14, marginTop: 2 },
+        statsGrid: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+        statCard: {
+          flex: 1,
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          borderRadius: 12,
+          padding: 16,
+        },
+        statLabel: { color: theme.colors.textMuted, fontSize: 12, fontWeight: '600', marginBottom: 4 },
+        statValue: { color: theme.colors.text, fontSize: 20, fontWeight: '700' },
+        footer: { marginTop: 24 },
+        doneText: { color: theme.colors.textMuted, fontSize: 14, marginBottom: 16, textAlign: 'center' },
+        primaryBtn: {
+          backgroundColor: theme.colors.primary,
+          borderRadius: 12,
+          paddingVertical: 14,
+          alignItems: 'center',
+        },
+        primaryBtnText: {
+          color: theme.isDark ? '#000' : '#FFF',
+          fontWeight: '800',
+          fontSize: 16,
+        },
+      }),
+    [theme],
+  );
 
   const backToToday = () => {
     navigation.reset({ index: 0, routes: [{ name: 'TripsList' }] });
   };
 
   return (
-    <ScrollView
-      style={s.root}
-      contentContainerStyle={s.content}
-    >
+    <ScrollView style={s.root} contentContainerStyle={s.content}>
       <View style={s.header}>
         <Text style={s.checkmark}>✓</Text>
         <Text style={s.title}>Trip completed</Text>
@@ -71,7 +113,9 @@ export function TripSummaryScreen({ route, navigation }: any) {
 
       <View style={s.card}>
         <Text style={s.route}>{p.routeSummary}</Text>
-        <Text style={s.meta}>{p.busModel} · {p.busRegistration}</Text>
+        <Text style={s.meta}>
+          {p.busModel} · {p.busRegistration}
+        </Text>
         <Text style={s.meta}>
           {formatTime(p.departureTime)} → {formatTime(p.arrivalTime)} IST
         </Text>
@@ -115,51 +159,3 @@ export function TripSummaryScreen({ route, navigation }: any) {
     </ScrollView>
   );
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.colors.bg },
-  content: {
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 70 : 50,
-    paddingBottom: 40,
-  },
-  header: { alignItems: 'center', marginBottom: 24 },
-  checkmark: {
-    color: theme.colors.primary,
-    fontSize: 56,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  title: { color: theme.colors.text, fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  subtitle: { color: theme.colors.textMuted, fontSize: 14, fontWeight: '500' },
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  route: { color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 6 },
-  meta: { color: theme.colors.textMuted, fontSize: 14, marginTop: 2 },
-  statsGrid: { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  statCard: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    padding: 16,
-  },
-  statLabel: { color: theme.colors.textMuted, fontSize: 12, fontWeight: '600', marginBottom: 4 },
-  statValue: { color: theme.colors.text, fontSize: 20, fontWeight: '700' },
-  footer: { marginTop: 24 },
-  doneText: { color: theme.colors.textMuted, fontSize: 14, marginBottom: 16, textAlign: 'center' },
-  primaryBtn: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  primaryBtnText: { color: '#000', fontWeight: '800', fontSize: 16 },
-});

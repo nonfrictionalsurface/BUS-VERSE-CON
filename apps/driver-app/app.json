@@ -4,7 +4,7 @@
     "slug": "buscon-driver",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "plugins": [
       [
         "expo-camera",

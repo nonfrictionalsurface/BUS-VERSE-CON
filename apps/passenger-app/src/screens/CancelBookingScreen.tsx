@@ -7,7 +7,7 @@ import { useTheme } from '../theme';
 import { ApiError } from '../lib/api';
 import { formatDate, formatMoney, formatTime } from '../lib/format';
 import { AppHeader, ScreenContainer } from '../components/layout';
-import { Banner, Button, Card, Skeleton, useToast } from '../components/ui';
+import { Banner, Button, Card, PageLoader, useToast } from '../components/ui';
 import { bookingKeys, useRefundPreview } from '../features/booking/hooks/useBookings';
 import { cancelBooking } from '../features/booking/api/booking.api';
 
@@ -76,7 +76,7 @@ export const CancelBookingScreen: React.FC<Props> = ({ navigation, route }) => {
       return <Banner type="error" message="Could not work out your refund." action={{ label: 'Retry', onPress: () => void preview.refetch() }} />;
     }
     const p = preview.data;
-    if (!p) return <Skeleton height={240} borderRadius={18} />;
+    if (!p) return <PageLoader message="CALCULATING REFUND" minHeight={240} />;
     const eligible = p.tier !== 'TIER_NOT_ELIGIBLE';
     return (
       <View style={{ gap: spacing.sm }}>

@@ -1,9 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../theme';
 import { ScreenContainer, AppHeader } from '../components/layout';
-import { Card, Button, Skeleton, Banner } from '../components/ui';
+import { Card, Button, Banner, PageLoader } from '../components/ui';
 import { useSearch, ScheduleCard } from '../features/search';
 import { formatDate } from '../lib/format';
 import type { RootStackParamList } from '../types';
@@ -58,17 +58,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation, route }) => {
         </Card>
 
         {isLoading ? (
-          <View style={{ gap: spacing.md }}>
-            {[1, 2, 3].map((i) => (
-              <Card key={i} padding={spacing.md}>
-                <Skeleton width="60%" height={16} />
-                <View style={{ height: 12 }} />
-                <Skeleton width="100%" height={44} />
-                <View style={{ height: 12 }} />
-                <Skeleton width="40%" height={20} />
-              </Card>
-            ))}
-          </View>
+          <PageLoader message="FINDING BUSES" minHeight={360} />
         ) : isError ? (
           <Banner
             type="error"

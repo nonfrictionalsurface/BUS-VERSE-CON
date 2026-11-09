@@ -1,2 +1,5 @@
-import { theme } from './tokens';
-export function useCleanTheme() { return theme; }
+import { useTheme } from './ThemeContext';
+
+export function useCleanTheme() {
+  return useTheme().theme;
+}

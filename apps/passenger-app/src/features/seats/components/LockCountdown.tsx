@@ -1,90 +1,46 @@
-﻿import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../../theme';
-import { formatCountdown } from '../../../lib/format';
+import React, { useEffect, useState } from 'react';
+import { Text, StyleSheet } from 'react-native';
+import { useCleanTheme } from '../../../theme/passengerAdapter';
 
-type Props = {
-  expiresAt: number | null;
-  onExpire?: () => void;
-};
-
-type CountdownState = 'normal' | 'warning' | 'critical' | 'expiring' | 'expired';
-
-function computeState(remainingMs: number): CountdownState {
-  if (remainingMs <= 0) return 'expired';
-  if (remainingMs <= 10_000) return 'expiring';
-  if (remainingMs <= 30_000) return 'critical';
-  if (remainingMs <= 60_000) return 'warning';
-  return 'normal';
+interface Props {
+  expiresAt: string;
+  onExpire: () => void;
 }
 
-export const LockCountdown: React.FC<Props> = ({ expiresAt, onExpire }) => {
-  const { tokens, typography, radius } = useTheme();
-  const [remainingMs, setRemainingMs] = useState(() =>
-    expiresAt ? Math.max(0, expiresAt - Date.now()) : 0,
-  );
-  const [hasFiredExpiry, setHasFiredExpiry] = useState(false);
+export function LockCountdown({ expiresAt, onExpire }: Props) {
+  const theme = useCleanTheme();
+  const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
-    if (!expiresAt) return;
-    setHasFiredExpiry(false);
+    let fired = false;
     const tick = () => {
-      const rem = Math.max(0, expiresAt - Date.now());
-      setRemainingMs(rem);
-      if (rem === 0 && !hasFiredExpiry) {
-        setHasFiredExpiry(true);
-        onExpire?.();
+      const ms = new Date(expiresAt).getTime() - Date.now();
+      setRemaining(Math.max(0, ms));
+      if (ms <= 0 && !fired) {
+        fired = true;
+        onExpire();
       }
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expiresAt]);
+  }, [expiresAt, onExpire]);
 
-  if (!expiresAt) return null;
+  const total = Math.floor(remaining / 1000);
+  const mm = String(Math.floor(total / 60)).padStart(2, '0');
+  const ss = String(total % 60).padStart(2, '0');
 
-  const state = computeState(remainingMs);
-  const color =
-    state === 'normal'
-      ? tokens.textPrimary
-      : state === 'warning'
-        ? tokens.warningAmber
-        : tokens.dangerCrimson;
-  const label =
-    state === 'expired' ? 'Lock expired' : state === 'expiring' ? 'Hurry!' : 'Seat lock';
+  let color = theme.colors.textMuted;
+  if (remaining < 60_000) color = theme.colors.warning;
+  if (remaining < 30_000) color = theme.colors.danger;
 
   return (
-    <View
-      style={[
-        styles.wrap,
-        {
-          backgroundColor: tokens.surfaceCard,
-          borderColor: tokens.borderSubtle,
-          borderRadius: radius.md,
-        },
-      ]}
-      accessibilityRole="timer"
-      accessibilityLiveRegion="polite"
-    >
-      <Text style={[typography.caption, { color: tokens.textMuted }]}>{label}</Text>
-      <Text style={[typography.monoData, { color, fontSize: 18, marginTop: 2 }]}>
-        {formatCountdown(remainingMs)}
-      </Text>
-    </View>
+    <Text style={[styles.text, { color }]} accessibilityLiveRegion="polite">
+      ⏱ {mm}:{ss} to complete
+    </Text>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  wrap: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    alignItems: 'center',
-    alignSelf: 'center',
-    minWidth: 120,
-    marginVertical: 8,
-  },
+  text: { fontSize: 13, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' },
 });
-
-export default LockCountdown;

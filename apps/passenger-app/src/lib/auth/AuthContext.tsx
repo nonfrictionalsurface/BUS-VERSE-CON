@@ -26,11 +26,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isReady, setIsReady] = useState(false);
   const refreshTokenRef = useRef<string | null>(null);
 
-  // Wire the API client's refresh handler once
+  // Wire the API client's refresh handler once.
+  // IMPORTANT: on failure this MUST clear user state too, otherwise the app
+  // sits in "isAuthenticated=true but every API 401s" zombie mode.
   useEffect(() => {
     setRefreshHandler(async () => {
       const refresh = refreshTokenRef.current ?? (await sessionStorage.getRefreshToken());
-      if (!refresh) return null;
+      if (!refresh) {
+        setUser(null);
+        return null;
+      }
       try {
         const res = await api.post<AuthTokens>(EP.refresh('passenger'), { refreshToken: refresh });
         setAccessToken(res.accessToken);
@@ -39,15 +44,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         wsManager.setTokens(res.accessToken, res.refreshToken);
         return res.accessToken;
       } catch {
+        // Refresh definitively failed — session is dead. Clear state so UI shows sign-in.
         setAccessToken(null);
         refreshTokenRef.current = null;
+        setUser(null);
+        wsManager.disconnect();
         await sessionStorage.clearRefreshToken();
         return null;
       }
     });
   }, []);
 
-  // Boot: try to restore session from stored refresh token
+  // Boot: try to restore session from stored refresh token.
   useEffect(() => {
     (async () => {
       try {
@@ -62,7 +70,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshTokenRef.current = res.refreshToken;
         await sessionStorage.setRefreshToken(res.refreshToken);
 
-        const me = await api.get<{ userId: string; phone: string; email: string | null; emailVerified: boolean; name: string | null }>(EP.me);
+        const me = await api.get<{
+          userId: string;
+          phone: string;
+          email: string | null;
+          emailVerified: boolean;
+          name: string | null;
+        }>(EP.me);
         setUser({
           id: me.userId,
           phone: me.phone,

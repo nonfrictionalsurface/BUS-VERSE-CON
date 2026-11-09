@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
-import { theme } from '../theme/tokens';
+import { useCleanTheme } from '../theme/clean';
 import { StaticVectorMark } from '../components/brand/StaticVectorMark';
 
 export function SplashScreen() {
+  const theme = useCleanTheme();
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
 
@@ -25,7 +26,7 @@ export function SplashScreen() {
   }, [opacity, scale]);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: theme.colors.bg }]}>
       <Animated.View style={{ opacity, transform: [{ scale }] }}>
         <StaticVectorMark size={120} />
       </Animated.View>
@@ -34,10 +35,5 @@ export function SplashScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: theme.colors.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  root: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

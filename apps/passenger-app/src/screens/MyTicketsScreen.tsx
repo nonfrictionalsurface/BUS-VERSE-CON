@@ -5,7 +5,7 @@ import type { RootStackParamList } from '../types';
 import { useTheme } from '../theme';
 import { useAuth } from '../lib/auth';
 import { AppHeader, ScreenContainer } from '../components/layout';
-import { Banner, Button, Chip, Skeleton } from '../components/ui';
+import { Banner, Button, Chip, PageLoader } from '../components/ui';
 import { SignInRequired } from '../features/auth';
 import { BookingCard } from '../features/booking/components/BookingCard';
 import { useBookings } from '../features/booking/hooks/useBookings';
@@ -59,10 +59,7 @@ export const MyTicketsScreen: React.FC<Props> = ({ navigation }) => {
         {bookings.isError ? (
           <Banner type="error" message="Could not load your tickets." action={{ label: 'Retry', onPress: () => void bookings.refetch() }} />
         ) : bookings.isLoading ? (
-          <View style={{ gap: spacing.sm }}>
-            <Skeleton height={120} borderRadius={18} />
-            <Skeleton height={120} borderRadius={18} />
-          </View>
+          <PageLoader message="LOADING TICKETS" minHeight={360} />
         ) : list.length === 0 ? (
           <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm }}>
             <Text style={[typography.body, { color: tokens.textSecondary }]}>{current?.empty}</Text>

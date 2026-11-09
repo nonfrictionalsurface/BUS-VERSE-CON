@@ -1,9 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { TransitLoopLoader } from '../components/brand/TransitLoopLoader';
-import { theme } from '../theme/tokens';
+import { useCleanTheme } from '../theme/clean';
 
 export function BootScreen() {
+  const theme = useCleanTheme();
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.bg }]}>
       <TransitLoopLoader size={280} label="VERIFYING SESSION" />

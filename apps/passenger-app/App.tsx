@@ -23,6 +23,7 @@ import { AuthProvider } from './src/lib/auth';
 import { ToastProvider } from './src/components/ui';
 import { TransitLoader } from './src/brand';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,17 +64,19 @@ const AppInner: React.FC = () => {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <SafeAreaProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <AppInner />
-            </ToastProvider>
-          </AuthProvider>
-        </SafeAreaProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <SafeAreaProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <AppInner />
+              </ToastProvider>
+            </AuthProvider>
+          </SafeAreaProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

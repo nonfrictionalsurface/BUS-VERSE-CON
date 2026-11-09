@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme';
-import { Modal, Input, Spinner } from '../../../components/ui';
+import { Modal, Input, PageLoader } from '../../../components/ui';
 import { useCities } from '../hooks/useCities';
 import type { CityDTO } from '../../../types';
 
@@ -27,9 +27,7 @@ export const CityPickerModal: React.FC<Props> = ({ open, onClose, onSelect, titl
       />
       <ScrollView style={{ maxHeight: 420, marginTop: spacing.sm }} showsVerticalScrollIndicator={false}>
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <Spinner />
-          </View>
+          <PageLoader message="LOADING CITIES" width={180} minHeight={200} backgroundColor="transparent" />
         ) : cities.length === 0 ? (
           <Text style={[typography.body, { color: tokens.textMuted, textAlign: 'center', paddingVertical: 40 }]}>
             No cities found

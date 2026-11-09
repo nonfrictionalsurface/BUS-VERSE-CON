@@ -6,7 +6,7 @@ import { useTheme } from '../theme';
 import { ApiError } from '../lib/api';
 import { formatDuration, formatTime } from '../lib/format';
 import { AppHeader } from '../components/layout';
-import { Badge, Banner, Card, Spinner } from '../components/ui';
+import { Badge, Banner, Card, PageLoader } from '../components/ui';
 import { LiveMap } from '../features/tracking/components/LiveMap';
 import { useLiveTrip } from '../features/tracking/hooks/useLiveTrip';
 
@@ -46,9 +46,7 @@ export const LiveTrackingScreen: React.FC<Props> = ({ navigation, route }) => {
     return (
       <View style={{ flex: 1, backgroundColor: tokens.canvasBg }}>
         {header}
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Spinner size="lg" />
-        </View>
+        <PageLoader message="LOADING TRIP" />
       </View>
     );
   }
