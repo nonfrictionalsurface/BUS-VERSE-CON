@@ -1,4 +1,4 @@
-﻿import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../../lib/prisma.js';
 
@@ -9,7 +9,9 @@ const assignDriverSchema = z.object({
 });
 
 export async function devRouter(server: FastifyInstance): Promise<void> {
-  if (process.env.NODE_ENV === 'production') return;
+  const isLocalDev = process.env.NODE_ENV !== 'production';
+  const isDemoMode = process.env.DEMO_MODE === 'true';
+  if (!isLocalDev && !isDemoMode) return;
 
   // ============================================================
   // 1. POST /dev/verify-and-approve-operator
