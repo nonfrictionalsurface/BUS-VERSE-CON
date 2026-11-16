@@ -44,7 +44,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-ink-bright tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-ink-bright tracking-tight">
           {isAdmin ? 'Platform Oversight' : 'Operations Dashboard'}
         </h1>
         <p className="text-sm text-ink-secondary mt-1">

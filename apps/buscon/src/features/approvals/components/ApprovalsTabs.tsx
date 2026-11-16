@@ -147,7 +147,7 @@ export function ApprovalsTabs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-1 p-1 bg-surface-sunken rounded-lg w-fit flex-wrap">
+      <div className="flex gap-1 p-1 bg-surface-sunken rounded-lg w-full sm:w-fit flex-wrap">
         {tabs.map(({ key, label, icon: Icon, count }) => (
           <button
             key={key}

@@ -73,7 +73,7 @@ export function OperatorApplicationDrawer({ operator, onClose, onApprove, onReje
       <div className="flex-1 bg-black/50 animate-in fade-in" onClick={onClose} />
 
       {/* Drawer */}
-      <aside className="w-full max-w-xl bg-canvas-subtle border-l border-line-hairline flex flex-col shadow-modal animate-in slide-in-from-right duration-300">
+      <aside className="w-full sm:max-w-xl bg-canvas-subtle sm:border-l border-line-hairline flex flex-col shadow-modal animate-in slide-in-from-right duration-300">
         {/* Header */}
         <header className="h-16 px-6 flex items-center justify-between border-b border-line-hairline shrink-0">
           <div className="flex items-center gap-3">

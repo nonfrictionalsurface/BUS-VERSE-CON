@@ -1,10 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '@/styles/globals.css';
 import { AppProviders } from '@/providers/AppProviders';
 
 export const metadata: Metadata = {
   title: 'BusCon — Operator Console',
   description: 'Fleet, schedules, and oversight for bus operators.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 };
 
 const themeInit = `

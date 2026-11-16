@@ -86,9 +86,9 @@ export default function BusDetailPage() {
         <Link href="/operator/buses" className="inline-flex items-center gap-1 text-sm text-ink-secondary hover:text-brand-text mb-4 transition-colors">
           <ArrowLeft size={16} /> Back to Fleet
         </Link>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-ink-bright tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-ink-bright tracking-tight flex items-center gap-3">
               <BusIcon className="text-brand-text" size={32} />
               {bus.registrationNumber}
             </h1>

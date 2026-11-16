@@ -197,7 +197,7 @@ export function AdminDriversTab() {
       )}
 
       {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-2 text-xs text-ink-muted mb-1">
             <Users size={14} /> TOTAL DRIVERS
@@ -225,7 +225,7 @@ export function AdminDriversTab() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 p-1 bg-surface-sunken rounded-lg w-fit">
+      <div className="flex gap-1 p-1 bg-surface-sunken rounded-lg w-full sm:w-fit overflow-x-auto">
         {[
           { key: 'all' as Filter, label: 'All', count: stats.total },
           { key: 'pending' as Filter, label: 'Pending', count: stats.pending },

@@ -51,7 +51,7 @@ export function DriverKycDrawer({ driver, onClose, onApprove, onReject, isApprov
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/50 animate-in fade-in" onClick={onClose} />
-      <aside className="w-full max-w-xl bg-canvas-subtle border-l border-line-hairline flex flex-col shadow-modal animate-in slide-in-from-right duration-300">
+      <aside className="w-full sm:max-w-xl bg-canvas-subtle sm:border-l border-line-hairline flex flex-col shadow-modal animate-in slide-in-from-right duration-300">
         <header className="h-16 px-6 flex items-center justify-between border-b border-line-hairline shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center text-brand-text">
