@@ -43,10 +43,21 @@ function mapTripSummary(t: Awaited<ReturnType<typeof repo.findTripsForDriver>>[n
 
 export async function listDriverTrips(
   userId: string,
-  opts: { date?: string | undefined },
+  opts: { date?: string | undefined; scope?: 'today' | 'all' | undefined },
 ): Promise<DriverTripSummaryDTO[]> {
-  const rows = await repo.findTripsForDriver(userId, opts.date);
-  return rows.map(mapTripSummary);
+  const all = opts.scope === 'all' && !opts.date;
+  const rows = await repo.findTripsForDriver(userId, opts.date, { all });
+  const list = rows.map(mapTripSummary);
+  if (!all) return list;
+  // Active first, then upcoming (soonest first), then finished (newest first)
+  const rank = (s: string) => (s === 'IN_PROGRESS' ? 0 : s === 'SCHEDULED' ? 1 : 2);
+  return list.sort((a, b) => {
+    const r = rank(a.status) - rank(b.status);
+    if (r !== 0) return r;
+    const ta = new Date(a.departureTime).getTime();
+    const tb = new Date(b.departureTime).getTime();
+    return rank(a.status) === 2 ? tb - ta : ta - tb;
+  });
 }
 
 export async function getTripDetail(
@@ -56,7 +67,7 @@ export async function getTripDetail(
   const t = await repo.findTripForDriver(userId, tripId);
   if (!t) throw tripErrors.notFound();
 
-  const counts = await repo.findTripsForDriver(userId, undefined).then(
+  const counts = await repo.findTripsForDriver(userId, undefined, { all: true, tripId }).then(
     (all) => all.find((x) => x.id === tripId)?.counts ?? { boarded: 0, confirmed: 0 },
   );
 
@@ -236,7 +247,7 @@ export async function endTrip(
   const distanceKm = computeTripDistanceKm(samples);
 
   const counts = await repo
-    .findTripsForDriver(userId, undefined)
+    .findTripsForDriver(userId, undefined, { all: true, tripId })
     .then((all) => all.find((x) => x.id === tripId)?.counts ?? { boarded: 0, confirmed: 0 });
 
   const now = new Date();

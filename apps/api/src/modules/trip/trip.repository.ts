@@ -44,6 +44,7 @@ async function getPassengerCountsForSchedules(
 export async function findTripsForDriver(
   userId: string,
   date?: string,
+  opts: { all?: boolean; tripId?: string | undefined } = {},
 ): Promise<Array<{
   id: string;
   scheduleId: string;
@@ -60,7 +61,10 @@ export async function findTripsForDriver(
     where: {
       driver: { userId, deletedAt: null },
       deletedAt: null,
-      schedule: { departureTime: { gte: from, lte: to }, deletedAt: null },
+      ...(opts.tripId ? { id: opts.tripId } : {}),
+      schedule: opts.all
+        ? { deletedAt: null }
+        : { departureTime: { gte: from, lte: to }, deletedAt: null },
     },
     include: {
       schedule: {
@@ -78,7 +82,8 @@ export async function findTripsForDriver(
       },
       bus: { select: { id: true, registrationNumber: true, model: true } },
     },
-    orderBy: { schedule: { departureTime: 'asc' } },
+    orderBy: { schedule: { departureTime: opts.all ? 'desc' : 'asc' } },
+    ...(opts.all && !opts.tripId ? { take: 300 } : {}),
   });
 
   const counts = await getPassengerCountsForSchedules(trips.map((t) => t.schedule.id));

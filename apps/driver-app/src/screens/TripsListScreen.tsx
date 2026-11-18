@@ -8,13 +8,27 @@ import { listTrips } from '../lib/api/trips.api';
 import { useAuth } from '../lib/auth/AuthContext';
 import { StaticVectorMark } from '../components/brand/StaticVectorMark';
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// "18 Nov 4:30 PM" in IST (no Intl dependency)
+function fmtDeparture(iso?: string): string {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return '';
+  const d = new Date(t + 5.5 * 3600 * 1000);
+  const hh = d.getUTCHours();
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${h12}:${mm} ${hh >= 12 ? 'PM' : 'AM'}`;
+}
+
 export function TripsListScreen({ navigation }: any) {
   const theme = useCleanTheme();
   const { mode, cycleMode } = useTheme();
   const { user, logout } = useAuth();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['trips'],
-    queryFn: () => listTrips(),
+    queryFn: () => listTrips({ scope: 'all' }),
   });
 
   const s = useMemo(
@@ -108,7 +122,7 @@ export function TripsListScreen({ navigation }: any) {
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }: any) => (
           <Pressable
-            style={s.card}
+            style={[s.card, item.status === 'IN_PROGRESS' && { borderColor: theme.colors.primary, borderWidth: 2 }]}
             onPress={() =>
               navigation.navigate('TripDetail', {
                 tripId: item.tripId,
@@ -118,6 +132,9 @@ export function TripsListScreen({ navigation }: any) {
           >
             <Text style={s.route}>
               {item.route.originCity} → {item.route.destinationCity}
+            </Text>
+            <Text style={s.sub}>
+              {fmtDeparture(item.departureTime)}
             </Text>
             <Text style={s.sub}>
               {item.bus.registrationNumber} · {item.status}
@@ -132,7 +149,7 @@ export function TripsListScreen({ navigation }: any) {
               marginTop: 24,
             }}
           >
-            No trips today.
+            No trips found.
           </Text>
         }
         onRefresh={refetch}

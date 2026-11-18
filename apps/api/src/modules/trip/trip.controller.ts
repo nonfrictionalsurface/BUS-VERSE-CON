@@ -15,7 +15,7 @@ function actorIp(request: FastifyRequest): string | undefined {
 
 export async function getMyTrips(request: FastifyRequest, reply: FastifyReply) {
   const q = schema.tripListQuerySchema.parse(request.query ?? {});
-  const rows = await svc.listDriverTrips(request.user!.userId, { date: q.date });
+  const rows = await svc.listDriverTrips(request.user!.userId, { date: q.date, scope: q.scope });
   return reply.status(200).send(success(rows));
 }
 

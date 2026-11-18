@@ -1,6 +1,11 @@
-﻿import { api } from './client';
+import { api } from './client';
 
-export const listTrips = (date?: string) => api.get(`/driver/trips${date ? `?date=${date}` : ''}`);
+export const listTrips = (opts: { date?: string; scope?: 'today' | 'all' } = {}) => {
+  const q: string[] = [];
+  if (opts.date) q.push(`date=${opts.date}`);
+  if (opts.scope) q.push(`scope=${opts.scope}`);
+  return api.get(`/driver/trips${q.length ? `?${q.join('&')}` : ''}`);
+};
 export const getTrip = (tripId: string) => api.get(`/driver/trips/${tripId}`);
 export const startTrip = (tripId: string) => api.post(`/driver/trips/${tripId}/start`, {});
 export const endTrip = (tripId: string) => api.post(`/driver/trips/${tripId}/end`, {});

@@ -27,6 +27,7 @@ export const delayBodySchema = z
   .strict();
 
 export const tripListQuerySchema = z.object({
+  scope: z.enum(['today', 'all']).optional(),
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
