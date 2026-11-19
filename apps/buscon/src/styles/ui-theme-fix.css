@@ -1,0 +1,308 @@
+/* ==========================================================================
+   BusCon Dedicated UI & Visibility Theme Fix
+   Preserves warm cream / espresso / dusty-rose identity with high contrast
+   and a balanced, comfortable (non-black) dark mode.
+   ========================================================================== */
+
+:root {
+  /* Balanced warm alabaster canvas with crisp white cards */
+  --canvas-bg: #F5F1EB;
+  --canvas-subtle: #FFFFFF;
+  --surface-card: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-hover: #EDE7DE;
+  --surface-sunken: #EAE3D8;
+
+  /* High-contrast espresso typography */
+  --text-bright: #221C17;
+  --text-primary: #2E2620;
+  --text-secondary: #5C5046;
+  --text-muted: #786B60;
+
+  /* Visible borders & focus rings */
+  --border-hairline: #E0D8CC;
+  --border-subtle: #CFC5B6;
+  --border-strong: #B8AC9B;
+  --border-focus: #B46565;
+
+  /* Refined Dusty Rose / Terracotta (accessible contrast with white & light surfaces) */
+  --brand: #B46565;
+  --brand-emerald: #B46565;
+  --brand-emerald-hover: #9D5050;
+  --brand-emerald-active: #864040;
+  --brand-emerald-subtle: rgba(180, 101, 101, 0.12);
+  --brand-emerald-border: rgba(180, 101, 101, 0.36);
+  --brand-emerald-text: #8E4444; /* Deep rose for text/icons on light surfaces */
+  --brand-on-fill: #FFFFFF;      /* Crisp white for text inside solid brand buttons */
+
+  /* Semantic status colors */
+  --signal-emerald: #1F8A5B;
+  --warning-amber: #B4690E;
+  --danger-crimson: #C83E3E;
+
+  /* Warm espresso sidebar */
+  --sidebar-bg: #2B241F;
+  --sidebar-text: #FAF7F2;
+  --sidebar-muted: #CBBBA8;
+  --sidebar-hover: #3B322B;
+  --sidebar-active: #4C4037;
+
+  /* Elevation shadows */
+  --shadow-floating: 0 10px 28px -8px rgba(34, 28, 23, 0.10);
+  --shadow-ambient: 0 3px 12px -2px rgba(34, 28, 23, 0.06);
+  --shadow-modal: 0 24px 60px -12px rgba(34, 28, 23, 0.22);
+  --shadow-glow: 0 0 18px rgba(180, 101, 101, 0.25);
+}
+
+[data-theme="dark"] {
+  /* Comfortable, lifted warm charcoal-taupe (not pitch black) */
+  --canvas-bg: #272321;
+  --canvas-subtle: #302B28;
+  --surface-card: #35302C;
+  --surface-elevated: #3E3834;
+  --surface-hover: #443E39;
+  --surface-sunken: #211E1C;
+
+  /* Soft warm off-white & sand typography */
+  --text-bright: #FAF6F0;
+  --text-primary: #EFE9E0;
+  --text-secondary: #C8BDB1;
+  --text-muted: #9F9387;
+
+  /* Visible dark-mode dividers */
+  --border-hairline: #453E39;
+  --border-subtle: #544B45;
+  --border-strong: #695E57;
+  --border-focus: #D98C8C;
+
+  /* Cohesive luminous dusty-rose brand accent */
+  --brand: #D48484;
+  --brand-emerald: #D48484;
+  --brand-emerald-hover: #DF9696;
+  --brand-emerald-active: #C27070;
+  --brand-emerald-subtle: rgba(212, 132, 132, 0.16);
+  --brand-emerald-border: rgba(212, 132, 132, 0.38);
+  --brand-emerald-text: #EEA8A8;
+  --brand-on-fill: #1F1B19;
+
+  /* Semantic status colors */
+  --signal-emerald: #4ADE80;
+  --warning-amber: #FBBF24;
+  --danger-crimson: #F87171;
+
+  /* Sidebar slightly deeper than canvas for clean hierarchy */
+  --sidebar-bg: #1F1C1A;
+  --sidebar-text: #FAF6F0;
+  --sidebar-muted: #B8ACA0;
+  --sidebar-hover: #2E2926;
+  --sidebar-active: #3D3632;
+
+  --shadow-floating: 0 14px 36px -8px rgba(0, 0, 0, 0.45);
+  --shadow-ambient: 0 6px 18px -4px rgba(0, 0, 0, 0.30);
+  --shadow-modal: 0 24px 64px -12px rgba(0, 0, 0, 0.60);
+  --shadow-glow: 0 0 20px rgba(212, 132, 132, 0.28);
+}
+
+/* --------------------------------------------------------------------------
+   1. Fix Missing Canvas & Surface Utility Classes
+   -------------------------------------------------------------------------- */
+.bg-canvas-bg {
+  background-color: var(--canvas-bg) !important;
+}
+
+.bg-canvas-subtle {
+  background-color: var(--canvas-subtle) !important;
+}
+
+.bg-surface-card {
+  background-color: var(--surface-card) !important;
+}
+
+.bg-surface-sunken {
+  background-color: var(--surface-sunken) !important;
+}
+
+.bg-surface-sunken\/50 {
+  background-color: color-mix(in srgb, var(--surface-sunken) 55%, transparent) !important;
+}
+
+.hover\:bg-surface-hover:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+.hover\:bg-surface-hover\/50:hover {
+  background-color: color-mix(in srgb, var(--surface-hover) 55%, transparent) !important;
+}
+
+.hover\:bg-surface-hover\/30:hover {
+  background-color: color-mix(in srgb, var(--surface-hover) 35%, transparent) !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. Fix Button Visibility (Primary, Secondary, Ghost, Danger & Controls)
+   -------------------------------------------------------------------------- */
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"]:disabled {
+  cursor: not-allowed;
+}
+
+/* Primary filled brand buttons */
+.bg-brand {
+  background-color: var(--brand) !important;
+  color: var(--brand-on-fill) !important;
+  border: 1px solid var(--brand-emerald-hover);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.bg-brand:hover:not(:disabled) {
+  background-color: var(--brand-emerald-hover) !important;
+}
+
+.bg-brand:active:not(:disabled) {
+  background-color: var(--brand-emerald-active) !important;
+}
+
+/* Secondary buttons (previously invisible due to white-on-white text-brand-text) */
+button.bg-surface-card,
+a > button.bg-surface-card {
+  background-color: var(--surface-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+button.bg-surface-card:hover:not(:disabled),
+a > button.bg-surface-card:hover:not(:disabled) {
+  background-color: var(--surface-hover) !important;
+  border-color: var(--border-strong) !important;
+}
+
+/* Ghost buttons */
+button.text-ink-secondary:not(.bg-surface-card):not(.bg-brand):not(.bg-danger-crimson) {
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+button.text-ink-secondary:not(.bg-surface-card):not(.bg-brand):not(.bg-danger-crimson):hover:not(:disabled) {
+  background-color: var(--surface-hover) !important;
+  border-color: var(--border-hairline);
+  color: var(--text-bright) !important;
+}
+
+/* Danger buttons */
+.bg-danger-crimson {
+  background-color: #C83E3E !important;
+  color: #FFFFFF !important;
+  border: 1px solid #A82E2E;
+}
+
+.bg-danger-crimson:hover:not(:disabled) {
+  background-color: #B03232 !important;
+}
+
+/* Brand accent text & links */
+.text-brand-text {
+  color: var(--brand-emerald-text) !important;
+}
+
+.hover\:bg-brand\/10:hover {
+  background-color: color-mix(in srgb, var(--brand) 14%, transparent) !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Fix Broken Hex-Alpha Badges, Alerts & Stat Cards
+   -------------------------------------------------------------------------- */
+.bg-brand\/5 {
+  background-color: color-mix(in srgb, var(--brand) 8%, transparent) !important;
+}
+
+.bg-brand\/10 {
+  background-color: color-mix(in srgb, var(--brand) 14%, transparent) !important;
+}
+
+.border-brand\/30 {
+  border-color: color-mix(in srgb, var(--brand) 38%, transparent) !important;
+}
+
+.bg-signal-emerald\/5 {
+  background-color: color-mix(in srgb, var(--signal-emerald) 8%, transparent) !important;
+}
+
+.bg-signal-emerald\/10 {
+  background-color: color-mix(in srgb, var(--signal-emerald) 14%, transparent) !important;
+}
+
+.bg-signal-emerald\/20 {
+  background-color: color-mix(in srgb, var(--signal-emerald) 22%, transparent) !important;
+}
+
+.border-signal-emerald\/30 {
+  border-color: color-mix(in srgb, var(--signal-emerald) 38%, transparent) !important;
+}
+
+.text-signal-emerald {
+  color: var(--signal-emerald) !important;
+}
+
+.bg-warning-amber\/10 {
+  background-color: color-mix(in srgb, var(--warning-amber) 14%, transparent) !important;
+}
+
+.text-warning-amber {
+  color: var(--warning-amber) !important;
+}
+
+.bg-danger-crimson\/5 {
+  background-color: color-mix(in srgb, var(--danger-crimson) 8%, transparent) !important;
+}
+
+.bg-danger-crimson\/10 {
+  background-color: color-mix(in srgb, var(--danger-crimson) 13%, transparent) !important;
+}
+
+.hover\:bg-danger-crimson\/10:hover {
+  background-color: color-mix(in srgb, var(--danger-crimson) 15%, transparent) !important;
+}
+
+.border-danger-crimson\/20 {
+  border-color: color-mix(in srgb, var(--danger-crimson) 28%, transparent) !important;
+}
+
+.border-danger-crimson\/30 {
+  border-color: color-mix(in srgb, var(--danger-crimson) 40%, transparent) !important;
+}
+
+.text-danger-crimson {
+  color: var(--danger-crimson) !important;
+}
+
+.bg-ink-muted\/10 {
+  background-color: color-mix(in srgb, var(--text-muted) 15%, transparent) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Inputs, Selects, Tables & Dark-Mode Seat Studio Readability
+   -------------------------------------------------------------------------- */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: var(--surface-card);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+[data-theme="dark"] .text-emerald-700 { color: #6EE7B7 !important; }
+[data-theme="dark"] .text-blue-700    { color: #93C5FD !important; }
+[data-theme="dark"] .text-pink-700    { color: #F9A8D4 !important; }
+[data-theme="dark"] .text-purple-700  { color: #D8B4FE !important; }
+[data-theme="dark"] .text-amber-700   { color: #FCD34D !important; }
