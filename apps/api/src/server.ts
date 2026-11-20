@@ -102,6 +102,8 @@ await registerErrorHandler(server);
 
 // Phase 8 - start background workers (cron + webhook replay)
 if (process.env.NODE_ENV !== 'test') {
+  void (async () => {
+  try {
   const { startScheduler } = await import('./workers/scheduler.js');
   const { startCronWorker } = await import('./workers/cron.worker.js');
   const { startWebhookReplayWorker } = await import('./workers/webhook-replay.worker.js');
@@ -110,6 +112,10 @@ if (process.env.NODE_ENV !== 'test') {
   startWebhookReplayWorker();
   const { startAuditExportWorker } = await import('./workers/audit-export.worker.js');
   startAuditExportWorker();
+  } catch (err) {
+    server.log.error({ err }, 'background workers failed to start - API keeps running without cron/queues');
+  }
+  })();
 }
 
 try {

@@ -48,6 +48,7 @@ export function startWebhookReplayWorker(): Worker {
     }
   });
   webhookWorker.on('completed', (job) => logger.info({ jobId: job.id }, 'webhook-replay: completed'));
+  webhookWorker.on('error', (err) => logger.warn({ err: err.message }, 'webhook-replay: worker error (non-fatal)'));
   logger.info('webhook-replay worker: started');
   return webhookWorker;
 }

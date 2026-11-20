@@ -22,6 +22,7 @@ export function startCronWorker(): Worker {
   );
   cronWorker.on('completed', (job) => logger.info({ jobId: job.id, name: job.name }, 'cron.worker: completed'));
   cronWorker.on('failed', (job, err) => logger.error({ jobId: job?.id, name: job?.name, err }, 'cron.worker: failed'));
+  cronWorker.on('error', (err) => logger.warn({ err: err.message }, 'cron.worker: error (non-fatal)'));
   logger.info('cron.worker: started');
   return cronWorker;
 }

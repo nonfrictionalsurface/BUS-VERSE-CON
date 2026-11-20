@@ -23,6 +23,14 @@ export const redisConnection: ConnectionOptions = {
   maxRetriesPerRequest: null,
 };
 
+// BullMQ emits 'error' on Redis trouble; with no listener Node throws and kills the process.
+function guardErrors(q: Queue, label: string): Queue {
+  if (q.listenerCount('error') === 0) {
+    q.on('error', (err: Error) => logger.warn({ err: err.message }, `queue ${label}: error (non-fatal)`));
+  }
+  return q;
+}
+
 let cronQueue: Queue | null = null;
 let auditExportQueue: Queue | null = null;
 let webhookReplayQueue: Queue | null = null;
@@ -39,7 +47,7 @@ export function getCronQueue(): Queue {
       },
     });
   }
-  return cronQueue;
+  return guardErrors(cronQueue, 'cron');
 }
 
 export function getWebhookReplayQueue(): Queue {
@@ -54,7 +62,7 @@ export function getWebhookReplayQueue(): Queue {
       },
     });
   }
-  return webhookReplayQueue;
+  return guardErrors(webhookReplayQueue, 'webhook-replay');
 }
 
 export function getAuditExportQueue(): Queue {
@@ -69,7 +77,7 @@ export function getAuditExportQueue(): Queue {
       },
     });
   }
-  return auditExportQueue;
+  return guardErrors(auditExportQueue, 'audit-export');
 }
 
 export async function closeQueues(): Promise<void> {

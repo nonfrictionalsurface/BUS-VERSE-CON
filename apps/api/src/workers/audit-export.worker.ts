@@ -26,6 +26,7 @@ export function startAuditExportWorker(): Worker {
   auditExportWorker.on('completed', (job) => {
     logger.info({ jobId: job.id }, 'audit-export: done');
   });
+  auditExportWorker.on('error', (err) => logger.warn({ err: err.message }, 'audit-export: worker error (non-fatal)'));
   logger.info('audit-export worker: started');
   return auditExportWorker;
 }
