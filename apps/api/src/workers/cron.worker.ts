@@ -18,7 +18,7 @@ export function startCronWorker(): Worker {
       }
       return await fn();
     },
-    { connection: redisConnection, concurrency: 1 },
+    { connection: redisConnection, concurrency: 1, drainDelay: 60, stalledInterval: 300_000 },
   );
   cronWorker.on('completed', (job) => logger.info({ jobId: job.id, name: job.name }, 'cron.worker: completed'));
   cronWorker.on('failed', (job, err) => logger.error({ jobId: job?.id, name: job?.name, err }, 'cron.worker: failed'));

@@ -17,7 +17,7 @@ export function startAuditExportWorker(): Worker {
       logger.info({ jobId: job.id, rowCount: result.rowCount }, 'audit-export: completed');
       return { rowCount: result.rowCount, capped: result.capped, csv: result.csv };
     },
-    { connection: redisConnection, concurrency: 1 },
+    { connection: redisConnection, concurrency: 1, drainDelay: 60, stalledInterval: 300_000 },
   );
 
   auditExportWorker.on('failed', (job, err) => {

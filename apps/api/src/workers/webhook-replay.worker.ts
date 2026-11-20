@@ -33,6 +33,8 @@ export function startWebhookReplayWorker(): Worker {
     {
       connection: redisConnection,
       concurrency: 3,
+      drainDelay: 60,
+      stalledInterval: 300_000,
     },
   );
 
