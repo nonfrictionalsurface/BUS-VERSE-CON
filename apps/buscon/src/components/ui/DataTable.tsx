@@ -45,7 +45,11 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="rounded-xl border border-line-hairline bg-surface-card overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="md:hidden px-3 py-1.5 text-[11px] text-ink-muted bg-surface-sunken border-b border-line-hairline flex items-center justify-between">
+        <span>Swipe horizontally to view all columns</span>
+        <span aria-hidden="true">↔</span>
+      </div>
+      <div className="overflow-x-auto w-full">
         <table className="w-full min-w-[640px] text-sm text-left">
           <thead className="bg-surface-sunken border-b border-line-hairline">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -53,14 +57,14 @@ export function DataTable<TData, TValue>({
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-ink-muted whitespace-nowrap"
+                    className="h-11 px-4 text-xs font-bold uppercase tracking-wider text-ink-secondary whitespace-nowrap"
                     style={{ width: header.getSize() !== 150 ? header.getSize() : 'auto' }}
                   >
                     {header.isPlaceholder ? null : (
                       <div
                         className={cn(
                           'flex items-center gap-1',
-                          header.column.getCanSort() && 'cursor-pointer select-none hover:text-ink-primary'
+                          header.column.getCanSort() && 'cursor-pointer select-none hover:text-ink-bright'
                         )}
                         onClick={header.column.getToggleSortingHandler()}
                       >

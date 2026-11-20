@@ -207,9 +207,9 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
   };
 
   return (
-    <div className="flex gap-8 items-start animate-in fade-in duration-300">
+    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch lg:items-start animate-in fade-in duration-300">
       {/* LEFT: Tools Panel */}
-      <div className="w-72 shrink-0 space-y-6 sticky top-24">
+      <div className="w-full lg:w-72 lg:shrink-0 space-y-4 lg:space-y-6 lg:sticky lg:top-24">
         {/* Brush type */}
         <Card className="p-4 space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted border-b border-line-hairline pb-2">
@@ -270,7 +270,7 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
               )}
             >
               <span className="flex items-center gap-2">
-                <span className="text-base leading-none" aria-hidden="true">♀</span> Female Only
+                <span className="text-base leading-none" aria-hidden="true">â™€</span> Female Only
               </span>
               <span
                 className={cn(
@@ -324,7 +324,7 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
         {/* Grid controls */}
         <Card className="p-4 space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted border-b border-line-hairline pb-2">
-            Grid <span className="text-[9px] font-mono normal-case">({rows}R × {cols}C)</span>
+            Grid <span className="text-[9px] font-mono normal-case">({rows}R Ã— {cols}C)</span>
           </h3>
 
           <div className="space-y-2">
@@ -406,7 +406,7 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
       <div className="flex-1 space-y-4">
         <Card
           className={cn(
-            'p-8 bg-surface-sunken min-h-[600px] flex flex-col items-center justify-center overflow-auto rounded-3xl border-2 transition-colors select-none',
+            'p-4 sm:p-8 bg-surface-sunken min-h-[380px] sm:min-h-[560px] flex flex-col items-center justify-center overflow-auto rounded-3xl border-2 transition-colors select-none',
             isValid ? 'border-signal-emerald shadow-[0_0_0_4px_rgba(34,197,94,0.1)]' : 'border-line-hairline'
           )}
         >
@@ -432,7 +432,7 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
                     >
                       {cell !== 'AISLE' && `${String.fromCharCode(65 + r)}${c + 1}`}
                       {(cell === 'SEATER_F' || cell === 'SLEEPER_F') && (
-                        <span className="absolute top-0.5 right-0.5 text-[8px] leading-none">♀</span>
+                        <span className="absolute top-0.5 right-0.5 text-[8px] leading-none">â™€</span>
                       )}
                     </div>
                   ))}
@@ -454,11 +454,11 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
             Sleeper
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded bg-pink-500/15 border-2 border-pink-500/40 text-pink-700 flex items-center justify-center text-[9px]">♀</span>
+            <span className="w-5 h-5 rounded bg-pink-500/15 border-2 border-pink-500/40 text-pink-700 flex items-center justify-center text-[9px]">â™€</span>
             Female Seater
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded bg-purple-500/15 border-2 border-purple-500/40 text-purple-700 flex items-center justify-center text-[9px]">♀</span>
+            <span className="w-5 h-5 rounded bg-purple-500/15 border-2 border-purple-500/40 text-purple-700 flex items-center justify-center text-[9px]">â™€</span>
             Female Sleeper
           </span>
           <span className="flex items-center gap-1.5">
@@ -468,7 +468,7 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
         </div>
 
         {/* Counter + Actions */}
-        <div className="flex items-center justify-between p-5 bg-surface-card border border-line-hairline rounded-xl shadow-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 sm:p-5 bg-surface-card border border-line-hairline rounded-xl shadow-sm">
           <div className="flex items-center gap-4">
             <div
               className={cn(
@@ -489,14 +489,14 @@ export function SeatLayoutStudio({ capacity, initialLayout, onSave, onCancel, is
               </div>
             </div>
             <div className="hidden md:flex flex-col gap-0.5 text-[11px] text-ink-muted">
-              <span>🛏 {sleeperSeats} sleeper · 🪑 {assignedSeats - sleeperSeats} seater</span>
-              <span>♀ {femaleSeats} female-only</span>
+              <span>ðŸ› {sleeperSeats} sleeper Â· ðŸª‘ {assignedSeats - sleeperSeats} seater</span>
+              <span>â™€ {femaleSeats} female-only</span>
             </div>
           </div>
 
           <div className="flex gap-3">
             <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-            <Button onClick={handleSave} disabled={!isValid || isSaving} loading={isSaving} className="w-40">
+            <Button onClick={handleSave} disabled={!isValid || isSaving} loading={isSaving} className="w-full sm:w-40">
               Save Layout
             </Button>
           </div>

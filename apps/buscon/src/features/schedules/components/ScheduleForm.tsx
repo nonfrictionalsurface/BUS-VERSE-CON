@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -127,7 +127,7 @@ export function ScheduleForm() {
       )}
 
       <Card className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-ink-secondary flex items-center gap-1.5">
               <Bus size={12} /> Bus ({availableBuses.length} approved)
@@ -241,7 +241,7 @@ export function ScheduleForm() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-ink-secondary">Departure</label>
             <div className="flex gap-2">
@@ -255,7 +255,7 @@ export function ScheduleForm() {
                 type="time"
                 value={formData.departureTime}
                 onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
-                className="w-32"
+                className="w-full sm:w-32"
               />
             </div>
           </div>
@@ -272,7 +272,7 @@ export function ScheduleForm() {
                 type="time"
                 value={formData.arrivalTime}
                 onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
-                className="w-32"
+                className="w-full sm:w-32"
               />
             </div>
           </div>

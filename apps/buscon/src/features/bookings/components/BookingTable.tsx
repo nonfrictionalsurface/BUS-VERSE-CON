@@ -11,13 +11,13 @@ const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'bookingReference',
     header: 'Reference',
-    cell: ({ row }) => <span className="font-mono text-xs font-bold text-ink-secondary">{row.original.bookingReference}</span>,
+    cell: ({ row }) => <span className="font-mono text-xs font-bold text-ink-primary">{row.original.bookingReference}</span>,
   },
   {
     id: 'route',
     header: 'Route',
     cell: ({ row }) => (
-      <div className="flex items-center gap-2 text-sm font-medium text-ink-bright">
+      <div className="flex items-center gap-2 text-sm font-medium text-ink-bright whitespace-nowrap">
         {row.original.routeSummary?.originCity} <ArrowRight size={12} className="text-ink-muted" /> {row.original.routeSummary?.destinationCity}
       </div>
     ),
@@ -25,7 +25,7 @@ const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'departureTime',
     header: 'Departure',
-    cell: ({ row }) => <span className="text-sm text-ink-secondary">{formatIST(row.original.departureTime)}</span>,
+    cell: ({ row }) => <span className="text-sm text-ink-secondary whitespace-nowrap">{formatIST(row.original.departureTime)}</span>,
   },
   {
     id: 'passengers',
@@ -35,10 +35,10 @@ const columns: ColumnDef<Booking>[] = [
       return (
         <div className="flex flex-col gap-1">
           {p.map((pax, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs text-ink-secondary">
-              <User size={12} className="text-ink-muted" />
+            <div key={i} className="flex items-center gap-2 text-xs text-ink-secondary whitespace-nowrap">
+              <User size={12} className="text-ink-muted shrink-0" />
               <span>{pax.name}</span>
-              <span className="flex items-center gap-0.5 bg-surface-sunken px-1.5 py-0.5 rounded border border-line-hairline">
+              <span className="flex items-center gap-0.5 bg-surface-sunken px-1.5 py-0.5 rounded border border-line-hairline text-ink-primary">
                 <Armchair size={10} /> {pax.seatLabel}
               </span>
             </div>
@@ -50,7 +50,15 @@ const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: 'totalFarePaise',
     header: 'Total Fare',
-    cell: ({ row }) => <span className="font-mono text-sm font-medium text-brand-text">{formatINR(row.original.totalFarePaise)}</span>,
+    cell: ({ row }) => {
+      const r = row.original as any;
+      const farePaise = r.totalFarePaise ?? r.totalAmountPaise ?? r.fareAmountPaise ?? r.amountPaise;
+      return (
+        <span className="font-mono text-sm font-semibold text-ink-bright whitespace-nowrap">
+          {formatINR(farePaise)}
+        </span>
+      );
+    },
   },
   {
     accessorKey: 'status',

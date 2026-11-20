@@ -95,7 +95,7 @@ export function ApprovalsTabs() {
           <Button size="sm" variant="secondary" className="text-brand-text hover:bg-brand/10" onClick={() => handleApproveOp(row.original.id)} loading={approveOp.isPending}>
             <Check size={14} className="mr-1" /> Approve
           </Button>
-          <Button size="sm" variant="secondary" className="text-danger-crimson hover:bg-red-50" onClick={() => setRejectTarget({ id: row.original.id, type: 'operator' })}>
+          <Button size="sm" variant="secondary" className="text-danger-crimson hover:bg-danger-crimson/10" onClick={() => setRejectTarget({ id: row.original.id, type: 'operator' })}>
             <X size={14} className="mr-1" /> Reject
           </Button>
         </div>
@@ -115,7 +115,7 @@ export function ApprovalsTabs() {
           <Button size="sm" variant="secondary" className="text-brand-text hover:bg-brand/10" onClick={() => handleApproveBus(row.original.id)} loading={approveBus.isPending}>
             <Check size={14} className="mr-1" /> Approve
           </Button>
-          <Button size="sm" variant="secondary" className="text-danger-crimson hover:bg-red-50" onClick={() => setRejectTarget({ id: row.original.id, type: 'bus' })}>
+          <Button size="sm" variant="secondary" className="text-danger-crimson hover:bg-danger-crimson/10" onClick={() => setRejectTarget({ id: row.original.id, type: 'bus' })}>
             <X size={14} className="mr-1" /> Reject
           </Button>
         </div>

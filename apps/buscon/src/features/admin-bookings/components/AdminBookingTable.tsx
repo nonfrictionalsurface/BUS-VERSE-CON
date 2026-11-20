@@ -5,12 +5,11 @@ import { ColumnDef } from '@tanstack/react-table';
 import { AdminBooking } from '../api';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { ArrowRight, User, Armchair, Building2, AlertTriangle } from 'lucide-react';
 import { formatIST, formatINR } from '@/lib/utils/formatters';
 
 export function AdminBookingTable({ data, isLoading }: { data?: AdminBooking[]; isLoading: boolean }) {
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   if (error) {
     return (
@@ -20,7 +19,6 @@ export function AdminBookingTable({ data, isLoading }: { data?: AdminBooking[]; 
           <div>
             <p className="font-semibold">Backend endpoint not available</p>
             <p className="text-xs mt-1 font-mono">{error}</p>
-            <p className="text-xs mt-2">The <code>GET /v1/admin/bookings</code> endpoint may not be implemented yet. Cross-operator bookings will appear here once the backend supports it.</p>
           </div>
         </div>
       </div>
@@ -31,14 +29,14 @@ export function AdminBookingTable({ data, isLoading }: { data?: AdminBooking[]; 
     {
       accessorKey: 'bookingReference',
       header: 'Ref',
-      cell: ({ row }) => <span className="font-mono text-xs font-bold text-ink-secondary">{row.original.bookingReference}</span>,
+      cell: ({ row }) => <span className="font-mono text-xs font-bold text-ink-primary">{row.original.bookingReference}</span>,
     },
     {
       id: 'operator',
       header: 'Operator',
       cell: ({ row }) => (
-        <div className="flex items-center gap-1.5 text-sm text-ink-secondary">
-          <Building2 size={14} className="text-ink-muted" />
+        <div className="flex items-center gap-1.5 text-sm text-ink-secondary whitespace-nowrap">
+          <Building2 size={14} className="text-ink-muted shrink-0" />
           {row.original.operatorName || 'Unknown'}
         </div>
       ),
@@ -47,7 +45,7 @@ export function AdminBookingTable({ data, isLoading }: { data?: AdminBooking[]; 
       id: 'route',
       header: 'Route',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-sm font-medium text-ink-bright">
+        <div className="flex items-center gap-2 text-sm font-medium text-ink-bright whitespace-nowrap">
           {row.original.routeSummary?.originCity} <ArrowRight size={12} className="text-ink-muted" /> {row.original.routeSummary?.destinationCity}
         </div>
       ),
@@ -60,10 +58,10 @@ export function AdminBookingTable({ data, isLoading }: { data?: AdminBooking[]; 
         return (
           <div className="flex flex-col gap-1">
             {p.slice(0, 2).map((pax, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-ink-secondary">
-                <User size={12} className="text-ink-muted" />
+              <div key={i} className="flex items-center gap-2 text-xs text-ink-secondary whitespace-nowrap">
+                <User size={12} className="text-ink-muted shrink-0" />
                 <span>{pax.name}</span>
-                <span className="flex items-center gap-0.5 bg-surface-sunken px-1.5 py-0.5 rounded border border-line-hairline">
+                <span className="flex items-center gap-0.5 bg-surface-sunken px-1.5 py-0.5 rounded border border-line-hairline text-ink-primary">
                   <Armchair size={10} /> {pax.seatLabel}
                 </span>
               </div>
@@ -76,12 +74,20 @@ export function AdminBookingTable({ data, isLoading }: { data?: AdminBooking[]; 
     {
       accessorKey: 'totalFarePaise',
       header: 'Fare',
-      cell: ({ row }) => <span className="font-mono text-sm font-medium text-brand-text">{formatINR(row.original.totalFarePaise)}</span>,
+      cell: ({ row }) => {
+        const r = row.original as any;
+        const farePaise = r.totalFarePaise ?? r.totalAmountPaise ?? r.fareAmountPaise ?? r.amountPaise;
+        return (
+          <span className="font-mono text-sm font-semibold text-ink-bright whitespace-nowrap">
+            {formatINR(farePaise)}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'departureTime',
       header: 'Departure',
-      cell: ({ row }) => <span className="text-xs text-ink-secondary">{formatIST(row.original.departureTime)}</span>,
+      cell: ({ row }) => <span className="text-xs text-ink-secondary whitespace-nowrap">{formatIST(row.original.departureTime)}</span>,
     },
     {
       accessorKey: 'status',

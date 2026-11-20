@@ -1,7 +1,7 @@
 export function formatINR(paise?: number | bigint | string | null): string {
   if (paise === undefined || paise === null || paise === '') return '—';
   const num = typeof paise === 'string' ? parseFloat(paise) : Number(paise);
-  if (Number.isNaN(num) || num <= 0) return '—';
+  if (Number.isNaN(num) || num < 0) return '—';
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',

@@ -35,9 +35,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   const segments = pathname.split('/').filter(Boolean);
+  const currentTitle = segments.length > 0 ? humanize(segments[segments.length - 1]) : 'Dashboard';
+  const userInitial = (user.name || user.email || 'U').trim().charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen flex bg-canvas-bg">
+    <div className="min-h-screen flex bg-canvas-bg overflow-x-hidden">
       {/* Desktop sidebar (>= lg) */}
       <div className="hidden lg:block lg:w-[260px] lg:shrink-0 lg:h-screen lg:sticky lg:top-0">
         <Sidebar />
@@ -62,11 +64,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setNavOpen(true)}
-              className="lg:hidden p-2 -ml-1 rounded-md text-ink-secondary hover:bg-surface-hover"
+              className="lg:hidden p-2 -ml-1 rounded-md text-ink-primary hover:bg-surface-hover shrink-0"
               aria-label="Open menu"
             >
               <Menu size={22} />
             </button>
+
+            <span className="sm:hidden text-sm font-bold text-ink-bright truncate">
+              {currentTitle}
+            </span>
 
             <nav className="hidden sm:flex text-sm font-medium text-ink-secondary items-center gap-2 min-w-0 overflow-hidden">
               {segments.map((s, i) => (
@@ -74,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {i > 0 && <span className="text-ink-muted">/</span>}
                   <span
                     className={`truncate max-w-[8rem] md:max-w-none ${
-                      i === segments.length - 1 ? 'text-ink-bright' : ''
+                      i === segments.length - 1 ? 'text-ink-bright font-semibold' : ''
                     }`}
                   >
                     {humanize(s)}
@@ -84,12 +90,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div
-              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
                 isAdmin
-                  ? 'bg-amber-500/10 text-amber-600'
-                  : 'bg-signal-emerald/10 text-brand-text'
+                  ? 'bg-amber-500/15 border-amber-500/35 text-amber-700 dark:text-amber-300'
+                  : 'bg-brand/15 border-brand/30 text-brand-text'
               }`}
             >
               {isAdmin ? <ShieldAlert size={12} /> : <Bus size={12} />}
@@ -98,23 +104,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
             </div>
 
-            <button className="p-2 rounded-full hover:bg-surface-hover text-ink-secondary transition-colors relative">
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="p-2 rounded-full hover:bg-surface-hover text-ink-secondary hover:text-ink-bright transition-colors relative"
+            >
               <Bell size={18} />
               <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-canvas-subtle" />
             </button>
+
             <div
-              className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full flex items-center justify-center font-bold text-sm border ${
+              title={user.name || user.email || 'User'}
+              className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full flex items-center justify-center font-bold text-sm border select-none ${
                 isAdmin
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-600'
-                  : 'bg-signal-emerald/10 border-signal-emerald/30 text-brand-text'
+                  ? 'bg-amber-500/15 border-amber-500/35 text-amber-700 dark:text-amber-300'
+                  : 'bg-brand/15 border-brand/30 text-brand-text'
               }`}
             >
-              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              {userInitial}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-10 max-w-[1440px] w-full mx-auto animate-in fade-in duration-300">
+        <main className="flex-1 min-w-0 overflow-x-hidden p-4 sm:p-6 lg:p-10 max-w-[1440px] w-full mx-auto animate-in fade-in duration-300">
           {children}
         </main>
       </div>

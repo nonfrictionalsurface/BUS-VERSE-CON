@@ -176,7 +176,7 @@ export function BusWizard() {
       {step === 1 && (
         <form onSubmit={handleStep1Submit} className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-left-4">
           <Card className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Input
                   name="registrationNumber"
@@ -197,7 +197,7 @@ export function BusWizard() {
                   }
                 />
                 <p className="text-[10px] text-ink-muted mt-1 leading-tight">
-                  Must be unique in your fleet. Click 🎲 to generate one.
+                  Must be unique in your fleet. Click ðŸŽ² to generate one.
                 </p>
               </div>
               <Input
@@ -210,7 +210,7 @@ export function BusWizard() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-ink-secondary">Bus Type</label>
                 <select

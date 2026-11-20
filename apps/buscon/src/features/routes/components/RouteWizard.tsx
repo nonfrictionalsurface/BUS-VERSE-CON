@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -316,7 +316,7 @@ export function RouteWizard() {
       {step === 1 && (
         <form onSubmit={handleStep1Next} className="space-y-6 animate-in fade-in slide-in-from-left-4">
           <Card className="space-y-5">
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <CityAutocomplete label="Origin City" value={origin} onChange={setOrigin} placeholder="e.g. Delhi" />
               <CityAutocomplete label="Destination City" value={destination} onChange={setDestination} placeholder="e.g. Lucknow" />
             </div>
@@ -410,7 +410,7 @@ export function RouteWizard() {
                       <div className="w-6 h-6 mt-1 rounded-full bg-surface-card text-ink-secondary flex items-center justify-center text-xs font-bold shrink-0 border border-line-hairline">
                         {i + 2}
                       </div>
-                      <div className="flex-1 grid grid-cols-3 gap-2">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
                           <label className="text-[10px] font-bold uppercase text-ink-muted">Stand</label>
                           <select
@@ -488,7 +488,7 @@ export function RouteWizard() {
                 <p className="text-[11px] text-amber-600 mt-1">No stands found for {destination?.name}.</p>
               )}
 
-              <div className="grid grid-cols-2 gap-3 mt-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                 <div>
                   <label className="text-[10px] font-bold uppercase text-ink-muted flex items-center gap-1">
                     Distance from previous (km)

@@ -104,7 +104,7 @@ export default function BusDetailPage() {
         <Card className="col-span-1 md:col-span-2 space-y-6">
           <div>
             <h2 className="text-lg font-bold text-ink-bright mb-4">Bus Details</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-ink-secondary font-medium mb-1">Registration</p>
                 <p className="font-mono font-bold text-ink-bright">{bus.registrationNumber}</p>
